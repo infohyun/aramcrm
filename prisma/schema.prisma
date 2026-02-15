@@ -1,0 +1,294 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// 사용자 (직원) 관리
+// ============================================
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  password      String
+  role          String    @default("staff") // admin, manager, staff
+  department    String?
+  phone         String?
+  avatar        String?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  customers      Customer[]
+  communications Communication[]
+  vocRecords     VOC[]
+  activities     Activity[]
+  emailTemplates EmailTemplate[]
+  serviceTickets ServiceTicket[]
+  shipments      Shipment[]
+}
+
+// ============================================
+// 고객 관리
+// ============================================
+model Customer {
+  id            String    @id @default(cuid())
+  name          String
+  email         String?
+  phone         String?
+  mobile        String?
+  company       String?
+  position      String?
+  department    String?
+  address       String?
+  addressDetail String?
+  zipCode       String?
+  grade         String    @default("normal") // vip, gold, normal, new
+  status        String    @default("active") // active, inactive, dormant
+  source        String?
+  memo          String?
+  tags          String?
+  birthday      String?
+  assignedToId  String?
+  assignedTo    User?     @relation(fields: [assignedToId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  communications Communication[]
+  vocRecords     VOC[]
+  activities     Activity[]
+  orders         Order[]
+  serviceTickets ServiceTicket[]
+  shipments      Shipment[]
+}
+
+// ============================================
+// 커뮤니케이션
+// ============================================
+model Communication {
+  id            String    @id @default(cuid())
+  customerId    String
+  customer      Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  type          String
+  direction     String
+  subject       String?
+  content       String
+  status        String    @default("sent")
+  sentAt        DateTime?
+  deliveredAt   DateTime?
+  readAt        DateTime?
+  trackingId    String?   @unique
+  metadata      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// ============================================
+// 고객의 소리 (VOC)
+// ============================================
+model VOC {
+  id            String    @id @default(cuid())
+  customerId    String
+  customer      Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  category      String
+  priority      String    @default("medium")
+  title         String
+  content       String
+  status        String    @default("open")
+  resolution    String?
+  productTags   String?
+  resolvedAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// ============================================
+// 활동 로그
+// ============================================
+model Activity {
+  id            String    @id @default(cuid())
+  customerId    String?
+  customer      Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  type          String
+  title         String
+  description   String?
+  dueDate       DateTime?
+  isCompleted   Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// ============================================
+// 주문/거래 내역
+// ============================================
+model Order {
+  id            String    @id @default(cuid())
+  customerId    String
+  customer      Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  orderNumber   String    @unique
+  productName   String
+  quantity      Int       @default(1)
+  unitPrice     Float
+  totalPrice    Float
+  status        String    @default("pending")
+  orderDate     DateTime  @default(now())
+  memo          String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// ============================================
+// 이메일 템플릿
+// ============================================
+model EmailTemplate {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  name          String
+  subject       String
+  content       String
+  category      String?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// ============================================
+// 외부 연동 설정
+// ============================================
+model Integration {
+  id            String    @id @default(cuid())
+  name          String    @unique
+  type          String
+  config        String?
+  isActive      Boolean   @default(false)
+  lastSyncAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// ============================================
+// AS (After Service) 관리
+// ============================================
+model ServiceTicket {
+  id              String    @id @default(cuid())
+  ticketNumber    String    @unique
+  customerId      String
+  customer        Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  assignedToId    String?
+  assignedTo      User?     @relation(fields: [assignedToId], references: [id])
+  category        String    // repair, exchange, refund, inspection, other
+  priority        String    @default("medium") // urgent, high, medium, low
+  title           String
+  description     String
+  status          String    @default("received") // received, inspecting, in_repair, waiting_parts, completed, returned, closed
+  // 제품 정보
+  productName     String?
+  serialIncoming  String?   // 입고 시리얼 번호
+  serialOutgoing  String?   // 출고 시리얼 번호
+  // 비용 및 부품
+  repairCost      Float?    @default(0)
+  partsCost       Float?    @default(0)
+  partsUsed       String?   // JSON: 투입 부품 목록
+  // 일정
+  receivedAt      DateTime  @default(now()) // 접수일
+  inspectedAt     DateTime? // 검수일
+  repairedAt      DateTime? // 수리 완료일
+  returnedAt      DateTime? // 고객 리턴일
+  estimatedDays   Int?      // 예상 소요일
+  actualDays      Int?      // 실제 소요일
+  // 물류
+  returnTrackingNo  String? // 반송 송장번호
+  returnCourier     String? // 반송 택배사
+  memo            String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+// ============================================
+// 재고 관리
+// ============================================
+model Inventory {
+  id            String    @id @default(cuid())
+  sku           String    @unique
+  productName   String
+  category      String?   // skincare, makeup, haircare, bodycare, etc.
+  currentStock  Int       @default(0)
+  minStock      Int       @default(10) // 최소 재고 알림 기준
+  maxStock      Int       @default(1000)
+  warehouse     String?   // 창고 위치
+  unit          String    @default("EA") // EA, BOX, SET
+  unitPrice     Float     @default(0)
+  status        String    @default("in_stock") // in_stock, low_stock, out_of_stock
+  lastRestocked DateTime?
+  memo          String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  movements     InventoryMovement[]
+}
+
+// ============================================
+// 재고 이동 이력
+// ============================================
+model InventoryMovement {
+  id            String    @id @default(cuid())
+  inventoryId   String
+  inventory     Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+  type          String    // inbound, outbound, adjustment, return
+  quantity      Int
+  reason        String?   // 입출고 사유
+  reference     String?   // 관련 주문번호/AS번호
+  teamDivision  String?   // 국내사업팀, 해외사업팀 등
+  createdAt     DateTime  @default(now())
+}
+
+// ============================================
+// 배송/물류 관리
+// ============================================
+model Shipment {
+  id              String    @id @default(cuid())
+  shipmentNumber  String    @unique
+  customerId      String?
+  customer        Customer? @relation(fields: [customerId], references: [id])
+  userId          String?
+  user            User?     @relation(fields: [userId], references: [id])
+  type            String    @default("outbound") // outbound, inbound, internal, as_return
+  courier         String?   // 택배사: CJ대한통운, 한진, 롯데, 우체국, FedEx, DHL, EMS 등
+  trackingNumber  String?   // 송장번호
+  teamDivision    String?   // 국내영업팀, 해외영업팀, AS팀 등
+  status          String    @default("preparing") // preparing, shipped, in_transit, delivered, returned
+  origin          String?   // 출발지
+  destination     String?   // 도착지
+  items           String?   // JSON: 배송 품목
+  shippedAt       DateTime?
+  deliveredAt     DateTime?
+  memo            String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+// ============================================
+// FAQ 관리
+// ============================================
+model FAQ {
+  id            String    @id @default(cuid())
+  category      String    // product, shipping, as, payment, general
+  question      String
+  answer        String
+  sortOrder     Int       @default(0)
+  viewCount     Int       @default(0)
+  isPublished   Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
