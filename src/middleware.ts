@@ -1,5 +1,5 @@
-import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
 // Protected route prefixes
 const protectedPaths = [
@@ -22,7 +22,7 @@ const publicPaths = [
   "/api/auth",
 ];
 
-export default auth((req) => {
+export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // Allow public paths
@@ -34,25 +34,22 @@ export default auth((req) => {
   // Check if the path is protected
   const isProtectedPath = protectedPaths.some((path) => pathname.startsWith(path));
 
-  if (isProtectedPath && !req.auth) {
-    // Redirect unauthenticated users to login
+  // Check for NextAuth session token cookie
+  const sessionToken =
+    req.cookies.get("authjs.session-token") ||
+    req.cookies.get("__Secure-authjs.session-token");
+
+  if (isProtectedPath && !sessionToken) {
     const loginUrl = new URL("/login", req.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon)
-     * - public assets (images, etc.)
-     */
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
