@@ -17,6 +17,11 @@ import {
   Wrench,
   Package,
   HelpCircle,
+  Gamepad2,
+  Grid3X3,
+  Joystick,
+  Blocks,
+  Paintbrush,
 } from "lucide-react";
 
 interface NavGroup {
@@ -40,6 +45,16 @@ const navGroups: NavGroup[] = [
       { label: "AS 관리", icon: Wrench, href: "/service" },
       { label: "재고/물류", icon: Package, href: "/inventory" },
       { label: "FAQ 관리", icon: HelpCircle, href: "/faq" },
+    ],
+  },
+  {
+    label: "게임",
+    items: [
+      { label: "게임 허브", icon: Gamepad2, href: "/games" },
+      { label: "2048 퍼즐", icon: Grid3X3, href: "/games/puzzle-2048" },
+      { label: "스네이크", icon: Joystick, href: "/games/snake" },
+      { label: "테트리스", icon: Blocks, href: "/games/tetris" },
+      { label: "픽셀 아트", icon: Paintbrush, href: "/games/pixel-art" },
     ],
   },
   {
