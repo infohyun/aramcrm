@@ -220,7 +220,7 @@ function getLanIPs() {
 
 server.listen(PORT, () => {
   console.log('');
-  console.log('  Chess Online Server');
+  console.log('  Game Hub Server');
   console.log('  ===================');
   console.log(`  Local:    http://localhost:${PORT}`);
   const ips = getLanIPs();
@@ -228,6 +228,12 @@ server.listen(PORT, () => {
     console.log(`  Network:  http://${ip}:${PORT}`);
   });
   console.log('');
-  console.log('  Open in two browser tabs to play!');
+  console.log('  Games:');
+  console.log(`    Hub:        http://localhost:${PORT}/games.html`);
+  console.log(`    Chess:      http://localhost:${PORT}/index.html`);
+  console.log(`    2048:       http://localhost:${PORT}/2048.html`);
+  console.log(`    Snake:      http://localhost:${PORT}/snake.html`);
+  console.log(`    Tetris:     http://localhost:${PORT}/tetris.html`);
+  console.log(`    Pixel Art:  http://localhost:${PORT}/pixel-art.html`);
   console.log('');
 });

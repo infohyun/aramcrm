@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>테트리스</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:20px;user-select:none}
+.top-bar{width:100%;max-width:520px;display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.back{color:rgba(255,255,255,0.4);text-decoration:none;font-size:0.85rem;padding:8px 14px;border-radius:10px;transition:all 0.2s}
+.back:hover{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7)}
+h1{font-size:1.8rem;font-weight:800}
+.btns{display:flex;gap:8px}
+.btn{background:rgba(255,255,255,0.06);border:none;color:rgba(255,255,255,0.7);padding:8px 16px;border-radius:10px;cursor:pointer;font-size:0.8rem;transition:all 0.2s}
+.btn:hover{background:rgba(255,255,255,0.1);color:#fff}
+.game-area{display:flex;gap:20px;margin-bottom:20px;align-items:flex-start}
+canvas{border-radius:18px;border:1px solid rgba(255,255,255,0.08);display:block;background:#0a0a0a}
+.side{display:flex;flex-direction:column;gap:12px;width:130px}
+.panel{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:14px;text-align:center}
+.panel-label{font-size:0.6rem;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.panel-val{font-size:1.3rem;font-weight:700}
+.panel-val.sc{color:#60a5fa}
+.panel-val.best{color:#facc15}
+.panel-val.line{color:#22d3ee}
+.panel-val.lv{color:#a78bfa}
+.next-canvas{width:100%;border-radius:10px}
+.game-wrap{position:relative}
+.overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);border-radius:18px;z-index:10}
+.overlay h2{font-size:2rem;margin-bottom:8px}
+.overlay p{color:rgba(255,255,255,0.5);margin-bottom:16px}
+.overlay .btn{padding:12px 28px;font-size:0.95rem;background:rgba(59,130,246,0.8);color:#fff;font-weight:600;border-radius:12px}
+.overlay .btn:hover{background:#3b82f6}
+.dpad{display:none;margin-bottom:20px}
+@media(max-width:768px){.dpad{display:flex;gap:16px;justify-content:center;align-items:end} .side{width:110px}}
+.dpad-grid{display:grid;grid-template-columns:repeat(3,50px);gap:6px}
+.dpad button{width:50px;height:50px;border-radius:12px;background:rgba(255,255,255,0.06);border:none;color:rgba(255,255,255,0.6);font-size:1.2rem;cursor:pointer}
+.dpad button:active{background:rgba(255,255,255,0.15)}
+.dpad .empty{visibility:hidden}
+.dpad .hd{width:auto;padding:0 16px;font-size:0.75rem}
+.info{max-width:520px;width:100%;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:16px}
+.info h3{font-size:0.8rem;color:rgba(255,255,255,0.5);margin-bottom:8px}
+.info p{font-size:0.75rem;color:rgba(255,255,255,0.3);line-height:1.8}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <a href="/games.html" class="back">← 게임 허브</a>
+  <h1>테트리스</h1>
+  <div class="btns">
+    <button class="btn" id="playBtn" onclick="togglePlay()">▶ 시작</button>
+    <button class="btn" onclick="initGame()">↺ 리셋</button>
+  </div>
+</div>
+
+<div class="game-area">
+  <div class="game-wrap">
+    <canvas id="canvas" width="280" height="560"></canvas>
+    <div class="overlay" id="overStart">
+      <h2>🟦 테트리스</h2>
+      <p>Space를 눌러 시작하세요</p>
+    </div>
+    <div class="overlay" id="overDead" style="display:none">
+      <h2>게임 오버!</h2>
+      <p>점수: <span id="finalScore">0</span></p>
+      <button class="btn" onclick="initGame()">다시 하기</button>
+    </div>
+  </div>
+  <div class="side">
+    <div class="panel">
+      <div class="panel-label">다음 블록</div>
+      <canvas id="nextCanvas" class="next-canvas" width="110" height="70"></canvas>
+    </div>
+    <div class="panel"><div class="panel-label">점수</div><div class="panel-val sc" id="score">0</div></div>
+    <div class="panel"><div class="panel-label">최고</div><div class="panel-val best" id="best">0</div></div>
+    <div class="panel"><div class="panel-label">라인</div><div class="panel-val line" id="lines">0</div></div>
+    <div class="panel"><div class="panel-label">레벨</div><div class="panel-val lv" id="level">1</div></div>
+  </div>
+</div>
+
+<div class="dpad">
+  <div class="dpad-grid">
+    <div class="empty"></div>
+    <button ontouchstart="rotatePiece()">↻</button>
+    <div class="empty"></div>
+    <button ontouchstart="moveLeft()">◀</button>
+    <button ontouchstart="softDrop()">▼</button>
+    <button ontouchstart="moveRight()">▶</button>
+  </div>
+  <button class="hd" ontouchstart="hardDrop()" style="height:50px;border-radius:12px;background:rgba(255,255,255,0.06);border:none;color:rgba(255,255,255,0.6)">하드<br>드롭</button>
+</div>
+
+<div class="info">
+  <h3>조작법</h3>
+  <p>⬅➡ 이동 | ⬆ 회전 | ⬇ 소프트드롭 | X 하드드롭 | Space 시작/일시정지</p>
+</div>
+
+<script>
+const COLS=10, ROWS=20, CELL=28;
+const SHAPES=[[[1,1,1,1]],[[1,1],[1,1]],[[0,1,0],[1,1,1]],[[1,0,0],[1,1,1]],[[0,0,1],[1,1,1]],[[0,1,1],[1,1,0]],[[1,1,0],[0,1,1]]];
+const COLORS=['','#06b6d4','#eab308','#a855f7','#f97316','#3b82f6','#22c55e','#ef4444'];
+const GHOST=['','rgba(6,182,212,0.15)','rgba(234,179,8,0.15)','rgba(168,85,247,0.15)','rgba(249,115,22,0.15)','rgba(59,130,246,0.15)','rgba(34,197,94,0.15)','rgba(239,68,68,0.15)'];
+const PTS=[0,100,300,500,800];
+
+const cv=document.getElementById('canvas'), cx=cv.getContext('2d');
+const nv=document.getElementById('nextCanvas'), nx=nv.getContext('2d');
+
+let board, piece, next, score, bestScore, lines, level, gameOver, isPlaying, timer;
+
+function newPiece(){const i=Math.floor(Math.random()*SHAPES.length);return{shape:SHAPES[i].map(r=>[...r]),x:Math.floor(COLS/2)-Math.floor(SHAPES[i][0].length/2),y:0,color:i+1}}
+function createBoard(){return Array.from({length:ROWS},()=>Array(COLS).fill(0))}
+
+function init(){bestScore=parseInt(localStorage.getItem('bestTetris')||'0');document.getElementById('best').textContent=bestScore.toLocaleString();initGame()}
+
+function initGame(){
+  board=createBoard();piece=newPiece();next=newPiece();
+  score=0;lines=0;level=1;gameOver=false;isPlaying=false;
+  if(timer)clearInterval(timer);
+  document.getElementById('overStart').style.display='flex';
+  document.getElementById('overDead').style.display='none';
+  document.getElementById('playBtn').textContent='▶ 시작';
+  updateUI();render();renderNext();
+}
+
+function togglePlay(){
+  if(gameOver){initGame();return}
+  isPlaying=!isPlaying;
+  document.getElementById('playBtn').textContent=isPlaying?'⏸ 일시정지':'▶ 시작';
+  if(isPlaying){document.getElementById('overStart').style.display='none';startLoop();}
+  else{if(timer)clearInterval(timer);}
+}
+
+function startLoop(){if(timer)clearInterval(timer);const spd=Math.max(50,800-(level-1)*70);timer=setInterval(tick,spd);}
+
+function valid(b,p){for(let r=0;r<p.shape.length;r++)for(let c=0;c<p.shape[r].length;c++){if(!p.shape[r][c])continue;const nx=p.x+c,ny=p.y+r;if(nx<0||nx>=COLS||ny>=ROWS)return false;if(ny>=0&&b[ny][nx])return false;}return true}
+
+function rotate(s){const rows=s.length,cols=s[0].length,rot=Array.from({length:cols},()=>Array(rows).fill(0));for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)rot[c][rows-1-r]=s[r][c];return rot}
+
+function ghostY(){let gy=piece.y;while(valid(board,{...piece,y:gy+1}))gy++;return gy}
+
+function lock(){
+  for(let r=0;r<piece.shape.length;r++)for(let c=0;c<piece.shape[r].length;c++){
+    if(!piece.shape[r][c])continue;const ny=piece.y+r,nx2=piece.x+c;
+    if(ny>=0&&ny<ROWS&&nx2>=0&&nx2<COLS)board[ny][nx2]=piece.color;
+  }
+  const nb=board.filter(r=>r.some(c=>c===0));const cl=ROWS-nb.length;
+  while(nb.length<ROWS)nb.unshift(Array(COLS).fill(0));
+  board=nb;lines+=cl;level=Math.floor(lines/10)+1;score+=PTS[cl]*level;
+  if(score>bestScore){bestScore=score;localStorage.setItem('bestTetris',bestScore.toString())}
+  piece=next;next=newPiece();
+  if(!valid(board,piece)){gameOver=true;isPlaying=false;clearInterval(timer);document.getElementById('finalScore').textContent=score.toLocaleString();document.getElementById('overDead').style.display='flex';document.getElementById('playBtn').textContent='▶ 시작';}
+  else{startLoop();}
+  updateUI();renderNext();
+}
+
+function tick(){if(!isPlaying||gameOver)return;const m={...piece,y:piece.y+1};if(valid(board,m))piece=m;else lock();render();}
+
+function moveLeft(){if(!isPlaying)return;const m={...piece,x:piece.x-1};if(valid(board,m))piece=m;render();}
+function moveRight(){if(!isPlaying)return;const m={...piece,x:piece.x+1};if(valid(board,m))piece=m;render();}
+function softDrop(){if(!isPlaying)return;tick();}
+function rotatePiece(){
+  if(!isPlaying)return;
+  const rot={...piece,shape:rotate(piece.shape)};
+  if(valid(board,rot)){piece=rot;}
+  else{for(const off of[-1,1,-2,2]){const k={...rot,x:rot.x+off};if(valid(board,k)){piece=k;break;}}}
+  render();
+}
+function hardDrop(){if(!isPlaying)return;piece.y=ghostY();lock();render();}
+
+function updateUI(){
+  document.getElementById('score').textContent=score.toLocaleString();
+  document.getElementById('best').textContent=bestScore.toLocaleString();
+  document.getElementById('lines').textContent=lines;
+  document.getElementById('level').textContent=level;
+}
+
+function render(){
+  cx.clearRect(0,0,COLS*CELL,ROWS*CELL);
+  cx.fillStyle='rgba(255,255,255,0.01)';cx.fillRect(0,0,COLS*CELL,ROWS*CELL);
+  cx.strokeStyle='rgba(255,255,255,0.03)';cx.lineWidth=0.5;
+  for(let r=0;r<=ROWS;r++){cx.beginPath();cx.moveTo(0,r*CELL);cx.lineTo(COLS*CELL,r*CELL);cx.stroke()}
+  for(let c=0;c<=COLS;c++){cx.beginPath();cx.moveTo(c*CELL,0);cx.lineTo(c*CELL,ROWS*CELL);cx.stroke()}
+  // Board
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){if(board[r][c]){cx.fillStyle=COLORS[board[r][c]];cx.shadowColor=COLORS[board[r][c]];cx.shadowBlur=4;cx.beginPath();cx.roundRect(c*CELL+1,r*CELL+1,CELL-2,CELL-2,3);cx.fill();cx.shadowBlur=0;}}
+  // Ghost
+  const gy=ghostY();
+  for(let r=0;r<piece.shape.length;r++)for(let c=0;c<piece.shape[r].length;c++){if(!piece.shape[r][c])continue;cx.fillStyle=GHOST[piece.color];cx.strokeStyle=COLORS[piece.color];cx.lineWidth=1;cx.globalAlpha=0.4;cx.beginPath();cx.roundRect((piece.x+c)*CELL+1,(gy+r)*CELL+1,CELL-2,CELL-2,3);cx.fill();cx.stroke();cx.globalAlpha=1;}
+  // Piece
+  for(let r=0;r<piece.shape.length;r++)for(let c=0;c<piece.shape[r].length;c++){if(!piece.shape[r][c])continue;const py=(piece.y+r)*CELL;if(py<0)continue;cx.fillStyle=COLORS[piece.color];cx.shadowColor=COLORS[piece.color];cx.shadowBlur=6;cx.beginPath();cx.roundRect((piece.x+c)*CELL+1,py+1,CELL-2,CELL-2,3);cx.fill();cx.shadowBlur=0;}
+}
+
+function renderNext(){
+  nx.clearRect(0,0,110,70);const s=next.shape,cs=20;
+  const ox=(110-s[0].length*cs)/2,oy=(70-s.length*cs)/2;
+  for(let r=0;r<s.length;r++)for(let c=0;c<s[r].length;c++){if(!s[r][c])continue;nx.fillStyle=COLORS[next.color];nx.shadowColor=COLORS[next.color];nx.shadowBlur=4;nx.beginPath();nx.roundRect(ox+c*cs+1,oy+r*cs+1,cs-2,cs-2,3);nx.fill();nx.shadowBlur=0;}
+}
+
+document.addEventListener('keydown',e=>{
+  if(gameOver){if(e.key===' '){e.preventDefault();initGame();}return;}
+  if(e.key===' '){e.preventDefault();togglePlay();return;}
+  if(!isPlaying)return;
+  switch(e.key){
+    case'ArrowLeft':case'a':e.preventDefault();moveLeft();break;
+    case'ArrowRight':case'd':e.preventDefault();moveRight();break;
+    case'ArrowDown':case's':e.preventDefault();softDrop();break;
+    case'ArrowUp':case'w':e.preventDefault();rotatePiece();break;
+    case'x':e.preventDefault();hardDrop();break;
+  }
+});
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>픽셀 아트 크리에이터</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:20px;user-select:none}
+.top-bar{width:100%;max-width:900px;display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.back{color:rgba(255,255,255,0.4);text-decoration:none;font-size:0.85rem;padding:8px 14px;border-radius:10px;transition:all 0.2s}
+.back:hover{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7)}
+h1{font-size:1.8rem;font-weight:800}
+.btns{display:flex;gap:8px}
+.btn{background:rgba(255,255,255,0.06);border:none;color:rgba(255,255,255,0.7);padding:8px 16px;border-radius:10px;cursor:pointer;font-size:0.8rem;transition:all 0.2s}
+.btn:hover{background:rgba(255,255,255,0.1);color:#fff}
+.btn-danger{background:rgba(239,68,68,0.1);color:#f87171}
+.btn-danger:hover{background:rgba(239,68,68,0.2)}
+.main{display:flex;gap:20px;width:100%;max-width:900px;align-items:flex-start;flex-wrap:wrap}
+.toolbar{display:flex;flex-direction:column;gap:14px;width:200px;min-width:200px}
+.panel{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:14px}
+.panel-title{font-size:0.65rem;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.tool-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.tool-btn{height:36px;border-radius:8px;border:none;background:rgba(255,255,255,0.03);color:rgba(255,255,255,0.4);cursor:pointer;font-size:1rem;transition:all 0.15s}
+.tool-btn:hover{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.6)}
+.tool-btn.active{background:rgba(255,255,255,0.12);color:#fff}
+.action-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.color-current{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.color-swatch{width:40px;height:40px;border-radius:10px;border:1px solid rgba(255,255,255,0.1)}
+.color-input{flex:1;height:32px;border-radius:6px;border:none;cursor:pointer;background:transparent}
+.palette{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
+.pal-btn{width:100%;aspect-ratio:1;border-radius:6px;border:1px solid rgba(255,255,255,0.1);cursor:pointer;transition:transform 0.1s}
+.pal-btn:hover{transform:scale(1.15)}
+.pal-btn.active{border-color:rgba(255,255,255,0.4);box-shadow:0 0 0 2px rgba(255,255,255,0.2)}
+.size-grid{display:flex;flex-wrap:wrap;gap:6px}
+.size-btn{padding:6px 12px;border-radius:8px;border:none;background:rgba(255,255,255,0.03);color:rgba(255,255,255,0.4);cursor:pointer;font-size:0.7rem;transition:all 0.15s}
+.size-btn.active{background:rgba(255,255,255,0.12);color:#fff}
+.canvas-wrap{flex:1;display:flex;justify-content:center}
+.canvas-border{display:inline-block;border-radius:18px;border:1px solid rgba(255,255,255,0.08);background:#0f0f0f;padding:12px}
+canvas{border-radius:12px;cursor:crosshair;display:block}
+.shortcuts{font-size:0.7rem;color:rgba(255,255,255,0.3);line-height:1.8}
+.shortcuts span{color:rgba(255,255,255,0.5)}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <a href="/games.html" class="back">← 게임 허브</a>
+  <h1>픽셀 아트</h1>
+  <div class="btns">
+    <button class="btn" onclick="exportPNG()">📥 PNG 저장</button>
+    <button class="btn btn-danger" onclick="clearCanvas()">🗑 초기화</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="toolbar">
+    <!-- Tools -->
+    <div class="panel">
+      <div class="panel-title">도구</div>
+      <div class="tool-grid">
+        <button class="tool-btn active" id="tool-brush" onclick="setTool('brush')" title="브러시 (B)">🖌</button>
+        <button class="tool-btn" id="tool-eraser" onclick="setTool('eraser')" title="지우개 (E)">🧹</button>
+        <button class="tool-btn" id="tool-fill" onclick="setTool('fill')" title="채우기 (G)">🪣</button>
+        <button class="tool-btn" id="tool-picker" onclick="setTool('picker')" title="스포이드 (I)">💉</button>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="panel">
+      <div class="panel-title">작업</div>
+      <div class="action-grid">
+        <button class="tool-btn" onclick="undo()" title="실행취소 (Ctrl+Z)">↶</button>
+        <button class="tool-btn" onclick="redo()" title="다시실행 (Ctrl+Shift+Z)">↷</button>
+        <button class="tool-btn" id="gridToggle" onclick="toggleGrid()" title="그리드 토글" style="background:rgba(255,255,255,0.12);color:#fff">⊞</button>
+      </div>
+    </div>
+
+    <!-- Color -->
+    <div class="panel">
+      <div class="panel-title">색상</div>
+      <div class="color-current">
+        <div class="color-swatch" id="colorSwatch"></div>
+        <input type="color" class="color-input" id="colorPicker" value="#ef4444">
+      </div>
+      <div class="palette" id="palette"></div>
+    </div>
+
+    <!-- Size -->
+    <div class="panel">
+      <div class="panel-title">캔버스 크기</div>
+      <div class="size-grid" id="sizeGrid"></div>
+    </div>
+
+    <!-- Shortcuts -->
+    <div class="panel">
+      <div class="panel-title">단축키</div>
+      <div class="shortcuts">
+        <span>B</span> 브러시<br>
+        <span>E</span> 지우개<br>
+        <span>G</span> 채우기<br>
+        <span>I</span> 스포이드<br>
+        <span>Ctrl+Z</span> 실행취소<br>
+        <span>Ctrl+Shift+Z</span> 다시실행
+      </div>
+    </div>
+  </div>
+
+  <div class="canvas-wrap">
+    <div class="canvas-border">
+      <canvas id="canvas"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+const PRESETS=['#ef4444','#f97316','#eab308','#22c55e','#06b6d4','#3b82f6','#8b5cf6','#ec4899','#f43f5e','#14b8a6','#84cc16','#a855f7','#ffffff','#a3a3a3','#525252','#000000','#78350f','#7c2d12','#fbbf24','#34d399','#60a5fa','#c084fc','#fde68a','#bbf7d0','#bfdbfe','#e9d5ff','#fb7185','#fecdd3','#713f12','#1e3a5f'];
+const SIZES=[16,24,32,48,64];
+
+const cv=document.getElementById('canvas'), cx=cv.getContext('2d');
+const picker=document.getElementById('colorPicker'), swatch=document.getElementById('colorSwatch');
+
+let gridSize=32, pixels, color='#ef4444', tool='brush', showGrid=true;
+let history=[], histIdx=-1, isDrawing=false;
+let cellSize;
+
+function init(){
+  // Palette
+  const pal=document.getElementById('palette');
+  PRESETS.forEach(c=>{const b=document.createElement('button');b.className='pal-btn'+(color===c?' active':'');b.style.background=c;b.onclick=()=>setColor(c);pal.appendChild(b);});
+  // Sizes
+  const sg=document.getElementById('sizeGrid');
+  SIZES.forEach(s=>{const b=document.createElement('button');b.className='size-btn'+(s===gridSize?' active':'');b.textContent=s+'x'+s;b.onclick=()=>changeSize(s);sg.appendChild(b);});
+  picker.addEventListener('input',e=>setColor(e.target.value));
+  setupCanvas();
+  initPixels();
+}
+
+function initPixels(){
+  pixels=Array.from({length:gridSize},()=>Array(gridSize).fill(''));
+  pushHistory();
+  render();
+}
+
+function setupCanvas(){
+  cellSize=Math.min(Math.floor(560/gridSize),32);
+  cv.width=gridSize*cellSize;
+  cv.height=gridSize*cellSize;
+}
+
+function setColor(c){
+  color=c;picker.value=c;swatch.style.background=c;
+  document.querySelectorAll('.pal-btn').forEach(b=>b.classList.toggle('active',b.style.backgroundColor===c||rgbToHex(b.style.backgroundColor)===c));
+}
+
+function rgbToHex(rgb){if(rgb.startsWith('#'))return rgb;const m=rgb.match(/(\d+)/g);if(!m)return rgb;return'#'+m.slice(0,3).map(x=>(+x).toString(16).padStart(2,'0')).join('');}
+
+function setTool(t){
+  tool=t;
+  ['brush','eraser','fill','picker'].forEach(id=>{
+    const el=document.getElementById('tool-'+id);
+    if(el)el.classList.toggle('active',id===t);
+  });
+}
+
+function toggleGrid(){
+  showGrid=!showGrid;
+  document.getElementById('gridToggle').style.background=showGrid?'rgba(255,255,255,0.12)':'rgba(255,255,255,0.03)';
+  document.getElementById('gridToggle').style.color=showGrid?'#fff':'rgba(255,255,255,0.4)';
+  render();
+}
+
+function changeSize(s){
+  const np=Array.from({length:s},(_, r)=>Array.from({length:s},(_,c)=>r<pixels.length&&c<pixels[0].length?pixels[r][c]:''));
+  gridSize=s;pixels=np;
+  setupCanvas();pushHistory();render();
+  document.querySelectorAll('.size-btn').forEach(b=>b.classList.toggle('active',b.textContent===s+'x'+s));
+}
+
+function pushHistory(){
+  history=history.slice(0,histIdx+1);
+  history.push(pixels.map(r=>[...r]));
+  if(history.length>50)history.shift();
+  histIdx=history.length-1;
+}
+
+function undo(){if(histIdx>0){histIdx--;pixels=history[histIdx].map(r=>[...r]);render();}}
+function redo(){if(histIdx<history.length-1){histIdx++;pixels=history[histIdx].map(r=>[...r]);render();}}
+
+function floodFill(sr,sc,fc){
+  const tc=pixels[sr][sc];if(tc===fc)return;
+  const stack=[[sr,sc]],visited=new Set();
+  while(stack.length){
+    const[r,c]=stack.pop(),k=r+','+c;
+    if(visited.has(k)||r<0||r>=gridSize||c<0||c>=gridSize||pixels[r][c]!==tc)continue;
+    visited.add(k);pixels[r][c]=fc;
+    stack.push([r-1,c],[r+1,c],[r,c-1],[r,c+1]);
+  }
+  pushHistory();render();
+}
+
+function cellAction(r,c){
+  if(tool==='picker'){const pc=pixels[r][c];if(pc)setColor(pc);setTool('brush');return false;}
+  if(tool==='fill'){floodFill(r,c,color);return false;}
+  pixels[r][c]=tool==='eraser'?'':color;
+  render();return true;
+}
+
+function getCell(e){
+  const rect=cv.getBoundingClientRect();
+  const x=e.clientX-rect.left,y=e.clientY-rect.top;
+  const c=Math.floor(x/cellSize),r=Math.floor(y/cellSize);
+  if(r>=0&&r<gridSize&&c>=0&&c<gridSize)return{r,c};
+  return null;
+}
+
+cv.addEventListener('mousedown',e=>{const cell=getCell(e);if(cell){isDrawing=true;cellAction(cell.r,cell.c);}});
+cv.addEventListener('mousemove',e=>{if(!isDrawing||tool==='picker'||tool==='fill')return;const cell=getCell(e);if(cell){pixels[cell.r][cell.c]=tool==='eraser'?'':color;render();}});
+window.addEventListener('mouseup',()=>{if(isDrawing){isDrawing=false;pushHistory();}});
+
+// Touch support
+cv.addEventListener('touchstart',e=>{e.preventDefault();const t=e.touches[0];const cell=getCell(t);if(cell){isDrawing=true;cellAction(cell.r,cell.c);}},{passive:false});
+cv.addEventListener('touchmove',e=>{e.preventDefault();if(!isDrawing||tool==='picker'||tool==='fill')return;const t=e.touches[0];const cell=getCell(t);if(cell){pixels[cell.r][cell.c]=tool==='eraser'?'':color;render();}},{passive:false});
+cv.addEventListener('touchend',()=>{if(isDrawing){isDrawing=false;pushHistory();}});
+
+function render(){
+  const size=gridSize*cellSize;
+  cx.clearRect(0,0,size,size);
+  for(let r=0;r<gridSize;r++)for(let c=0;c<gridSize;c++){
+    const x=c*cellSize,y=r*cellSize;
+    if(!pixels[r][c]){cx.fillStyle=(r+c)%2===0?'#1a1a1a':'#222';} else{cx.fillStyle=pixels[r][c];}
+    cx.fillRect(x,y,cellSize,cellSize);
+  }
+  if(showGrid&&cellSize>4){
+    cx.strokeStyle='rgba(255,255,255,0.06)';cx.lineWidth=0.5;
+    for(let r=0;r<=gridSize;r++){cx.beginPath();cx.moveTo(0,r*cellSize);cx.lineTo(size,r*cellSize);cx.stroke();}
+    for(let c=0;c<=gridSize;c++){cx.beginPath();cx.moveTo(c*cellSize,0);cx.lineTo(c*cellSize,size);cx.stroke();}
+  }
+}
+
+function exportPNG(){
+  const c=document.createElement('canvas');
+  const scale=Math.max(1,Math.floor(512/gridSize));
+  c.width=gridSize*scale;c.height=gridSize*scale;
+  const ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);
+  for(let r=0;r<gridSize;r++)for(let col=0;col<gridSize;col++){
+    if(pixels[r][col]){ctx.fillStyle=pixels[r][col];ctx.fillRect(col*scale,r*scale,scale,scale);}
+  }
+  const a=document.createElement('a');a.download=`pixel-art-${gridSize}x${gridSize}.png`;a.href=c.toDataURL('image/png');a.click();
+}
+
+function clearCanvas(){pixels=Array.from({length:gridSize},()=>Array(gridSize).fill(''));pushHistory();render();}
+
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();e.shiftKey?redo():undo();return;}
+  switch(e.key){case'b':setTool('brush');break;case'e':setTool('eraser');break;case'g':setTool('fill');break;case'i':setTool('picker');break;}
+});
+
+swatch.style.background=color;
+init();
+</script>
+</body>
+</html>

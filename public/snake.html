@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>스네이크 게임</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:20px;user-select:none}
+.top-bar{width:100%;max-width:520px;display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.back{color:rgba(255,255,255,0.4);text-decoration:none;font-size:0.85rem;padding:8px 14px;border-radius:10px;transition:all 0.2s}
+.back:hover{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7)}
+h1{font-size:1.8rem;font-weight:800}
+.btns{display:flex;gap:8px}
+.btn{background:rgba(255,255,255,0.06);border:none;color:rgba(255,255,255,0.7);padding:8px 16px;border-radius:10px;cursor:pointer;font-size:0.8rem;transition:all 0.2s}
+.btn:hover{background:rgba(255,255,255,0.1);color:#fff}
+.scores{display:flex;gap:12px;margin-bottom:20px;width:100%;max-width:520px}
+.score-box{flex:1;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:12px;text-align:center}
+.score-label{font-size:0.65rem;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px}
+.score-val{font-size:1.4rem;font-weight:700}
+.score-val.sc{color:#4ade80}
+.score-val.best{color:#facc15}
+.score-val.len{color:#34d399}
+.game-wrap{position:relative;margin-bottom:20px}
+canvas{border-radius:18px;border:1px solid rgba(255,255,255,0.08);display:block}
+.overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);border-radius:18px;z-index:10}
+.overlay h2{font-size:2rem;margin-bottom:8px}
+.overlay p{color:rgba(255,255,255,0.5);margin-bottom:16px}
+.overlay .btn{padding:12px 28px;font-size:0.95rem;background:rgba(34,197,94,0.8);color:#fff;font-weight:600;border-radius:12px}
+.overlay .btn:hover{background:#22c55e}
+.dpad{display:none;margin-bottom:20px}
+@media(max-width:768px){.dpad{display:grid;grid-template-columns:repeat(3,60px);gap:8px;justify-content:center}}
+.dpad button{width:60px;height:60px;border-radius:14px;background:rgba(255,255,255,0.06);border:none;color:rgba(255,255,255,0.6);font-size:1.4rem;cursor:pointer;transition:background 0.15s}
+.dpad button:active{background:rgba(255,255,255,0.15)}
+.dpad .empty{visibility:hidden}
+.info{max-width:520px;width:100%;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:16px}
+.info h3{font-size:0.8rem;color:rgba(255,255,255,0.5);margin-bottom:8px}
+.info p{font-size:0.75rem;color:rgba(255,255,255,0.3);line-height:1.8}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <a href="/games.html" class="back">← 게임 허브</a>
+  <h1>스네이크</h1>
+  <div class="btns">
+    <button class="btn" id="playBtn" onclick="togglePlay()">▶ 시작</button>
+    <button class="btn" onclick="initGame()">↺ 리셋</button>
+  </div>
+</div>
+
+<div class="scores">
+  <div class="score-box"><div class="score-label">점수</div><div class="score-val sc" id="score">0</div></div>
+  <div class="score-box"><div class="score-label">최고 점수</div><div class="score-val best" id="best">0</div></div>
+  <div class="score-box"><div class="score-label">길이</div><div class="score-val len" id="len">1</div></div>
+</div>
+
+<div class="game-wrap">
+  <canvas id="canvas" width="480" height="480"></canvas>
+  <div class="overlay" id="overStart">
+    <h2>🐍 스네이크</h2>
+    <p>방향키를 누르면 시작됩니다</p>
+  </div>
+  <div class="overlay" id="overDead" style="display:none">
+    <h2>게임 오버!</h2>
+    <p>점수: <span id="finalScore">0</span></p>
+    <button class="btn" onclick="initGame()">다시 하기</button>
+  </div>
+</div>
+
+<div class="dpad">
+  <div class="empty"></div>
+  <button ontouchstart="changeDir('up')">▲</button>
+  <div class="empty"></div>
+  <button ontouchstart="changeDir('left')">◀</button>
+  <button ontouchstart="changeDir('down')">▼</button>
+  <button ontouchstart="changeDir('right')">▶</button>
+</div>
+
+<div class="info">
+  <h3>조작법</h3>
+  <p>⬆⬇⬅➡ 방향키 또는 WASD로 이동 | Space: 시작/일시정지 | 빨간 먹이를 먹으면 점수 획득</p>
+</div>
+
+<script>
+const G = 20, C = 24, canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+let snake, food, dir, score, bestScore, gameOver, isPlaying, speed, timer;
+
+function init() {
+  bestScore = parseInt(localStorage.getItem('bestSnake') || '0');
+  document.getElementById('best').textContent = bestScore.toLocaleString();
+  initGame();
+}
+
+function initGame() {
+  snake = [{x:10,y:10}]; food = genFood();
+  dir = 'right'; score = 0; gameOver = false; isPlaying = false;
+  speed = 150;
+  if(timer) clearTimeout(timer);
+  document.getElementById('overStart').style.display = 'flex';
+  document.getElementById('overDead').style.display = 'none';
+  document.getElementById('playBtn').textContent = '▶ 시작';
+  render(); update();
+}
+
+function genFood() {
+  let f;
+  do { f = {x:Math.floor(Math.random()*G), y:Math.floor(Math.random()*G)}; }
+  while(snake.some(s => s.x===f.x && s.y===f.y));
+  return f;
+}
+
+function togglePlay() {
+  if(gameOver) { initGame(); return; }
+  isPlaying = !isPlaying;
+  document.getElementById('playBtn').textContent = isPlaying ? '⏸ 일시정지' : '▶ 시작';
+  if(isPlaying) { document.getElementById('overStart').style.display = 'none'; loop(); }
+}
+
+function changeDir(d) {
+  const opp = {up:'down',down:'up',left:'right',right:'left'};
+  if(opp[d] !== dir) {
+    dir = d;
+    if(!isPlaying && !gameOver) {
+      isPlaying = true;
+      document.getElementById('overStart').style.display = 'none';
+      document.getElementById('playBtn').textContent = '⏸ 일시정지';
+      loop();
+    }
+  }
+}
+
+function loop() {
+  if(!isPlaying || gameOver) return;
+  const head = {...snake[0]};
+  switch(dir) {
+    case 'up': head.y--; break;
+    case 'down': head.y++; break;
+    case 'left': head.x--; break;
+    case 'right': head.x++; break;
+  }
+  if(head.x<0||head.x>=G||head.y<0||head.y>=G||snake.some(s=>s.x===head.x&&s.y===head.y)) {
+    gameOver = true; isPlaying = false;
+    document.getElementById('finalScore').textContent = score.toLocaleString();
+    document.getElementById('overDead').style.display = 'flex';
+    document.getElementById('playBtn').textContent = '▶ 시작';
+    return;
+  }
+  snake.unshift(head);
+  if(head.x===food.x && head.y===food.y) {
+    score += 10;
+    speed = Math.max(50, speed - 2);
+    food = genFood();
+    if(score > bestScore) { bestScore = score; localStorage.setItem('bestSnake', bestScore.toString()); }
+  } else { snake.pop(); }
+  update(); render();
+  timer = setTimeout(loop, speed);
+}
+
+function update() {
+  document.getElementById('score').textContent = score.toLocaleString();
+  document.getElementById('best').textContent = bestScore.toLocaleString();
+  document.getElementById('len').textContent = snake.length;
+}
+
+function render() {
+  ctx.clearRect(0,0,G*C,G*C);
+  // Grid
+  ctx.fillStyle='rgba(255,255,255,0.01)'; ctx.fillRect(0,0,G*C,G*C);
+  ctx.strokeStyle='rgba(255,255,255,0.03)'; ctx.lineWidth=0.5;
+  for(let i=0;i<=G;i++){ctx.beginPath();ctx.moveTo(i*C,0);ctx.lineTo(i*C,G*C);ctx.stroke();ctx.beginPath();ctx.moveTo(0,i*C);ctx.lineTo(G*C,i*C);ctx.stroke();}
+  // Food
+  ctx.fillStyle='#ef4444';ctx.shadowColor='#ef4444';ctx.shadowBlur=10;
+  ctx.beginPath();ctx.arc(food.x*C+C/2,food.y*C+C/2,C/2-2,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+  // Snake
+  snake.forEach((s,i)=>{
+    const isHead=i===0, alpha=1-(i/snake.length)*0.5;
+    ctx.fillStyle=isHead?`rgba(74,222,128,${alpha})`:`rgba(34,197,94,${alpha})`;
+    ctx.shadowColor=isHead?'#4ade80':'transparent';ctx.shadowBlur=isHead?8:0;
+    const p=isHead?1:2, rad=isHead?6:4;
+    ctx.beginPath();ctx.roundRect(s.x*C+p,s.y*C+p,C-p*2,C-p*2,rad);ctx.fill();
+  });
+  ctx.shadowBlur=0;
+}
+
+document.addEventListener('keydown', e => {
+  const map = {ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',s:'down',a:'left',d:'right'};
+  if(map[e.key]) { e.preventDefault(); changeDir(map[e.key]); }
+  if(e.key===' ') { e.preventDefault(); togglePlay(); }
+});
+
+init();
+</script>
+</body>
+</html>
