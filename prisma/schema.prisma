@@ -16,14 +16,24 @@ model User {
   email         String    @unique
   name          String
   password      String
-  role          String    @default("staff") // admin, manager, staff
-  department    String?
+  role          String    @default("staff") // admin, manager, staff (하위 호환용)
+  department    String?   // 하위 호환용 문자열 부서명
   phone         String?
   avatar        String?
   isActive      Boolean   @default(true)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  // RBAC 관계 (Phase 1-B)
+  roleId        String?
+  roleRef       Role?     @relation(fields: [roleId], references: [id])
+  departmentId  String?
+  departmentRef Department? @relation(fields: [departmentId], references: [id])
+  position      String?   // 직급: 사원, 주임, 대리, 과장, 차장, 부장, 이사, 대표
+  bio           String?
+  lastLoginAt   DateTime?
+
+  // 기존 관계
   customers      Customer[]
   communications Communication[]
   vocRecords     VOC[]
@@ -31,6 +41,114 @@ model User {
   emailTemplates EmailTemplate[]
   serviceTickets ServiceTicket[]
   shipments      Shipment[]
+
+  // 새 관계 (Phase 2)
+  notifications       Notification[]
+  posts               Post[]
+  postComments        PostComment[]
+  projectsOwned       Project[]       @relation("ProjectOwner")
+  projectMembers      ProjectMember[]
+  tasksAssigned       Task[]          @relation("TaskAssignee")
+  tasksCreated        Task[]          @relation("TaskCreator")
+  taskComments        TaskComment[]
+  approvalsRequested  Approval[]      @relation("ApprovalRequester")
+  approvalSteps       ApprovalStep[]
+  calendarEvents      CalendarEvent[] @relation("EventCreator")
+  eventAttendees      EventAttendee[]
+  documents           Document[]
+  meetingsOrganized   Meeting[]       @relation("MeetingOrganizer")
+  meetingAttendees    MeetingAttendee[]
+  meetingMinutes      MeetingMinute[]
+  meetingActionItems  MeetingActionItem[] @relation("ActionAssignee")
+  wikiPages           WikiPage[]
+  channelMembers      ChannelMember[]
+  messages            Message[]
+}
+
+// ============================================
+// 부서 관리 (Phase 1-B)
+// ============================================
+model Department {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  code        String   @unique  // sales, research, domestic, overseas, management, marketing, design, production, as, quality, qa
+  description String?
+  headId      String?  // 부서장 userId
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users               User[]
+  departmentPermissions DepartmentPermission[]
+}
+
+// ============================================
+// 역할 관리 (Phase 1-B)
+// ============================================
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique // 시스템관리자, 부서장, 팀장, 직원
+  code        String   @unique // system_admin, dept_head, team_lead, staff
+  description String?
+  level       Int      @default(0) // 권한 레벨 (높을수록 높음)
+  isSystem    Boolean  @default(false) // 시스템 기본 역할
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users           User[]
+  rolePermissions RolePermission[]
+}
+
+// ============================================
+// 권한 관리 (Phase 1-B)
+// ============================================
+model Permission {
+  id          String   @id @default(cuid())
+  module      String   // board, projects, approvals, calendar, documents, meetings, wiki, chat, reports, sales, service, customers, settings
+  action      String   // read, create, update, delete, manage
+  description String?
+  createdAt   DateTime @default(now())
+
+  rolePermissions       RolePermission[]
+  departmentPermissions DepartmentPermission[]
+
+  @@unique([module, action])
+}
+
+model RolePermission {
+  id           String     @id @default(cuid())
+  roleId       String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+}
+
+model DepartmentPermission {
+  id             String     @id @default(cuid())
+  departmentId   String
+  department     Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  permissionId   String
+  permission     Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([departmentId, permissionId])
+}
+
+// ============================================
+// 알림 시스템 (Phase 1-B)
+// ============================================
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // approval, task, mention, system, board, meeting, calendar
+  title     String
+  message   String
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
 }
 
 // ============================================
@@ -188,29 +306,25 @@ model ServiceTicket {
   customer        Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
   assignedToId    String?
   assignedTo      User?     @relation(fields: [assignedToId], references: [id])
-  category        String    // repair, exchange, refund, inspection, other
-  priority        String    @default("medium") // urgent, high, medium, low
+  category        String
+  priority        String    @default("medium")
   title           String
   description     String
-  status          String    @default("received") // received, inspecting, in_repair, waiting_parts, completed, returned, closed
-  // 제품 정보
+  status          String    @default("received")
   productName     String?
-  serialIncoming  String?   // 입고 시리얼 번호
-  serialOutgoing  String?   // 출고 시리얼 번호
-  // 비용 및 부품
+  serialIncoming  String?
+  serialOutgoing  String?
   repairCost      Float?    @default(0)
   partsCost       Float?    @default(0)
-  partsUsed       String?   // JSON: 투입 부품 목록
-  // 일정
-  receivedAt      DateTime  @default(now()) // 접수일
-  inspectedAt     DateTime? // 검수일
-  repairedAt      DateTime? // 수리 완료일
-  returnedAt      DateTime? // 고객 리턴일
-  estimatedDays   Int?      // 예상 소요일
-  actualDays      Int?      // 실제 소요일
-  // 물류
-  returnTrackingNo  String? // 반송 송장번호
-  returnCourier     String? // 반송 택배사
+  partsUsed       String?
+  receivedAt      DateTime  @default(now())
+  inspectedAt     DateTime?
+  repairedAt      DateTime?
+  returnedAt      DateTime?
+  estimatedDays   Int?
+  actualDays      Int?
+  returnTrackingNo  String?
+  returnCourier     String?
   memo            String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -223,14 +337,14 @@ model Inventory {
   id            String    @id @default(cuid())
   sku           String    @unique
   productName   String
-  category      String?   // skincare, makeup, haircare, bodycare, etc.
+  category      String?
   currentStock  Int       @default(0)
-  minStock      Int       @default(10) // 최소 재고 알림 기준
+  minStock      Int       @default(10)
   maxStock      Int       @default(1000)
-  warehouse     String?   // 창고 위치
-  unit          String    @default("EA") // EA, BOX, SET
+  warehouse     String?
+  unit          String    @default("EA")
   unitPrice     Float     @default(0)
-  status        String    @default("in_stock") // in_stock, low_stock, out_of_stock
+  status        String    @default("in_stock")
   lastRestocked DateTime?
   memo          String?
   createdAt     DateTime  @default(now())
@@ -246,11 +360,11 @@ model InventoryMovement {
   id            String    @id @default(cuid())
   inventoryId   String
   inventory     Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
-  type          String    // inbound, outbound, adjustment, return
+  type          String
   quantity      Int
-  reason        String?   // 입출고 사유
-  reference     String?   // 관련 주문번호/AS번호
-  teamDivision  String?   // 국내사업팀, 해외사업팀 등
+  reason        String?
+  reference     String?
+  teamDivision  String?
   createdAt     DateTime  @default(now())
 }
 
@@ -264,14 +378,14 @@ model Shipment {
   customer        Customer? @relation(fields: [customerId], references: [id])
   userId          String?
   user            User?     @relation(fields: [userId], references: [id])
-  type            String    @default("outbound") // outbound, inbound, internal, as_return
-  courier         String?   // 택배사: CJ대한통운, 한진, 롯데, 우체국, FedEx, DHL, EMS 등
-  trackingNumber  String?   // 송장번호
-  teamDivision    String?   // 국내영업팀, 해외영업팀, AS팀 등
-  status          String    @default("preparing") // preparing, shipped, in_transit, delivered, returned
-  origin          String?   // 출발지
-  destination     String?   // 도착지
-  items           String?   // JSON: 배송 품목
+  type            String    @default("outbound")
+  courier         String?
+  trackingNumber  String?
+  teamDivision    String?
+  status          String    @default("preparing")
+  origin          String?
+  destination     String?
+  items           String?
   shippedAt       DateTime?
   deliveredAt     DateTime?
   memo            String?
@@ -284,7 +398,7 @@ model Shipment {
 // ============================================
 model FAQ {
   id            String    @id @default(cuid())
-  category      String    // product, shipping, as, payment, general
+  category      String
   question      String
   answer        String
   sortOrder     Int       @default(0)
@@ -292,4 +406,376 @@ model FAQ {
   isPublished   Boolean   @default(true)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+}
+
+// ============================================
+// 공지사항/게시판 (Phase 2 - 모듈 1)
+// ============================================
+model Post {
+  id          String    @id @default(cuid())
+  authorId    String
+  author      User      @relation(fields: [authorId], references: [id])
+  category    String    @default("general") // notice, general, department, event
+  title       String
+  content     String
+  isPinned    Boolean   @default(false)
+  isPublished Boolean   @default(true)
+  viewCount   Int       @default(0)
+  attachments String?   // JSON array of file URLs
+  departmentScope String? // null=전사, 특정 부서코드
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  comments    PostComment[]
+}
+
+model PostComment {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  content   String
+  parentId  String?  // 답글 (대댓글)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ============================================
+// 프로젝트 관리 (Phase 2 - 모듈 2)
+// ============================================
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  status      String   @default("planning") // planning, active, on_hold, completed, cancelled
+  priority    String   @default("medium")
+  ownerId     String
+  owner       User     @relation("ProjectOwner", fields: [ownerId], references: [id])
+  startDate   DateTime?
+  endDate     DateTime?
+  progress    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members     ProjectMember[]
+  tasks       Task[]
+}
+
+model ProjectMember {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  role      String   @default("member") // owner, admin, member, viewer
+  joinedAt  DateTime @default(now())
+
+  @@unique([projectId, userId])
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  status      String   @default("todo") // todo, in_progress, review, done
+  priority    String   @default("medium")
+  assigneeId  String?
+  assignee    User?    @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  creatorId   String
+  creator     User     @relation("TaskCreator", fields: [creatorId], references: [id])
+  dueDate     DateTime?
+  labels      String?  // JSON array
+  sortOrder   Int      @default(0)
+  parentId    String?  // 하위 태스크
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  comments    TaskComment[]
+}
+
+model TaskComment {
+  id       String   @id @default(cuid())
+  taskId   String
+  task     Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  authorId String
+  author   User     @relation(fields: [authorId], references: [id])
+  content  String
+  createdAt DateTime @default(now())
+}
+
+// ============================================
+// 결재 시스템 (Phase 2 - 모듈 3)
+// ============================================
+model ApprovalTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   // leave, purchase, travel, expense, general
+  description String?
+  steps       String   // JSON: [{order, roleCode, departmentCode}]
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  approvals   Approval[]
+}
+
+model Approval {
+  id          String   @id @default(cuid())
+  templateId  String?
+  template    ApprovalTemplate? @relation(fields: [templateId], references: [id])
+  requesterId String
+  requester   User     @relation("ApprovalRequester", fields: [requesterId], references: [id])
+  type        String   // leave, purchase, travel, expense, general
+  title       String
+  content     String
+  status      String   @default("pending") // pending, approved, rejected, cancelled
+  attachments String?  // JSON
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  steps       ApprovalStep[]
+}
+
+model ApprovalStep {
+  id         String    @id @default(cuid())
+  approvalId String
+  approval   Approval  @relation(fields: [approvalId], references: [id], onDelete: Cascade)
+  approverId String
+  approver   User      @relation(fields: [approverId], references: [id])
+  stepOrder  Int
+  status     String    @default("pending") // pending, approved, rejected
+  comment    String?
+  decidedAt  DateTime?
+  createdAt  DateTime  @default(now())
+}
+
+// ============================================
+// 캘린더 (Phase 2 - 모듈 4)
+// ============================================
+model CalendarEvent {
+  id            String    @id @default(cuid())
+  title         String
+  description   String?
+  type          String    @default("schedule") // schedule, meeting, deadline, holiday, personal
+  startDate     DateTime
+  endDate       DateTime
+  allDay        Boolean   @default(false)
+  location      String?
+  color         String?
+  creatorId     String
+  creator       User      @relation("EventCreator", fields: [creatorId], references: [id])
+  isRecurring   Boolean   @default(false)
+  recurrenceRule String?
+  departmentScope String? // null=전사
+  googleEventId String?   // Google Calendar 연동
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  attendees     EventAttendee[]
+}
+
+model EventAttendee {
+  id       String @id @default(cuid())
+  eventId  String
+  event    CalendarEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User   @relation(fields: [userId], references: [id])
+  status   String @default("pending") // pending, accepted, declined
+
+  @@unique([eventId, userId])
+}
+
+// ============================================
+// 문서 관리 (Phase 2 - 모듈 5)
+// ============================================
+model DocumentFolder {
+  id          String   @id @default(cuid())
+  name        String
+  parentId    String?
+  departmentScope String? // null=공유, 부서코드=부서별
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  documents   Document[]
+}
+
+model Document {
+  id          String   @id @default(cuid())
+  folderId    String?
+  folder      DocumentFolder? @relation(fields: [folderId], references: [id])
+  uploaderId  String
+  uploader    User     @relation(fields: [uploaderId], references: [id])
+  name        String
+  fileUrl     String
+  fileSize    Int      @default(0)
+  mimeType    String?
+  description String?
+  tags        String?
+  downloadCount Int    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  versions    DocumentVersion[]
+}
+
+model DocumentVersion {
+  id         String   @id @default(cuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  version    Int
+  fileUrl    String
+  fileSize   Int      @default(0)
+  changelog  String?
+  createdAt  DateTime @default(now())
+}
+
+// ============================================
+// 회의 관리 (Phase 2 - 모듈 6)
+// ============================================
+model Meeting {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  organizerId String
+  organizer   User     @relation("MeetingOrganizer", fields: [organizerId], references: [id])
+  location    String?
+  startTime   DateTime
+  endTime     DateTime
+  status      String   @default("scheduled") // scheduled, in_progress, completed, cancelled
+  type        String   @default("general") // general, standup, review, planning, retrospective
+  calendarEventId String? // 캘린더 연동
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  attendees   MeetingAttendee[]
+  minutes     MeetingMinute[]
+  actionItems MeetingActionItem[]
+}
+
+model MeetingAttendee {
+  id        String @id @default(cuid())
+  meetingId String
+  meeting   Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User   @relation(fields: [userId], references: [id])
+  status    String @default("pending") // pending, accepted, declined
+
+  @@unique([meetingId, userId])
+}
+
+model MeetingMinute {
+  id        String   @id @default(cuid())
+  meetingId String
+  meeting   Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MeetingActionItem {
+  id         String    @id @default(cuid())
+  meetingId  String
+  meeting    Meeting   @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  assigneeId String
+  assignee   User      @relation("ActionAssignee", fields: [assigneeId], references: [id])
+  title      String
+  status     String    @default("pending") // pending, in_progress, done
+  dueDate    DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+// ============================================
+// 위키 (Phase 2 - 모듈 7)
+// ============================================
+model WikiPage {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  content   String
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  parentId  String?  // 트리 구조
+  tags      String?  // JSON array
+  sortOrder Int      @default(0)
+  isPublished Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  versions  WikiVersion[]
+}
+
+model WikiVersion {
+  id        String   @id @default(cuid())
+  pageId    String
+  page      WikiPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  version   Int
+  content   String
+  changelog String?
+  createdAt DateTime @default(now())
+}
+
+// ============================================
+// 팀 메시지 (Phase 2 - 모듈 8)
+// ============================================
+model Channel {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  type        String   @default("group") // group, direct, department
+  departmentScope String?
+  isArchived  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members     ChannelMember[]
+  messages    Message[]
+}
+
+model ChannelMember {
+  id        String   @id @default(cuid())
+  channelId String
+  channel   Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  role      String   @default("member") // admin, member
+  lastReadAt DateTime?
+  joinedAt  DateTime @default(now())
+
+  @@unique([channelId, userId])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  channelId String
+  channel   Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  senderId  String
+  sender    User     @relation(fields: [senderId], references: [id])
+  content   String
+  type      String   @default("text") // text, file, system
+  fileUrl   String?
+  fileName  String?
+  isEdited  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ============================================
+// 리포트 템플릿 (Phase 2 - 모듈 9)
+// ============================================
+model ReportTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  type        String   // sales, service, customer, inventory, project
+  config      String   // JSON: 차트 설정, 필터 등
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

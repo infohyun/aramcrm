@@ -13,6 +13,17 @@ const protectedPaths = [
   "/import-export",
   "/integrations",
   "/settings",
+  // Phase 2 모듈
+  "/board",
+  "/projects",
+  "/approvals",
+  "/calendar",
+  "/documents",
+  "/meetings",
+  "/wiki",
+  "/chat",
+  "/reports",
+  "/sales",
 ];
 
 // Public paths that should not be protected

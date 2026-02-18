@@ -11,7 +11,10 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get("status");
     const priority = searchParams.get("priority");
     const customerId = searchParams.get("customerId");
+    const assignedToId = searchParams.get("assignedToId");
     const search = searchParams.get("search");
+    const sortBy = searchParams.get("sortBy") || "createdAt";
+    const sortOrder = searchParams.get("sortOrder") || "desc";
 
     const skip = (page - 1) * limit;
 
@@ -21,7 +24,13 @@ export async function GET(request: NextRequest) {
       where.category = category;
     }
     if (status) {
-      where.status = status;
+      // 콤마로 구분된 여러 상태 지원
+      const statuses = status.split(",");
+      if (statuses.length > 1) {
+        where.status = { in: statuses };
+      } else {
+        where.status = status;
+      }
     }
     if (priority) {
       where.priority = priority;
@@ -29,13 +38,28 @@ export async function GET(request: NextRequest) {
     if (customerId) {
       where.customerId = customerId;
     }
+    if (assignedToId) {
+      where.assignedToId = assignedToId;
+    }
     if (search) {
       where.OR = [
         { title: { contains: search } },
         { description: { contains: search } },
         { ticketNumber: { contains: search } },
+        { productName: { contains: search } },
+        { serialIncoming: { contains: search } },
         { customer: { name: { contains: search } } },
       ];
+    }
+
+    // 정렬 설정
+    const orderBy: Record<string, string> = {};
+    if (sortBy === "priority") {
+      orderBy.priority = sortOrder;
+    } else if (sortBy === "receivedAt") {
+      orderBy.receivedAt = sortOrder;
+    } else {
+      orderBy.createdAt = sortOrder;
     }
 
     const [tickets, total] = await Promise.all([
@@ -48,6 +72,7 @@ export async function GET(request: NextRequest) {
               name: true,
               email: true,
               phone: true,
+              mobile: true,
               company: true,
             },
           },
@@ -58,14 +83,14 @@ export async function GET(request: NextRequest) {
             },
           },
         },
-        orderBy: { createdAt: "desc" },
+        orderBy,
         skip,
         take: limit,
       }),
       prisma.serviceTicket.count({ where }),
     ]);
 
-    // Also get stats
+    // 상태별 통계
     const [
       totalCount,
       receivedCount,
@@ -74,6 +99,7 @@ export async function GET(request: NextRequest) {
       waitingPartsCount,
       completedCount,
       returnedCount,
+      closedCount,
     ] = await Promise.all([
       prisma.serviceTicket.count(),
       prisma.serviceTicket.count({ where: { status: "received" } }),
@@ -82,16 +108,48 @@ export async function GET(request: NextRequest) {
       prisma.serviceTicket.count({ where: { status: "waiting_parts" } }),
       prisma.serviceTicket.count({ where: { status: "completed" } }),
       prisma.serviceTicket.count({ where: { status: "returned" } }),
+      prisma.serviceTicket.count({ where: { status: "closed" } }),
     ]);
+
+    // 긴급 건수
+    const urgentCount = await prisma.serviceTicket.count({
+      where: {
+        priority: "urgent",
+        status: { notIn: ["completed", "returned", "closed"] },
+      },
+    });
+
+    // 오늘 접수된 건수
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayReceivedCount = await prisma.serviceTicket.count({
+      where: {
+        receivedAt: { gte: today },
+      },
+    });
+
+    // 오늘 완료된 건수
+    const todayCompletedCount = await prisma.serviceTicket.count({
+      where: {
+        repairedAt: { gte: today },
+      },
+    });
 
     return NextResponse.json({
       data: tickets,
       stats: {
         total: totalCount,
         received: receivedCount,
+        inspecting: inspectingCount,
+        inRepair: inRepairCount,
+        waitingParts: waitingPartsCount,
         inProgress: inspectingCount + inRepairCount + waitingPartsCount,
         completed: completedCount,
         returned: returnedCount,
+        closed: closedCount,
+        urgent: urgentCount,
+        todayReceived: todayReceivedCount,
+        todayCompleted: todayCompletedCount,
       },
       pagination: {
         page,
@@ -127,9 +185,9 @@ export async function POST(request: NextRequest) {
       memo,
     } = body;
 
-    if (!customerId || !category || !title || !description) {
+    if (!customerId || !category || !title) {
       return NextResponse.json(
-        { error: "필수 항목을 모두 입력해주세요. (고객, 카테고리, 제목, 설명)" },
+        { error: "필수 항목을 모두 입력해주세요. (고객, 카테고리, 제목)" },
         { status: 400 }
       );
     }
@@ -146,11 +204,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Auto-generate ticketNumber: AS-{YYYYMMDD}-{NNN}
-    const today = new Date();
+    const now = new Date();
     const dateStr =
-      today.getFullYear().toString() +
-      (today.getMonth() + 1).toString().padStart(2, "0") +
-      today.getDate().toString().padStart(2, "0");
+      now.getFullYear().toString() +
+      (now.getMonth() + 1).toString().padStart(2, "0") +
+      now.getDate().toString().padStart(2, "0");
     const prefix = `AS-${dateStr}-`;
 
     const lastTicket = await prisma.serviceTicket.findFirst({
@@ -174,7 +232,7 @@ export async function POST(request: NextRequest) {
         customerId,
         category,
         title,
-        description,
+        description: description || "",
         priority,
         status: "received",
         productName: productName || null,
@@ -190,6 +248,7 @@ export async function POST(request: NextRequest) {
             name: true,
             email: true,
             phone: true,
+            mobile: true,
             company: true,
           },
         },
