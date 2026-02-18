@@ -110,7 +110,7 @@ export async function POST(
         status: status || "todo",
         priority: priority || "medium",
         assigneeId: assigneeId || null,
-        creatorId: session.user.id,
+        creatorId: session.user!.id!,
         dueDate: dueDate ? new Date(dueDate) : null,
         labels: labels ? JSON.stringify(labels) : null,
       },

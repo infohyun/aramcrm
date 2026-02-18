@@ -24,7 +24,7 @@ export async function GET(
       where: {
         channelId_userId: {
           channelId: id,
-          userId: session.user.id,
+          userId: session.user!.id!,
         },
       },
     });
@@ -62,7 +62,7 @@ export async function GET(
       where: {
         channelId_userId: {
           channelId: id,
-          userId: session.user.id,
+          userId: session.user!.id!,
         },
       },
       data: {
@@ -115,7 +115,7 @@ export async function POST(
       where: {
         channelId_userId: {
           channelId: id,
-          userId: session.user.id,
+          userId: session.user!.id!,
         },
       },
     });
@@ -130,7 +130,7 @@ export async function POST(
     const message = await prisma.message.create({
       data: {
         channelId: id,
-        senderId: session.user.id,
+        senderId: session.user!.id!,
         content: content.trim(),
         type: type || "text",
       },

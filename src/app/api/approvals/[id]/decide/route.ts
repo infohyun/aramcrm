@@ -70,7 +70,7 @@ export async function POST(
     }
 
     // Verify the current user is the approver for this step
-    if (currentStep.approverId !== session.user.id) {
+    if (currentStep.approverId !== session.user!.id!) {
       return NextResponse.json(
         { error: "현재 결재 순서가 아닙니다. 본인 차례에 결재할 수 있습니다." },
         { status: 403 }

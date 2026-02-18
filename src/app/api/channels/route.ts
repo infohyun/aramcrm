@@ -10,7 +10,7 @@ export async function GET() {
       return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
     }
 
-    const userId = session.user.id;
+    const userId = session.user!.id!;
 
     // 사용자가 멤버인 채널 목록 조회
     const channels = await prisma.channel.findMany({
@@ -112,13 +112,13 @@ export async function POST(request: NextRequest) {
 
     // 채널 생성 + 생성자를 admin으로 추가
     const memberCreateData = [
-      { userId: session.user.id, role: "admin" },
+      { userId: session.user!.id!, role: "admin" },
     ];
 
     // 추가 멤버가 있으면 포함
     if (memberIds && Array.isArray(memberIds)) {
       for (const memberId of memberIds) {
-        if (memberId !== session.user.id) {
+        if (memberId !== session.user!.id!) {
           memberCreateData.push({ userId: memberId, role: "member" });
         }
       }
@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
     await prisma.message.create({
       data: {
         channelId: channel.id,
-        senderId: session.user.id,
+        senderId: session.user!.id!,
         content: `${session.user.name || "사용자"}님이 채널을 생성했습니다.`,
         type: "system",
       },

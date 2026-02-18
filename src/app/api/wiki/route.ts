@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
         slug,
         title: title.trim(),
         content,
-        authorId: session.user.id,
+        authorId: session.user!.id!,
         parentId: parentId || null,
         tags: tags || null,
         sortOrder: sortOrder || 0,

@@ -23,7 +23,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const updatedUser = await prisma.user.update({
-      where: { id: session.user.id },
+      where: { id: session.user!.id! },
       data: {
         name: name.trim(),
         phone: phone?.trim() || null,

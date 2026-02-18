@@ -44,7 +44,7 @@ export async function GET(
     }
 
     // 멤버인지 확인
-    const isMember = channel.members.some((m) => m.userId === session.user.id);
+    const isMember = channel.members.some((m) => m.userId === session.user!.id);
     if (!isMember) {
       return NextResponse.json(
         { error: "이 채널에 접근할 권한이 없습니다." },
@@ -56,7 +56,7 @@ export async function GET(
     await prisma.channelMember.updateMany({
       where: {
         channelId: id,
-        userId: session.user.id,
+        userId: session.user!.id!,
       },
       data: {
         lastReadAt: new Date(),
@@ -104,7 +104,7 @@ export async function PUT(
     }
 
     // admin 권한 확인
-    const membership = channel.members.find((m) => m.userId === session.user.id);
+    const membership = channel.members.find((m) => m.userId === session.user!.id);
     if (!membership || membership.role !== "admin") {
       return NextResponse.json(
         { error: "채널 수정 권한이 없습니다." },

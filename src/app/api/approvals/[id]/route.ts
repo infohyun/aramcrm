@@ -96,7 +96,7 @@ export async function PUT(
     }
 
     // Only the requester can update their own approval
-    if (existing.requesterId !== session.user.id) {
+    if (existing.requesterId !== session.user!.id!) {
       return NextResponse.json(
         { error: "본인이 요청한 결재만 수정할 수 있습니다." },
         { status: 403 }

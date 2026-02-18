@@ -127,12 +127,12 @@ export async function POST(request: NextRequest) {
         description: description || null,
         status: status || "planning",
         priority: priority || "medium",
-        ownerId: session.user.id,
+        ownerId: session.user!.id!,
         startDate: startDate ? new Date(startDate) : null,
         endDate: endDate ? new Date(endDate) : null,
         members: {
           create: {
-            userId: session.user.id,
+            userId: session.user!.id!,
             role: "owner",
           },
         },

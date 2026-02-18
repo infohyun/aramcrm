@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
 
     const post = await prisma.post.create({
       data: {
-        authorId: session.user.id,
+        authorId: session.user!.id!,
         category: category || "general",
         title,
         content,

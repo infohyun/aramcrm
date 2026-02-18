@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
         allDay,
         location: location || null,
         color: color || null,
-        creatorId: session.user.id,
+        creatorId: session.user!.id!,
         attendees:
           attendeeIds && attendeeIds.length > 0
             ? {

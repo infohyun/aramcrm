@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "20");
     const skip = (page - 1) * limit;
 
-    const userId = session.user.id;
+    const userId = session.user!.id!;
 
     const where: Record<string, unknown> = {};
 
@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
 
     const approval = await prisma.approval.create({
       data: {
-        requesterId: session.user.id,
+        requesterId: session.user!.id!,
         type,
         title,
         content,

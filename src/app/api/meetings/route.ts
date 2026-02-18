@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
         startTime: new Date(startTime),
         endTime: new Date(endTime),
         location: location || null,
-        organizerId: session.user.id,
+        organizerId: session.user!.id!,
         status: "scheduled",
         attendees: {
           create: (attendeeIds || []).map((userId: string) => ({

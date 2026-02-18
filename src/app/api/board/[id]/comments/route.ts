@@ -77,7 +77,7 @@ export async function POST(
     const comment = await prisma.postComment.create({
       data: {
         postId: id,
-        authorId: session.user.id,
+        authorId: session.user!.id!,
         content: content.trim(),
         parentId: parentId || null,
       },
