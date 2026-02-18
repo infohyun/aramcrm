@@ -5,7 +5,7 @@ import { useNotificationStore } from '@/stores/notificationStore';
 import { Bell, ArrowRight } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import Link from 'next/link';
+import { useNotificationStore as useNS } from '@/stores/notificationStore';
 
 const typeColors: Record<string, string> = {
   approval: 'bg-indigo-500',
@@ -18,7 +18,7 @@ const typeColors: Record<string, string> = {
 };
 
 export default function RecentActivityWidget() {
-  const { notifications } = useNotificationStore();
+  const { notifications } = useNS();
   const [activities, setActivities] = useState(notifications.slice(0, 8));
 
   useEffect(() => {
@@ -29,9 +29,9 @@ export default function RecentActivityWidget() {
     <div className="bg-white rounded-xl border border-[var(--card-border)] p-5">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-semibold text-gray-900">최근 활동</h3>
-        <Link href="#" className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1">
+        <a href="/board" className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1">
           전체 보기 <ArrowRight size={12} />
-        </Link>
+        </a>
       </div>
       {activities.length === 0 ? (
         <div className="text-center py-6">

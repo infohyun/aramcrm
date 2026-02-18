@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import {
   BarChart3,
   Download,
+  Printer,
   Loader2,
   TrendingUp,
   DollarSign,
@@ -418,18 +419,27 @@ export default function ReportsPage() {
                 </h1>
               </div>
             </div>
-            <button
-              onClick={handleExport}
-              disabled={exporting || loading}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {exporting ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Download className="w-4 h-4" />
-              )}
-              CSV 내보내기
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => window.print()}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors shadow-sm no-print"
+              >
+                <Printer className="w-4 h-4" />
+                인쇄 / PDF
+              </button>
+              <button
+                onClick={handleExport}
+                disabled={exporting || loading}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed no-print"
+              >
+                {exporting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4" />
+                )}
+                CSV 내보내기
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   User,
   Lock,
@@ -11,9 +11,15 @@ import {
   Eye,
   EyeOff,
   CheckCircle2,
+  Palette,
+  Sun,
+  Moon,
+  Upload,
+  Camera,
 } from "lucide-react";
+import { useTheme } from "@/components/ThemeProvider";
 
-type TabId = "profile" | "password" | "notifications" | "system";
+type TabId = "profile" | "password" | "notifications" | "system" | "appearance";
 
 interface Tab {
   id: TabId;
@@ -25,11 +31,13 @@ const tabs: Tab[] = [
   { id: "profile", label: "내 프로필", icon: User },
   { id: "password", label: "비밀번호 변경", icon: Lock },
   { id: "notifications", label: "알림 설정", icon: Bell },
+  { id: "appearance", label: "외관 설정", icon: Palette },
   { id: "system", label: "시스템 설정", icon: Building2 },
 ];
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<TabId>("profile");
+  const { theme, setTheme } = useTheme();
 
   // Profile state
   const [profileForm, setProfileForm] = useState({
@@ -38,8 +46,12 @@ export default function SettingsPage() {
     phone: "",
     department: "",
   });
+  const [avatar, setAvatar] = useState<string | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileMessage, setProfileMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   // Password state
   const [passwordForm, setPasswordForm] = useState({
@@ -55,27 +67,118 @@ export default function SettingsPage() {
 
   // Notification state
   const [notifications, setNotifications] = useState({
-    emailNotifications: true,
-    smsNotifications: false,
-    newCustomerAlert: true,
-    vocAlert: true,
-    dailyReport: false,
-    weeklyReport: true,
+    emailNotify: true,
+    pushNotify: true,
+    taskReminder: true,
+    approvalNotify: true,
+    chatNotify: true,
   });
   const [notificationSaving, setNotificationSaving] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // System settings state
   const [systemForm, setSystemForm] = useState({
-    companyName: "아람휴비스",
-    companyEmail: "info@aramhuvis.co.kr",
-    companyPhone: "02-1234-5678",
-    companyAddress: "서울특별시 강남구",
+    companyName: "",
+    companyEmail: "",
+    companyPhone: "",
+    companyAddress: "",
     defaultCustomerGrade: "normal",
     defaultPageSize: "20",
   });
   const [systemSaving, setSystemSaving] = useState(false);
   const [systemMessage, setSystemMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  // Appearance: hidden widgets
+  const [hiddenWidgets, setHiddenWidgets] = useState<string[]>([]);
+  const [appearanceSaving, setAppearanceSaving] = useState(false);
+  const [appearanceMessage, setAppearanceMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  const WIDGET_OPTIONS = [
+    { key: "stats", label: "통계 카드" },
+    { key: "quickActions", label: "빠른 작업" },
+    { key: "tasks", label: "내 태스크" },
+    { key: "approvals", label: "결재 현황" },
+    { key: "calendar", label: "캘린더" },
+    { key: "notices", label: "공지사항" },
+    { key: "recentActivity", label: "최근 활동" },
+  ];
+
+  // Load profile on mount
+  useEffect(() => {
+    async function loadProfile() {
+      try {
+        const res = await fetch("/api/settings/profile");
+        if (res.ok) {
+          const data = await res.json();
+          setProfileForm({
+            name: data.name || "",
+            email: data.email || "",
+            phone: data.phone || "",
+            department: data.department || "",
+          });
+          setAvatar(data.avatar || null);
+        }
+      } catch {
+        // ignore
+      } finally {
+        setProfileLoading(false);
+      }
+    }
+    loadProfile();
+  }, []);
+
+  // Load notification preferences
+  useEffect(() => {
+    async function loadPreferences() {
+      try {
+        const res = await fetch("/api/settings/preferences");
+        if (res.ok) {
+          const data = await res.json();
+          setNotifications({
+            emailNotify: data.emailNotify ?? true,
+            pushNotify: data.pushNotify ?? true,
+            taskReminder: data.taskReminder ?? true,
+            approvalNotify: data.approvalNotify ?? true,
+            chatNotify: data.chatNotify ?? true,
+          });
+          const hw = data.hiddenWidgets;
+          if (hw) {
+            try {
+              setHiddenWidgets(JSON.parse(hw));
+            } catch {
+              setHiddenWidgets([]);
+            }
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+    loadPreferences();
+  }, []);
+
+  // Load system settings
+  useEffect(() => {
+    async function loadSystemSettings() {
+      try {
+        const res = await fetch("/api/settings/system");
+        if (res.ok) {
+          const data = await res.json();
+          setSystemForm({
+            companyName: data.companyName || "아람휴비스",
+            companyEmail: data.companyEmail || "",
+            companyPhone: data.companyPhone || "",
+            companyAddress: data.companyAddress || "",
+            defaultCustomerGrade: data.defaultCustomerGrade || "normal",
+            defaultPageSize: data.defaultPageSize || "20",
+          });
+        }
+      } catch {
+        // ignore
+      }
+    }
+    loadSystemSettings();
+  }, []);
 
   // Profile handlers
   const handleProfileSave = async () => {
@@ -103,6 +206,37 @@ export default function SettingsPage() {
       setProfileMessage({ type: "error", text: "프로필 저장 중 오류가 발생했습니다." });
     } finally {
       setProfileSaving(false);
+    }
+  };
+
+  // Avatar upload
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setAvatarUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("avatar", file);
+
+      const res = await fetch("/api/settings/avatar", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setAvatar(data.avatar);
+        setProfileMessage({ type: "success", text: "아바타가 업데이트되었습니다." });
+      } else {
+        const data = await res.json();
+        setProfileMessage({ type: "error", text: data.error || "아바타 업로드에 실패했습니다." });
+      }
+    } catch {
+      setProfileMessage({ type: "error", text: "아바타 업로드 중 오류가 발생했습니다." });
+    } finally {
+      setAvatarUploading(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = "";
     }
   };
 
@@ -150,14 +284,46 @@ export default function SettingsPage() {
     setNotificationSaving(true);
     setNotificationMessage(null);
 
-    // Simulated save (no dedicated API for notification preferences in schema)
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      setNotificationMessage({ type: "success", text: "알림 설정이 저장되었습니다." });
+      const res = await fetch("/api/settings/preferences", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(notifications),
+      });
+
+      if (res.ok) {
+        setNotificationMessage({ type: "success", text: "알림 설정이 저장되었습니다." });
+      } else {
+        setNotificationMessage({ type: "error", text: "알림 설정 저장에 실패했습니다." });
+      }
     } catch {
-      setNotificationMessage({ type: "error", text: "알림 설정 저장에 실패했습니다." });
+      setNotificationMessage({ type: "error", text: "알림 설정 저장 중 오류가 발생했습니다." });
     } finally {
       setNotificationSaving(false);
+    }
+  };
+
+  // Appearance handlers
+  const handleAppearanceSave = async () => {
+    setAppearanceSaving(true);
+    setAppearanceMessage(null);
+
+    try {
+      const res = await fetch("/api/settings/preferences", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hiddenWidgets }),
+      });
+
+      if (res.ok) {
+        setAppearanceMessage({ type: "success", text: "외관 설정이 저장되었습니다." });
+      } else {
+        setAppearanceMessage({ type: "error", text: "외관 설정 저장에 실패했습니다." });
+      }
+    } catch {
+      setAppearanceMessage({ type: "error", text: "외관 설정 저장 중 오류가 발생했습니다." });
+    } finally {
+      setAppearanceSaving(false);
     }
   };
 
@@ -166,12 +332,20 @@ export default function SettingsPage() {
     setSystemSaving(true);
     setSystemMessage(null);
 
-    // Simulated save (system settings would need a dedicated model/API)
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      setSystemMessage({ type: "success", text: "시스템 설정이 저장되었습니다." });
+      const res = await fetch("/api/settings/system", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(systemForm),
+      });
+
+      if (res.ok) {
+        setSystemMessage({ type: "success", text: "시스템 설정이 저장되었습니다." });
+      } else {
+        setSystemMessage({ type: "error", text: "시스템 설정 저장에 실패했습니다." });
+      }
     } catch {
-      setSystemMessage({ type: "error", text: "시스템 설정 저장에 실패했습니다." });
+      setSystemMessage({ type: "error", text: "시스템 설정 저장 중 오류가 발생했습니다." });
     } finally {
       setSystemSaving(false);
     }
@@ -219,8 +393,8 @@ export default function SettingsPage() {
     <div className="mx-auto max-w-4xl space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-semibold text-gray-900">설정</h2>
-        <p className="mt-1 text-sm text-gray-500">
+        <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">설정</h2>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           계정 및 시스템 설정을 관리합니다
         </p>
       </div>
@@ -228,7 +402,7 @@ export default function SettingsPage() {
       <div className="flex flex-col gap-6 lg:flex-row">
         {/* Tabs Sidebar */}
         <div className="w-full lg:w-56 shrink-0">
-          <nav className="space-y-1 rounded-2xl border border-gray-100 bg-white p-2 shadow-[0_1px_3px_0_rgb(0_0_0/0.04)]">
+          <nav className="space-y-1 rounded-2xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 p-2 shadow-[0_1px_3px_0_rgb(0_0_0/0.04)]">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -238,11 +412,11 @@ export default function SettingsPage() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                     isActive
-                      ? "bg-indigo-50 text-indigo-700"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                      ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400"
+                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
                   }`}
                 >
-                  <Icon className={`h-4.5 w-4.5 ${isActive ? "text-indigo-600" : "text-gray-400"}`} />
+                  <Icon className={`h-4.5 w-4.5 ${isActive ? "text-indigo-600 dark:text-indigo-400" : "text-gray-400"}`} />
                   {tab.label}
                 </button>
               );
@@ -254,61 +428,97 @@ export default function SettingsPage() {
         <div className="flex-1">
           {/* Profile Section */}
           {activeTab === "profile" && (
-            <div className="rounded-2xl border border-gray-100 bg-white shadow-[0_1px_3px_0_rgb(0_0_0/0.04)]">
-              <div className="border-b border-gray-100 px-6 py-4">
-                <h3 className="text-lg font-semibold text-gray-900">내 프로필</h3>
-                <p className="mt-0.5 text-sm text-gray-500">
+            <div className="rounded-2xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-[0_1px_3px_0_rgb(0_0_0/0.04)]">
+              <div className="border-b border-gray-100 dark:border-gray-700 px-6 py-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">내 프로필</h3>
+                <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
                   기본 프로필 정보를 수정합니다
                 </p>
               </div>
               <div className="space-y-4 px-6 py-5">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700">이름</label>
+                {/* Avatar Upload */}
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden border-2 border-gray-200 dark:border-gray-600">
+                      {avatar ? (
+                        <img src={avatar} alt="Avatar" className="w-full h-full object-cover" />
+                      ) : (
+                        <User className="w-8 h-8 text-gray-400" />
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => avatarInputRef.current?.click()}
+                      disabled={avatarUploading}
+                      className="absolute -bottom-1 -right-1 p-1.5 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 transition-colors shadow-sm"
+                    >
+                      {avatarUploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Camera className="w-3 h-3" />}
+                    </button>
                     <input
-                      type="text"
-                      value={profileForm.name}
-                      onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
-                      placeholder="이름을 입력하세요"
-                      className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                      ref={avatarInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                      className="hidden"
                     />
                   </div>
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700">이메일</label>
-                    <input
-                      type="email"
-                      value={profileForm.email}
-                      onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
-                      placeholder="이메일 주소"
-                      disabled
-                      className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-500 cursor-not-allowed"
-                    />
-                    <p className="mt-1 text-xs text-gray-400">이메일은 변경할 수 없습니다</p>
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700">전화번호</label>
-                    <input
-                      type="tel"
-                      value={profileForm.phone}
-                      onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-                      placeholder="010-0000-0000"
-                      className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700">부서</label>
-                    <input
-                      type="text"
-                      value={profileForm.department}
-                      onChange={(e) => setProfileForm({ ...profileForm, department: e.target.value })}
-                      placeholder="소속 부서"
-                      className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
-                    />
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">프로필 사진</p>
+                    <p className="text-xs text-gray-400">JPG, PNG, GIF. 최대 5MB</p>
                   </div>
                 </div>
+
+                {profileLoading ? (
+                  <div className="flex justify-center py-4">
+                    <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
+                  </div>
+                ) : (
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">이름</label>
+                      <input
+                        type="text"
+                        value={profileForm.name}
+                        onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                        placeholder="이름을 입력하세요"
+                        className="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3.5 py-2.5 text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">이메일</label>
+                      <input
+                        type="email"
+                        value={profileForm.email}
+                        disabled
+                        className="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 px-3.5 py-2.5 text-sm text-gray-500 cursor-not-allowed"
+                      />
+                      <p className="mt-1 text-xs text-gray-400">이메일은 변경할 수 없습니다</p>
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">전화번호</label>
+                      <input
+                        type="tel"
+                        value={profileForm.phone}
+                        onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                        placeholder="010-0000-0000"
+                        className="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3.5 py-2.5 text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">부서</label>
+                      <input
+                        type="text"
+                        value={profileForm.department}
+                        onChange={(e) => setProfileForm({ ...profileForm, department: e.target.value })}
+                        placeholder="소속 부서"
+                        className="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3.5 py-2.5 text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                      />
+                    </div>
+                  </div>
+                )}
                 <MessageBox message={profileMessage} />
               </div>
-              <div className="flex justify-end border-t border-gray-100 px-6 py-4">
+              <div className="flex justify-end border-t border-gray-100 dark:border-gray-700 px-6 py-4">
                 <button
                   onClick={handleProfileSave}
                   disabled={profileSaving}
@@ -323,23 +533,23 @@ export default function SettingsPage() {
 
           {/* Password Section */}
           {activeTab === "password" && (
-            <div className="rounded-2xl border border-gray-100 bg-white shadow-[0_1px_3px_0_rgb(0_0_0/0.04)]">
-              <div className="border-b border-gray-100 px-6 py-4">
-                <h3 className="text-lg font-semibold text-gray-900">비밀번호 변경</h3>
-                <p className="mt-0.5 text-sm text-gray-500">
+            <div className="rounded-2xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-[0_1px_3px_0_rgb(0_0_0/0.04)]">
+              <div className="border-b border-gray-100 dark:border-gray-700 px-6 py-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">비밀번호 변경</h3>
+                <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
                   계정의 비밀번호를 변경합니다
                 </p>
               </div>
               <div className="space-y-4 px-6 py-5">
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700">현재 비밀번호</label>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">현재 비밀번호</label>
                   <div className="relative">
                     <input
                       type={showCurrentPassword ? "text" : "password"}
                       value={passwordForm.currentPassword}
                       onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
                       placeholder="현재 비밀번호를 입력하세요"
-                      className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 pr-10 text-sm text-gray-800 placeholder-gray-400 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                      className="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3.5 py-2.5 pr-10 text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
                     />
                     <button
                       type="button"
@@ -351,14 +561,14 @@ export default function SettingsPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700">새 비밀번호</label>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">새 비밀번호</label>
                   <div className="relative">
                     <input
                       type={showNewPassword ? "text" : "password"}
                       value={passwordForm.newPassword}
                       onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
                       placeholder="새 비밀번호 (최소 6자)"
-                      className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 pr-10 text-sm text-gray-800 placeholder-gray-400 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                      className="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3.5 py-2.5 pr-10 text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
                     />
                     <button
                       type="button"
@@ -370,14 +580,14 @@ export default function SettingsPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700">새 비밀번호 확인</label>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">새 비밀번호 확인</label>
                   <div className="relative">
                     <input
                       type={showConfirmPassword ? "text" : "password"}
                       value={passwordForm.confirmPassword}
                       onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
                       placeholder="새 비밀번호를 다시 입력하세요"
-                      className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 pr-10 text-sm text-gray-800 placeholder-gray-400 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                      className="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3.5 py-2.5 pr-10 text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
                     />
                     <button
                       type="button"
@@ -390,7 +600,7 @@ export default function SettingsPage() {
                 </div>
                 <MessageBox message={passwordMessage} />
               </div>
-              <div className="flex justify-end border-t border-gray-100 px-6 py-4">
+              <div className="flex justify-end border-t border-gray-100 dark:border-gray-700 px-6 py-4">
                 <button
                   onClick={handlePasswordSave}
                   disabled={passwordSaving}
@@ -405,91 +615,71 @@ export default function SettingsPage() {
 
           {/* Notifications Section */}
           {activeTab === "notifications" && (
-            <div className="rounded-2xl border border-gray-100 bg-white shadow-[0_1px_3px_0_rgb(0_0_0/0.04)]">
-              <div className="border-b border-gray-100 px-6 py-4">
-                <h3 className="text-lg font-semibold text-gray-900">알림 설정</h3>
-                <p className="mt-0.5 text-sm text-gray-500">
+            <div className="rounded-2xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-[0_1px_3px_0_rgb(0_0_0/0.04)]">
+              <div className="border-b border-gray-100 dark:border-gray-700 px-6 py-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">알림 설정</h3>
+                <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
                   알림 수신 방법과 항목을 설정합니다
                 </p>
               </div>
-              <div className="divide-y divide-gray-100 px-6">
-                {/* Email Notifications */}
+              <div className="divide-y divide-gray-100 dark:divide-gray-700 px-6">
                 <div className="flex items-center justify-between py-4">
                   <div>
-                    <p className="text-sm font-medium text-gray-900">이메일 알림</p>
-                    <p className="text-sm text-gray-500">중요 알림을 이메일로 수신합니다</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">이메일 알림</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">중요 알림을 이메일로 수신합니다</p>
                   </div>
                   <ToggleSwitch
-                    checked={notifications.emailNotifications}
-                    onChange={(value) => setNotifications({ ...notifications, emailNotifications: value })}
+                    checked={notifications.emailNotify}
+                    onChange={(value) => setNotifications({ ...notifications, emailNotify: value })}
                   />
                 </div>
-
-                {/* SMS Notifications */}
                 <div className="flex items-center justify-between py-4">
                   <div>
-                    <p className="text-sm font-medium text-gray-900">SMS 알림</p>
-                    <p className="text-sm text-gray-500">긴급 알림을 문자로 수신합니다</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">푸시 알림</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">브라우저 푸시 알림을 수신합니다</p>
                   </div>
                   <ToggleSwitch
-                    checked={notifications.smsNotifications}
-                    onChange={(value) => setNotifications({ ...notifications, smsNotifications: value })}
+                    checked={notifications.pushNotify}
+                    onChange={(value) => setNotifications({ ...notifications, pushNotify: value })}
                   />
                 </div>
-
-                {/* New Customer Alert */}
                 <div className="flex items-center justify-between py-4">
                   <div>
-                    <p className="text-sm font-medium text-gray-900">신규 고객 알림</p>
-                    <p className="text-sm text-gray-500">새로운 고객이 등록되면 알림을 받습니다</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">태스크 리마인더</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">마감일이 다가오는 태스크 알림</p>
                   </div>
                   <ToggleSwitch
-                    checked={notifications.newCustomerAlert}
-                    onChange={(value) => setNotifications({ ...notifications, newCustomerAlert: value })}
+                    checked={notifications.taskReminder}
+                    onChange={(value) => setNotifications({ ...notifications, taskReminder: value })}
                   />
                 </div>
-
-                {/* VOC Alert */}
                 <div className="flex items-center justify-between py-4">
                   <div>
-                    <p className="text-sm font-medium text-gray-900">VOC 접수 알림</p>
-                    <p className="text-sm text-gray-500">새로운 고객의 소리가 접수되면 알림을 받습니다</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">결재 알림</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">결재 요청 및 승인/반려 알림</p>
                   </div>
                   <ToggleSwitch
-                    checked={notifications.vocAlert}
-                    onChange={(value) => setNotifications({ ...notifications, vocAlert: value })}
+                    checked={notifications.approvalNotify}
+                    onChange={(value) => setNotifications({ ...notifications, approvalNotify: value })}
                   />
                 </div>
-
-                {/* Daily Report */}
                 <div className="flex items-center justify-between py-4">
                   <div>
-                    <p className="text-sm font-medium text-gray-900">일일 리포트</p>
-                    <p className="text-sm text-gray-500">매일 업무 요약 리포트를 수신합니다</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">채팅 알림</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">새 메시지 수신 알림</p>
                   </div>
                   <ToggleSwitch
-                    checked={notifications.dailyReport}
-                    onChange={(value) => setNotifications({ ...notifications, dailyReport: value })}
-                  />
-                </div>
-
-                {/* Weekly Report */}
-                <div className="flex items-center justify-between py-4">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">주간 리포트</p>
-                    <p className="text-sm text-gray-500">매주 주간 업무 리포트를 수신합니다</p>
-                  </div>
-                  <ToggleSwitch
-                    checked={notifications.weeklyReport}
-                    onChange={(value) => setNotifications({ ...notifications, weeklyReport: value })}
+                    checked={notifications.chatNotify}
+                    onChange={(value) => setNotifications({ ...notifications, chatNotify: value })}
                   />
                 </div>
               </div>
-              <div className="flex justify-end border-t border-gray-100 px-6 py-4">
+              <div className="flex justify-end border-t border-gray-100 dark:border-gray-700 px-6 py-4">
+                <MessageBox message={notificationMessage} />
                 <button
                   onClick={handleNotificationSave}
                   disabled={notificationSaving}
-                  className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700 disabled:opacity-50 shadow-sm"
+                  className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700 disabled:opacity-50 shadow-sm ml-4"
                 >
                   {notificationSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                   알림 설정 저장
@@ -498,69 +688,154 @@ export default function SettingsPage() {
             </div>
           )}
 
+          {/* Appearance Section */}
+          {activeTab === "appearance" && (
+            <div className="space-y-6">
+              {/* Theme */}
+              <div className="rounded-2xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-[0_1px_3px_0_rgb(0_0_0/0.04)]">
+                <div className="border-b border-gray-100 dark:border-gray-700 px-6 py-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">테마</h3>
+                  <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+                    화면 테마를 선택합니다
+                  </p>
+                </div>
+                <div className="px-6 py-5">
+                  <div className="flex gap-4">
+                    <button
+                      onClick={() => setTheme("light")}
+                      className={`flex-1 flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${
+                        theme === "light"
+                          ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20"
+                          : "border-gray-200 dark:border-gray-600 hover:border-gray-300"
+                      }`}
+                    >
+                      <Sun className={`w-5 h-5 ${theme === "light" ? "text-indigo-600" : "text-gray-400"}`} />
+                      <div className="text-left">
+                        <p className={`text-sm font-semibold ${theme === "light" ? "text-indigo-700" : "text-gray-700 dark:text-gray-300"}`}>라이트</p>
+                        <p className="text-xs text-gray-400">밝은 배경 테마</p>
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => setTheme("dark")}
+                      className={`flex-1 flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${
+                        theme === "dark"
+                          ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20"
+                          : "border-gray-200 dark:border-gray-600 hover:border-gray-300"
+                      }`}
+                    >
+                      <Moon className={`w-5 h-5 ${theme === "dark" ? "text-indigo-600" : "text-gray-400"}`} />
+                      <div className="text-left">
+                        <p className={`text-sm font-semibold ${theme === "dark" ? "text-indigo-700 dark:text-indigo-400" : "text-gray-700 dark:text-gray-300"}`}>다크</p>
+                        <p className="text-xs text-gray-400">어두운 배경 테마</p>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Dashboard Widget Visibility */}
+              <div className="rounded-2xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-[0_1px_3px_0_rgb(0_0_0/0.04)]">
+                <div className="border-b border-gray-100 dark:border-gray-700 px-6 py-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">대시보드 위젯</h3>
+                  <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+                    대시보드에 표시할 위젯을 선택합니다
+                  </p>
+                </div>
+                <div className="divide-y divide-gray-100 dark:divide-gray-700 px-6">
+                  {WIDGET_OPTIONS.map((w) => (
+                    <div key={w.key} className="flex items-center justify-between py-3">
+                      <span className="text-sm text-gray-700 dark:text-gray-300">{w.label}</span>
+                      <ToggleSwitch
+                        checked={!hiddenWidgets.includes(w.key)}
+                        onChange={(visible) => {
+                          if (visible) {
+                            setHiddenWidgets(hiddenWidgets.filter((k) => k !== w.key));
+                          } else {
+                            setHiddenWidgets([...hiddenWidgets, w.key]);
+                          }
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div className="flex justify-end border-t border-gray-100 dark:border-gray-700 px-6 py-4">
+                  <MessageBox message={appearanceMessage} />
+                  <button
+                    onClick={handleAppearanceSave}
+                    disabled={appearanceSaving}
+                    className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700 disabled:opacity-50 shadow-sm ml-4"
+                  >
+                    {appearanceSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    외관 설정 저장
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* System Settings Section */}
           {activeTab === "system" && (
-            <div className="rounded-2xl border border-gray-100 bg-white shadow-[0_1px_3px_0_rgb(0_0_0/0.04)]">
-              <div className="border-b border-gray-100 px-6 py-4">
+            <div className="rounded-2xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-[0_1px_3px_0_rgb(0_0_0/0.04)]">
+              <div className="border-b border-gray-100 dark:border-gray-700 px-6 py-4">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-lg font-semibold text-gray-900">시스템 설정</h3>
-                  <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">시스템 설정</h3>
+                  <span className="rounded-full bg-indigo-100 dark:bg-indigo-900/30 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:text-indigo-400">
                     관리자 전용
                   </span>
                 </div>
-                <p className="mt-0.5 text-sm text-gray-500">
+                <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
                   회사 정보 및 기본 설정을 관리합니다
                 </p>
               </div>
               <div className="space-y-4 px-6 py-5">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700">회사명</label>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">회사명</label>
                     <input
                       type="text"
                       value={systemForm.companyName}
                       onChange={(e) => setSystemForm({ ...systemForm, companyName: e.target.value })}
-                      className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm text-gray-800 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                      className="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3.5 py-2.5 text-sm text-gray-800 dark:text-gray-200 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
                     />
                   </div>
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700">대표 이메일</label>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">대표 이메일</label>
                     <input
                       type="email"
                       value={systemForm.companyEmail}
                       onChange={(e) => setSystemForm({ ...systemForm, companyEmail: e.target.value })}
-                      className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm text-gray-800 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                      className="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3.5 py-2.5 text-sm text-gray-800 dark:text-gray-200 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
                     />
                   </div>
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700">대표 전화번호</label>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">대표 전화번호</label>
                     <input
                       type="tel"
                       value={systemForm.companyPhone}
                       onChange={(e) => setSystemForm({ ...systemForm, companyPhone: e.target.value })}
-                      className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm text-gray-800 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                      className="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3.5 py-2.5 text-sm text-gray-800 dark:text-gray-200 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
                     />
                   </div>
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700">주소</label>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">주소</label>
                     <input
                       type="text"
                       value={systemForm.companyAddress}
                       onChange={(e) => setSystemForm({ ...systemForm, companyAddress: e.target.value })}
-                      className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm text-gray-800 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                      className="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3.5 py-2.5 text-sm text-gray-800 dark:text-gray-200 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
                     />
                   </div>
                 </div>
 
-                <hr className="border-gray-100" />
+                <hr className="border-gray-100 dark:border-gray-700" />
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700">기본 고객 등급</label>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">기본 고객 등급</label>
                     <select
                       value={systemForm.defaultCustomerGrade}
                       onChange={(e) => setSystemForm({ ...systemForm, defaultCustomerGrade: e.target.value })}
-                      className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm text-gray-800 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                      className="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3.5 py-2.5 text-sm text-gray-800 dark:text-gray-200 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
                     >
                       <option value="new">신규</option>
                       <option value="normal">일반</option>
@@ -569,11 +844,11 @@ export default function SettingsPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700">기본 페이지 크기</label>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">기본 페이지 크기</label>
                     <select
                       value={systemForm.defaultPageSize}
                       onChange={(e) => setSystemForm({ ...systemForm, defaultPageSize: e.target.value })}
-                      className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm text-gray-800 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                      className="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3.5 py-2.5 text-sm text-gray-800 dark:text-gray-200 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
                     >
                       <option value="10">10개</option>
                       <option value="20">20개</option>
@@ -584,7 +859,7 @@ export default function SettingsPage() {
                 </div>
                 <MessageBox message={systemMessage} />
               </div>
-              <div className="flex justify-end border-t border-gray-100 px-6 py-4">
+              <div className="flex justify-end border-t border-gray-100 dark:border-gray-700 px-6 py-4">
                 <button
                   onClick={handleSystemSave}
                   disabled={systemSaving}

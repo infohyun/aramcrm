@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
@@ -12,6 +12,7 @@ import {
   Tag,
 } from "lucide-react";
 import MarkdownRenderer from "../_components/MarkdownRenderer";
+import MarkdownToolbar from "@/components/MarkdownToolbar";
 
 interface WikiPageOption {
   id: string;
@@ -44,6 +45,7 @@ function NewWikiPage() {
   const [submitting, setSubmitting] = useState(false);
   const [pages, setPages] = useState<WikiPageOption[]>([]);
   const [loadingPage, setLoadingPage] = useState(false);
+  const contentRef = useRef<HTMLTextAreaElement>(null);
 
   // 기존 페이지 목록 (부모 선택용)
   useEffect(() => {
@@ -281,13 +283,17 @@ function NewWikiPage() {
                   )}
                 </div>
               ) : (
-                <textarea
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  placeholder={"# 제목\n\n본문 내용을 마크다운으로 작성하세요.\n\n## 소제목\n\n- 목록 항목 1\n- 목록 항목 2\n\n**굵은 글씨**, *기울임꼴*\n\n```\n코드 블록\n```"}
-                  rows={20}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none leading-relaxed"
-                />
+                <div>
+                  <MarkdownToolbar textareaRef={contentRef} value={content} onChange={setContent} />
+                  <textarea
+                    ref={contentRef}
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    placeholder={"# 제목\n\n본문 내용을 마크다운으로 작성하세요.\n\n## 소제목\n\n- 목록 항목 1\n- 목록 항목 2\n\n**굵은 글씨**, *기울임꼴*\n\n```\n코드 블록\n```"}
+                    rows={20}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-b-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none leading-relaxed"
+                  />
+                </div>
               )}
             </div>
 

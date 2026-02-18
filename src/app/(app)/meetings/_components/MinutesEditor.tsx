@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Save, FileText, Loader2, Clock, User } from "lucide-react";
+import MarkdownToolbar from "@/components/MarkdownToolbar";
 
 interface MinuteItem {
   id: string;
@@ -19,10 +20,11 @@ interface MinutesEditorProps {
   onSave: (content: string) => Promise<void>;
 }
 
-export default function MinutesEditor({ meetingId, minutes, onSave }: MinutesEditorProps) {
+export default function MinutesEditor({ minutes, onSave }: MinutesEditorProps) {
   const [content, setContent] = useState(minutes.length > 0 ? minutes[0].content : "");
   const [saving, setSaving] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const contentRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSave = async () => {
     if (!content.trim()) return;
@@ -112,12 +114,14 @@ export default function MinutesEditor({ meetingId, minutes, onSave }: MinutesEdi
         </div>
       ) : (
         <div className="p-4">
+          <MarkdownToolbar textareaRef={contentRef} value={content} onChange={setContent} />
           <textarea
+            ref={contentRef}
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="회의 내용을 기록하세요...&#10;&#10;- 논의 안건&#10;- 결정 사항&#10;- 후속 조치"
             rows={10}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none leading-relaxed"
+            className="w-full px-4 py-3 border border-gray-200 rounded-b-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none leading-relaxed"
           />
         </div>
       )}

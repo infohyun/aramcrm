@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { writeFile, mkdir } from "fs/promises";
+import path from "path";
 
-// POST /api/documents/upload - 파일 업로드 (플레이스홀더)
-// 실제 구현 시 Vercel Blob 등을 사용하여 파일 저장 후 URL 반환
+// POST /api/documents/upload - 파일 업로드 (실제 파일 저장)
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
@@ -24,11 +25,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 플레이스홀더: 실제 구현 시 Vercel Blob에 업로드
-    // const blob = await put(file.name, file, { access: 'public' });
-    // const fileUrl = blob.url;
+    // 50MB 제한
+    if (file.size > 50 * 1024 * 1024) {
+      return NextResponse.json(
+        { error: "파일 크기는 50MB 이하여야 합니다." },
+        { status: 400 }
+      );
+    }
 
-    const fileUrl = `/uploads/${Date.now()}_${file.name}`;
+    // 안전한 파일명 생성
+    const safeName = file.name.replace(/[^a-zA-Z0-9가-힣._-]/g, "_");
+    const fileName = `${Date.now()}_${safeName}`;
+    const uploadDir = path.join(process.cwd(), "public", "uploads", "documents");
+
+    await mkdir(uploadDir, { recursive: true });
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    await writeFile(path.join(uploadDir, fileName), buffer);
+
+    const fileUrl = `/uploads/documents/${fileName}`;
     const fileSize = file.size;
     const mimeType = file.type;
 

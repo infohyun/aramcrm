@@ -17,6 +17,18 @@
   --radius: 12px;
 }
 
+.dark {
+  --background: #111827;
+  --foreground: #f3f4f6;
+  --primary: #f3f4f6;
+  --primary-accent: #818cf8;
+  --primary-light: #1f2937;
+  --card-border: #374151;
+  --muted: #9ca3af;
+  --muted-light: #1f2937;
+  --surface-base: #111827;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -49,8 +61,71 @@ body {
   background: #a3a3a3;
 }
 
+.dark ::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
 /* Selection */
 ::selection {
   background: #111111;
   color: #ffffff;
+}
+
+.dark ::selection {
+  background: #818cf8;
+  color: #ffffff;
+}
+
+/* Print styles for report PDF export */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Hide navigation */
+  nav, aside,
+  .no-print,
+  button:not(.print-visible),
+  [data-no-print] {
+    display: none !important;
+  }
+
+  /* Ensure main content fills the page */
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  .flex.h-screen {
+    display: block !important;
+  }
+
+  .lg\:ml-64 {
+    margin-left: 0 !important;
+  }
+
+  /* Charts and cards */
+  .bg-white {
+    box-shadow: none !important;
+    border: 1px solid #e5e7eb !important;
+    break-inside: avoid;
+  }
+
+  /* Page breaks */
+  .page-break {
+    page-break-before: always;
+  }
+
+  @page {
+    margin: 1.5cm;
+    size: A4;
+  }
 }

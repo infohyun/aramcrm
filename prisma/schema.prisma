@@ -3,9 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
 }
 
 // ============================================
@@ -41,6 +40,9 @@ model User {
   emailTemplates EmailTemplate[]
   serviceTickets ServiceTicket[]
   shipments      Shipment[]
+
+  // 사용자 환경설정 (1:1)
+  preference     UserPreference?
 
   // 새 관계 (Phase 2)
   notifications       Notification[]
@@ -421,6 +423,8 @@ model Post {
   isPinned    Boolean   @default(false)
   isPublished Boolean   @default(true)
   viewCount   Int       @default(0)
+  priority    String    @default("normal") // urgent, important, normal, low
+  expiresAt   DateTime?
   attachments String?   // JSON array of file URLs
   departmentScope String? // null=전사, 특정 부서코드
   createdAt   DateTime  @default(now())
@@ -778,4 +782,39 @@ model ReportTemplate {
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+// ============================================
+// 사용자 환경설정 (개인화)
+// ============================================
+model UserPreference {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  theme           String   @default("light") // light, dark
+  language        String   @default("ko")
+  emailNotify     Boolean  @default(true)
+  pushNotify      Boolean  @default(true)
+  taskReminder    Boolean  @default(true)
+  approvalNotify  Boolean  @default(true)
+  chatNotify      Boolean  @default(true)
+  hiddenWidgets   String?  // JSON array of widget keys to hide
+  dashboardLayout String?  // JSON layout config
+  sidebarCollapsed Boolean @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ============================================
+// 시스템 전체 설정 (키-값)
+// ============================================
+model SystemSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  category  String   @default("general") // general, email, security, display
+  description String?
+  updatedBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -12,6 +12,7 @@ import {
   PartyPopper,
   Pin,
 } from "lucide-react";
+import MarkdownToolbar from "@/components/MarkdownToolbar";
 
 // ─── Config ───────────────────────────────────────────────────────────
 
@@ -31,8 +32,10 @@ export default function NewPostPage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [isPinned, setIsPinned] = useState(false);
+  const [priority, setPriority] = useState("normal");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const contentRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,6 +60,7 @@ export default function NewPostPage() {
           title: title.trim(),
           content: content.trim(),
           isPinned,
+          priority,
         }),
       });
 
@@ -129,8 +133,33 @@ export default function NewPostPage() {
                 ))}
               </div>
 
+              {/* Priority */}
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">우선순위</label>
+                <div className="flex gap-2">
+                  {[
+                    { key: "normal", label: "일반", color: "border-gray-300 text-gray-600 bg-gray-50" },
+                    { key: "important", label: "중요", color: "border-orange-300 text-orange-700 bg-orange-50" },
+                    { key: "urgent", label: "긴급", color: "border-red-300 text-red-700 bg-red-50" },
+                  ].map((p) => (
+                    <button
+                      key={p.key}
+                      type="button"
+                      onClick={() => setPriority(p.key)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                        priority === p.key
+                          ? `${p.color} ring-1 ring-current/20 shadow-sm`
+                          : "border-gray-200 text-gray-400 hover:bg-gray-50"
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Pin option */}
-              <div className="mt-4 flex items-center gap-3">
+              <div className="mt-3 flex items-center gap-3">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
@@ -172,12 +201,14 @@ export default function NewPostPage() {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 내용 <span className="text-red-500">*</span>
               </label>
+              <MarkdownToolbar textareaRef={contentRef} value={content} onChange={setContent} />
               <textarea
+                ref={contentRef}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="게시글 내용을 입력하세요..."
+                placeholder="게시글 내용을 입력하세요... (마크다운 지원)"
                 rows={16}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none leading-relaxed"
+                className="w-full px-4 py-3 border border-gray-200 rounded-b-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none leading-relaxed"
               />
             </div>
           </section>

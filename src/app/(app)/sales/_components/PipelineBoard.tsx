@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useCallback } from "react";
 import DealCard from "./DealCard";
 
 interface Customer {
@@ -36,6 +37,7 @@ interface PipelineStage {
 interface PipelineBoardProps {
   stages: PipelineStage[];
   onDealClick: (deal: Deal) => void;
+  onStageChange?: (dealId: string, newStatus: string) => void;
 }
 
 function formatCurrency(value: number): string {
@@ -51,13 +53,49 @@ function formatCurrency(value: number): string {
 export default function PipelineBoard({
   stages,
   onDealClick,
+  onStageChange,
 }: PipelineBoardProps) {
+  const [dragOverStage, setDragOverStage] = useState<string | null>(null);
+
+  const handleDragStart = useCallback((e: React.DragEvent, deal: Deal) => {
+    e.dataTransfer.setData("application/json", JSON.stringify({ dealId: deal.id, currentStatus: deal.status }));
+    e.dataTransfer.effectAllowed = "move";
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent, stageKey: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverStage(stageKey);
+  }, []);
+
+  const handleDragLeave = useCallback(() => {
+    setDragOverStage(null);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent, targetStageKey: string) => {
+    e.preventDefault();
+    setDragOverStage(null);
+
+    try {
+      const raw = e.dataTransfer.getData("application/json");
+      const { dealId, currentStatus } = JSON.parse(raw);
+      if (currentStatus !== targetStageKey && onStageChange) {
+        onStageChange(dealId, targetStageKey);
+      }
+    } catch {
+      // ignore
+    }
+  }, [onStageChange]);
+
   return (
     <div className="flex gap-4 overflow-x-auto pb-4 min-h-[500px]">
       {stages.map((stage) => (
         <div
           key={stage.key}
           className="flex-shrink-0 w-[280px] flex flex-col"
+          onDragOver={(e) => handleDragOver(e, stage.key)}
+          onDragLeave={handleDragLeave}
+          onDrop={(e) => handleDrop(e, stage.key)}
         >
           {/* Column Header */}
           <div
@@ -89,18 +127,32 @@ export default function PipelineBoard({
           </div>
 
           {/* Cards Container */}
-          <div className="flex-1 bg-gray-50/70 rounded-b-xl border border-gray-100 border-t-0 p-2 space-y-2 overflow-y-auto max-h-[600px]">
+          <div
+            className={`flex-1 rounded-b-xl border border-t-0 p-2 space-y-2 overflow-y-auto max-h-[600px] transition-colors ${
+              dragOverStage === stage.key
+                ? "bg-indigo-50 border-indigo-300"
+                : "bg-gray-50/70 border-gray-100"
+            }`}
+          >
             {stage.orders.length === 0 ? (
               <div className="flex items-center justify-center py-8">
-                <p className="text-xs text-gray-300">건이 없습니다</p>
+                <p className="text-xs text-gray-300">
+                  {dragOverStage === stage.key ? "여기에 놓으세요" : "건이 없습니다"}
+                </p>
               </div>
             ) : (
               stage.orders.map((deal) => (
-                <DealCard
+                <div
                   key={deal.id}
-                  deal={deal}
-                  onClick={() => onDealClick(deal)}
-                />
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, deal)}
+                  className="cursor-grab active:cursor-grabbing"
+                >
+                  <DealCard
+                    deal={deal}
+                    onClick={() => onDealClick(deal)}
+                  />
+                </div>
               ))
             )}
           </div>

@@ -39,6 +39,8 @@ interface Post {
   isPinned: boolean;
   isPublished: boolean;
   viewCount: number;
+  priority: string;
+  expiresAt: string | null;
   createdAt: string;
   updatedAt: string;
   _count: {
@@ -317,6 +319,16 @@ export default function BoardPage() {
                         {post.isPinned && (
                           <span className="text-[10px] font-semibold text-indigo-600 bg-indigo-100 px-1.5 py-0.5 rounded">
                             고정
+                          </span>
+                        )}
+                        {post.priority === "urgent" && (
+                          <span className="text-[10px] font-semibold text-red-600 bg-red-100 px-1.5 py-0.5 rounded animate-pulse">
+                            긴급
+                          </span>
+                        )}
+                        {post.priority === "important" && (
+                          <span className="text-[10px] font-semibold text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded">
+                            중요
                           </span>
                         )}
                       </div>

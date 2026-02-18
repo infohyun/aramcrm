@@ -28,9 +28,9 @@ export async function GET(request: NextRequest) {
 
     if (search) {
       where.OR = [
-        { title: { contains: search, mode: "insensitive" } },
-        { content: { contains: search, mode: "insensitive" } },
-        { author: { name: { contains: search, mode: "insensitive" } } },
+        { title: { contains: search } },
+        { content: { contains: search } },
+        { author: { name: { contains: search } } },
       ];
     }
 
@@ -54,6 +54,7 @@ export async function GET(request: NextRequest) {
         },
         orderBy: [
           { isPinned: "desc" },
+          { priority: "asc" },
           { createdAt: "desc" },
         ],
         skip,
@@ -106,7 +107,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { category, title, content, isPinned, departmentScope } = body;
+    const { category, title, content, isPinned, departmentScope, priority, expiresAt } = body;
 
     if (!title || !content) {
       return NextResponse.json(
@@ -123,6 +124,8 @@ export async function POST(request: NextRequest) {
         content,
         isPinned: isPinned || false,
         isPublished: true,
+        priority: priority || "normal",
+        expiresAt: expiresAt ? new Date(expiresAt) : null,
         departmentScope: departmentScope || null,
       },
       include: {

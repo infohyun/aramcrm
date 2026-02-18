@@ -277,6 +277,23 @@ export default function TasksKanbanPage() {
     setFormDueDate("");
   };
 
+  // ─── Task Templates ──────────────────────────────────────────────
+  const TASK_TEMPLATES = [
+    { title: "기획 검토", description: "프로젝트 기획안 검토 및 피드백", priority: "high" },
+    { title: "주간 보고", description: "이번 주 진행 상황 및 다음 주 계획 정리", priority: "medium" },
+    { title: "고객 미팅 준비", description: "미팅 자료 준비, 아젠다 작성, 참석자 확인", priority: "high" },
+    { title: "코드 리뷰", description: "개발 코드 품질 검토 및 개선 사항 제안", priority: "medium" },
+    { title: "테스트 수행", description: "QA 테스트 케이스 실행 및 결과 보고", priority: "high" },
+    { title: "문서 작성", description: "프로젝트 관련 문서 작성 및 업데이트", priority: "low" },
+  ];
+
+  const applyTemplate = (template: { title: string; description: string; priority: string }) => {
+    setFormTitle(template.title);
+    setFormDescription(template.description);
+    setFormPriority(template.priority);
+    setShowCreate(true);
+  };
+
   // ─── Task Detail ────────────────────────────────────────────────
 
   const openTaskDetail = async (taskId: string) => {
@@ -428,6 +445,22 @@ export default function TasksKanbanPage() {
       </div>
 
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-5">
+        {/* ─── Task Templates ────────────────────────────────────────── */}
+        <div className="mb-4">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-medium text-gray-500">빠른 추가:</span>
+            {TASK_TEMPLATES.map((tmpl, i) => (
+              <button
+                key={i}
+                onClick={() => applyTemplate(tmpl)}
+                className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-colors"
+              >
+                {tmpl.title}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* ─── Kanban Board ────────────────────────────────────────── */}
         {loading ? (
           <div className="flex items-center justify-center py-20">

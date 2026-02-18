@@ -108,6 +108,22 @@ export default function SalesPipelinePage() {
     }
   };
 
+  // ─── Handle stage change (drag & drop) ──────────────────────
+  const handleStageChange = async (dealId: string, newStatus: string) => {
+    try {
+      const res = await fetch(`/api/orders/${dealId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (res.ok) {
+        fetchPipeline();
+      }
+    } catch {
+      // ignore
+    }
+  };
+
   // ─── Active deals (excluding cancelled and delivered) ──────
   const activeDeals = stages
     .filter((s) => !["cancelled", "delivered"].includes(s.key))
@@ -259,7 +275,7 @@ export default function SalesPipelinePage() {
             </p>
           </div>
         ) : (
-          <PipelineBoard stages={stages} onDealClick={handleDealClick} />
+          <PipelineBoard stages={stages} onDealClick={handleDealClick} onStageChange={handleStageChange} />
         )}
       </div>
     </div>

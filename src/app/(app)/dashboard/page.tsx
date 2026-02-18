@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Settings2 } from "lucide-react";
 import StatsWidget from "./_widgets/StatsWidget";
 import QuickActionsWidget from "./_widgets/QuickActionsWidget";
 import TasksWidget from "./_widgets/TasksWidget";
@@ -27,23 +27,50 @@ export default function DashboardPage() {
     lowStockItems: 0, activeProjects: 0, pendingApprovals: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [hiddenWidgets, setHiddenWidgets] = useState<string[]>([]);
 
   const userName = session?.user?.name || "사용자";
+
+  // Load hidden widgets preference
+  useEffect(() => {
+    async function loadPreferences() {
+      try {
+        const res = await fetch("/api/settings/preferences");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.hiddenWidgets) {
+            try {
+              setHiddenWidgets(JSON.parse(data.hiddenWidgets));
+            } catch {
+              // ignore parse error
+            }
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+    loadPreferences();
+  }, []);
 
   useEffect(() => {
     async function fetchStats() {
       try {
-        const [customersRes, vocRes, serviceRes, inventoryRes] = await Promise.allSettled([
+        const [customersRes, vocRes, serviceRes, inventoryRes, projectsRes, approvalsRes] = await Promise.allSettled([
           fetch("/api/customers?limit=1"),
           fetch("/api/voc?limit=1"),
           fetch("/api/service?limit=1"),
           fetch("/api/inventory?limit=1"),
+          fetch("/api/projects?limit=1"),
+          fetch("/api/approvals?status=pending&limit=1"),
         ]);
 
         let totalCustomers = 0;
         let openVoc = 0;
         let activeServiceTickets = 0;
         let lowStockItems = 0;
+        let activeProjects = 0;
+        let pendingApprovals = 0;
 
         if (customersRes.status === "fulfilled" && customersRes.value.ok) {
           const data = await customersRes.value.json();
@@ -61,14 +88,22 @@ export default function DashboardPage() {
           const data = await inventoryRes.value.json();
           lowStockItems = (data.stats?.lowStock || 0) + (data.stats?.outOfStock || 0);
         }
+        if (projectsRes.status === "fulfilled" && projectsRes.value.ok) {
+          const data = await projectsRes.value.json();
+          activeProjects = data.stats?.active || data.total || 0;
+        }
+        if (approvalsRes.status === "fulfilled" && approvalsRes.value.ok) {
+          const data = await approvalsRes.value.json();
+          pendingApprovals = data.total || data.pagination?.total || 0;
+        }
 
         setStats({
           totalCustomers,
           openVoc,
           activeServiceTickets,
           lowStockItems,
-          activeProjects: 0,
-          pendingApprovals: 0,
+          activeProjects,
+          pendingApprovals,
         });
       } catch (error) {
         console.error("Dashboard stats error:", error);
@@ -78,6 +113,8 @@ export default function DashboardPage() {
     }
     fetchStats();
   }, []);
+
+  const isVisible = (key: string) => !hiddenWidgets.includes(key);
 
   if (loading) {
     return (
@@ -90,31 +127,40 @@ export default function DashboardPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       {/* Welcome */}
-      <div>
-        <h2 className="text-[22px] font-semibold text-[#111111] tracking-tight">
-          안녕하세요, {userName}님
-        </h2>
-        <p className="mt-1 text-[14px] text-[#888888]">
-          오늘의 업무 현황을 확인하세요.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-[22px] font-semibold text-[#111111] dark:text-gray-100 tracking-tight">
+            안녕하세요, {userName}님
+          </h2>
+          <p className="mt-1 text-[14px] text-[#888888] dark:text-gray-400">
+            오늘의 업무 현황을 확인하세요.
+          </p>
+        </div>
+        <a
+          href="/settings"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-sm transition-all no-print"
+        >
+          <Settings2 className="w-3.5 h-3.5" />
+          대시보드 설정
+        </a>
       </div>
 
       {/* Stats */}
-      <StatsWidget stats={stats} />
+      {isVisible("stats") && <StatsWidget stats={stats} />}
 
       {/* Quick Actions */}
-      <QuickActionsWidget />
+      {isVisible("quickActions") && <QuickActionsWidget />}
 
       {/* Main widgets grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <TasksWidget />
-        <ApprovalsWidget />
-        <CalendarWidget />
-        <NoticesWidget />
+        {isVisible("tasks") && <TasksWidget />}
+        {isVisible("approvals") && <ApprovalsWidget />}
+        {isVisible("calendar") && <CalendarWidget />}
+        {isVisible("notices") && <NoticesWidget />}
       </div>
 
       {/* Recent Activity */}
-      <RecentActivityWidget />
+      {isVisible("recentActivity") && <RecentActivityWidget />}
     </div>
   );
 }

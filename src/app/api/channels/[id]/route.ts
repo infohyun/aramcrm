@@ -144,3 +144,39 @@ export async function PUT(
     );
   }
 }
+
+// DELETE /api/channels/[id] - 채널 삭제
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+    }
+
+    const { id } = await params;
+
+    const channel = await prisma.channel.findUnique({
+      where: { id },
+      include: { members: true },
+    });
+
+    if (!channel) {
+      return NextResponse.json({ error: "채널을 찾을 수 없습니다." }, { status: 404 });
+    }
+
+    const membership = channel.members.find((m) => m.userId === session.user!.id);
+    if (!membership || membership.role !== "admin") {
+      return NextResponse.json({ error: "채널 삭제 권한이 없습니다." }, { status: 403 });
+    }
+
+    await prisma.channel.delete({ where: { id } });
+
+    return NextResponse.json({ message: "채널이 삭제되었습니다." });
+  } catch (error) {
+    console.error("채널 삭제 오류:", error);
+    return NextResponse.json({ error: "채널 삭제에 실패했습니다." }, { status: 500 });
+  }
+}

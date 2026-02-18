@@ -84,6 +84,12 @@ export default function ChatPage() {
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [currentUserId, setCurrentUserId] = useState("");
 
+  // Channel settings modal
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [settingsChannelName, setSettingsChannelName] = useState("");
+  const [settingsChannelDesc, setSettingsChannelDesc] = useState("");
+  const [settingsSaving, setSettingsSaving] = useState(false);
+
   // Create channel modal
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newChannelName, setNewChannelName] = useState("");
@@ -275,6 +281,56 @@ export default function ChatPage() {
     );
   };
 
+  // ─── Channel settings ──────────────────────────────────────
+  const openSettingsModal = () => {
+    if (!activeChannel) return;
+    setSettingsChannelName(activeChannel.name);
+    setSettingsChannelDesc(activeChannel.description || "");
+    setShowSettingsModal(true);
+  };
+
+  const handleSaveSettings = async () => {
+    if (!activeChannelId || !settingsChannelName.trim()) return;
+    setSettingsSaving(true);
+    try {
+      const res = await fetch(`/api/channels/${activeChannelId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: settingsChannelName.trim(),
+          description: settingsChannelDesc.trim() || null,
+        }),
+      });
+      if (res.ok) {
+        setShowSettingsModal(false);
+        fetchChannels();
+      }
+    } catch {
+      // ignore
+    } finally {
+      setSettingsSaving(false);
+    }
+  };
+
+  const handleDeleteChannel = async () => {
+    if (!activeChannelId) return;
+    if (!confirm("정말로 이 채널을 삭제하시겠습니까?")) return;
+
+    try {
+      const res = await fetch(`/api/channels/${activeChannelId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setShowSettingsModal(false);
+        setActiveChannelId(null);
+        setMessages([]);
+        fetchChannels();
+      }
+    } catch {
+      // ignore
+    }
+  };
+
   // 현재 활성 채널 정보
   const activeChannel = channels.find((c) => c.id === activeChannelId);
 
@@ -359,7 +415,11 @@ export default function ChatPage() {
                     <Users className="w-3.5 h-3.5" />
                     <span>{activeChannel.members.length}</span>
                   </div>
-                  <button className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+                  <button
+                    onClick={openSettingsModal}
+                    className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                    title="채널 설정"
+                  >
                     <Settings className="w-4 h-4 text-gray-400" />
                   </button>
                 </div>
@@ -401,6 +461,94 @@ export default function ChatPage() {
           )}
         </div>
       </div>
+
+      {/* ═══════════════════════════════════════════════════════════
+          MODAL: 채널 설정
+         ═══════════════════════════════════════════════════════════ */}
+      {showSettingsModal && activeChannel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-gray-100 rounded-xl">
+                  <Settings className="w-5 h-5 text-gray-600" />
+                </div>
+                <h2 className="text-lg font-bold text-gray-900">채널 설정</h2>
+              </div>
+              <button
+                onClick={() => setShowSettingsModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  채널 이름
+                </label>
+                <input
+                  type="text"
+                  value={settingsChannelName}
+                  onChange={(e) => setSettingsChannelName(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  설명
+                </label>
+                <input
+                  type="text"
+                  value={settingsChannelDesc}
+                  onChange={(e) => setSettingsChannelDesc(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  멤버 ({activeChannel.members.length}명)
+                </label>
+                <div className="max-h-32 overflow-y-auto border border-gray-200 rounded-xl divide-y divide-gray-50">
+                  {activeChannel.members.map((m) => (
+                    <div key={m.id} className="px-4 py-2 text-sm flex items-center justify-between">
+                      <span className="font-medium text-gray-700">{m.user.name}</span>
+                      <span className="text-xs text-gray-400">{m.role}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between p-6 border-t border-gray-100">
+              <button
+                onClick={handleDeleteChannel}
+                className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition-colors"
+              >
+                채널 삭제
+              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowSettingsModal(false)}
+                  className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={handleSaveSettings}
+                  disabled={!settingsChannelName.trim() || settingsSaving}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50 shadow-sm"
+                >
+                  {settingsSaving && <Loader2 className="w-4 h-4 animate-spin" />}
+                  저장
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ═══════════════════════════════════════════════════════════
           MODAL: 채널 만들기

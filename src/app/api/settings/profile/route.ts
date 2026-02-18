@@ -2,6 +2,39 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
+// GET: Load current user profile
+export async function GET() {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: session.user!.id! },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        department: true,
+        avatar: true,
+        position: true,
+        bio: true,
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "사용자를 찾을 수 없습니다." }, { status: 404 });
+    }
+
+    return NextResponse.json(user);
+  } catch (error) {
+    console.error("Profile GET error:", error);
+    return NextResponse.json({ error: "프로필을 불러오는데 실패했습니다." }, { status: 500 });
+  }
+}
+
 // PUT: Update user profile
 export async function PUT(request: NextRequest) {
   try {
