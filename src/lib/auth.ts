@@ -78,13 +78,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
-        (session.user as Record<string, unknown>).role = token.role;
-        (session.user as Record<string, unknown>).department = token.department;
-        (session.user as Record<string, unknown>).departmentId = token.departmentId;
-        (session.user as Record<string, unknown>).departmentName = token.departmentName;
-        (session.user as Record<string, unknown>).roleId = token.roleId;
-        (session.user as Record<string, unknown>).roleName = token.roleName;
-        (session.user as Record<string, unknown>).position = token.position;
+        const u = session.user as unknown as Record<string, unknown>;
+        u.role = token.role;
+        u.department = token.department;
+        u.departmentId = token.departmentId;
+        u.departmentName = token.departmentName;
+        u.roleId = token.roleId;
+        u.roleName = token.roleName;
+        u.position = token.position;
       }
       return session;
     },

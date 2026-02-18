@@ -225,7 +225,7 @@ export default function ApprovalDetailPage() {
     if (approval.status !== "pending") return false;
     const currentStep = approval.steps.find((s) => s.status === "pending");
     if (!currentStep) return false;
-    return currentStep.approverId === currentUserId;
+    return currentStep.approver.id === currentUserId;
   })();
 
   const isRequester = approval?.requester.id === currentUserId;

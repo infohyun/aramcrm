@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
@@ -20,7 +20,15 @@ interface WikiPageOption {
   parentId: string | null;
 }
 
-export default function NewWikiPage() {
+export default function NewWikiPageWrapper() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="w-8 h-8 text-indigo-600 animate-spin" /></div>}>
+      <NewWikiPage />
+    </Suspense>
+  );
+}
+
+function NewWikiPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 

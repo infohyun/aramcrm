@@ -79,7 +79,7 @@ export async function POST(
     const minute = await prisma.meetingMinute.create({
       data: {
         meetingId: id,
-        authorId: session.user.id,
+        authorId: session.user!.id!,
         content: content.trim(),
       },
       include: {

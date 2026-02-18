@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
         description: description || null,
         tags: tags || null,
         folderId: folderId || null,
-        uploaderId: session.user.id,
+        uploader: { connect: { id: session.user.id! } },
       },
       include: {
         uploader: {
