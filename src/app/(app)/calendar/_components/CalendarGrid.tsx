@@ -140,6 +140,7 @@ export default function CalendarGrid({
           const isSelected = selectedDate === dateStr;
           const isTodayDate = isToday(day.date);
           const dayOfWeek = day.date.getDay();
+          const hasHoliday = dayEvents.some((e) => e.type === "holiday");
 
           return (
             <div
@@ -161,8 +162,8 @@ export default function CalendarGrid({
                       ? "text-gray-300"
                       : isTodayDate
                       ? "bg-indigo-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold"
-                      : dayOfWeek === 0
-                      ? "text-red-500"
+                      : hasHoliday || dayOfWeek === 0
+                      ? "text-red-500 font-bold"
                       : dayOfWeek === 6
                       ? "text-blue-500"
                       : "text-gray-700"

@@ -17,6 +17,7 @@ import {
 import CalendarGrid from "./_components/CalendarGrid";
 import EventCard from "./_components/EventCard";
 import CreateEventModal from "./_components/CreateEventModal";
+import { getHolidayEvents } from "@/lib/holidays";
 
 // ─── Interfaces ───────────────────────────────────────────────────────
 
@@ -129,7 +130,10 @@ export default function CalendarPage() {
       const res = await fetch(`/api/calendar?${params}`);
       if (res.ok) {
         const data = await res.json();
-        setEvents(data.data || []);
+        const apiEvents = data.data || [];
+        // 공휴일 이벤트 병합 (한국, 미국, 프랑스)
+        const holidayEvents = getHolidayEvents(year, month);
+        setEvents([...holidayEvents, ...apiEvents]);
       }
     } catch (error) {
       console.error("Failed to fetch events:", error);
@@ -364,26 +368,31 @@ export default function CalendarPage() {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {selectedDateEvents.map((event) => (
-                      <div key={event.id} className="relative group">
-                        <EventCard event={event} />
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(event.id);
-                          }}
-                          disabled={deletingId === event.id}
-                          className="absolute top-2 right-2 p-1.5 rounded-lg bg-white border border-gray-200 opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:border-red-200 transition-all shadow-sm"
-                          title="삭제"
-                        >
-                          {deletingId === event.id ? (
-                            <Loader2 className="w-3 h-3 animate-spin text-gray-400" />
-                          ) : (
-                            <Trash2 className="w-3 h-3 text-gray-400 hover:text-red-500" />
+                    {selectedDateEvents.map((event) => {
+                      const isHoliday = event.id.startsWith("holiday-");
+                      return (
+                        <div key={event.id} className="relative group">
+                          <EventCard event={event} />
+                          {!isHoliday && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDelete(event.id);
+                              }}
+                              disabled={deletingId === event.id}
+                              className="absolute top-2 right-2 p-1.5 rounded-lg bg-white border border-gray-200 opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:border-red-200 transition-all shadow-sm"
+                              title="삭제"
+                            >
+                              {deletingId === event.id ? (
+                                <Loader2 className="w-3 h-3 animate-spin text-gray-400" />
+                              ) : (
+                                <Trash2 className="w-3 h-3 text-gray-400 hover:text-red-500" />
+                              )}
+                            </button>
                           )}
-                        </button>
-                      </div>
-                    ))}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
