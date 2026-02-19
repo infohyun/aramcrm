@@ -870,3 +870,108 @@ model SystemSetting {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// ============================================
+// AI CS 시스템 (멀티 에이전트)
+// ============================================
+
+// AI 대화 세션
+model AIConversation {
+  id          String    @id @default(cuid())
+  userId      String
+  customerId  String?
+  ticketId    String?
+  status      String    @default("active") // active, resolved, escalated, closed
+  language    String    @default("ko")
+  sentiment   String?   // positive, neutral, negative, angry
+  priority    String    @default("medium") // low, medium, high, urgent
+  category    String?   // faq, error, hardware, policy, general
+  summary     String?
+  metadata    String?   // JSON
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  messages    AIMessage[]
+  agentLogs   AIAgentLog[]
+  feedbacks   AIFeedback[]
+}
+
+// AI 대화 메시지
+model AIMessage {
+  id              String   @id @default(cuid())
+  conversationId  String
+  conversation    AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role            String   // user, assistant, system
+  content         String
+  agentId         String?  // 응답한 에이전트 ID (team-1 ~ team-10)
+  agentName       String?  // 에이전트 이름
+  isReviewed      Boolean  @default(false)
+  isApproved      Boolean? // null=미검토, true=승인, false=반려
+  reviewNote      String?
+  tokenInput      Int      @default(0)
+  tokenOutput     Int      @default(0)
+  metadata        String?  // JSON (감정분석 결과, 번역 등)
+  createdAt       DateTime @default(now())
+}
+
+// AI 에이전트 실행 로그
+model AIAgentLog {
+  id              String   @id @default(cuid())
+  conversationId  String
+  conversation    AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  agentId         String   // team-1 ~ team-10
+  agentName       String
+  action          String   // classify, translate, analyze, search, diagnose, review, etc.
+  input           String?  // 입력 요약
+  output          String?  // 출력 요약
+  confidence      Float?   // 0.0 ~ 1.0
+  durationMs      Int      @default(0)
+  tokenUsage      Int      @default(0)
+  error           String?
+  createdAt       DateTime @default(now())
+}
+
+// AI 사용자 피드백
+model AIFeedback {
+  id              String   @id @default(cuid())
+  conversationId  String
+  conversation    AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  messageId       String?
+  userId          String
+  rating          Int      // 1-5
+  feedbackType    String   @default("general") // general, accuracy, speed, helpfulness
+  comment         String?
+  createdAt       DateTime @default(now())
+}
+
+// AI 에이전트 설정
+model AIAgentConfig {
+  id              String   @id @default(cuid())
+  agentId         String   @unique // team-1 ~ team-10
+  agentName       String
+  description     String?
+  systemPrompt    String?  // 커스텀 시스템 프롬프트 (null이면 기본값 사용)
+  temperature     Float    @default(0.3)
+  maxTokens       Int      @default(2000)
+  isEnabled       Boolean  @default(true)
+  priority        Int      @default(0) // 호출 우선순위
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// AI 일별 사용량 집계
+model AIUsageDaily {
+  id              String   @id @default(cuid())
+  date            DateTime @db.Date
+  agentId         String?  // null이면 전체 합산
+  totalCalls      Int      @default(0)
+  totalTokenInput Int      @default(0)
+  totalTokenOutput Int     @default(0)
+  totalMessages   Int      @default(0)
+  totalConversations Int   @default(0)
+  estimatedCostUsd Float   @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([date, agentId])
+}

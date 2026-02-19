@@ -5,6 +5,7 @@ export const MODULES = [
   'service', 'inventory', 'faq',
   'documents', 'meetings', 'wiki', 'chat', 'reports', 'sales',
   'settings', 'import-export', 'integrations',
+  'ai-cs',
 ] as const;
 
 export type Module = (typeof MODULES)[number];

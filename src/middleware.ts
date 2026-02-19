@@ -24,6 +24,8 @@ const protectedPaths = [
   "/chat",
   "/reports",
   "/sales",
+  // AI CS 모듈
+  "/ai-cs",
 ];
 
 // Public paths that should not be protected
