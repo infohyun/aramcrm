@@ -31,6 +31,9 @@ import {
   TrendingUp,
   Bot,
   Truck,
+  Mail,
+  Zap,
+  Shield,
 } from "lucide-react";
 
 interface NavGroup {
@@ -54,6 +57,7 @@ const navGroups: NavGroup[] = [
       { label: "공지사항", icon: Megaphone, href: "/board" },
       { label: "메시지", icon: MessagesSquare, href: "/chat" },
       { label: "회의", icon: Video, href: "/meetings" },
+      { label: "이메일 캠페인", icon: Mail, href: "/campaigns" },
     ],
   },
   {
@@ -88,6 +92,8 @@ const navGroups: NavGroup[] = [
     items: [
       { label: "데이터 관리", icon: FileSpreadsheet, href: "/import-export" },
       { label: "외부 연동", icon: Link2, href: "/integrations" },
+      { label: "자동화", icon: Zap, href: "/automation" },
+      { label: "감사 로그", icon: Shield, href: "/audit-logs" },
       { label: "설정", icon: Settings, href: "/settings" },
     ],
   },

@@ -975,3 +975,93 @@ model AIUsageDaily {
 
   @@unique([date, agentId])
 }
+
+// ============================================
+// 감사 로그 (Audit Trail)
+// ============================================
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  userName    String?
+  action      String   // create, update, delete, login, logout, export, bulk_update, bulk_delete
+  entity      String   // customer, order, service, project, etc
+  entityId    String?
+  entityName  String?
+  changes     String?  // JSON: {field: {old, new}}
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+}
+
+// ============================================
+// 이메일 캠페인
+// ============================================
+model EmailCampaign {
+  id          String   @id @default(cuid())
+  name        String
+  subject     String
+  content     String
+  status      String   @default("draft") // draft, scheduled, sending, sent, failed
+  senderName  String?
+  senderEmail String?
+  segmentId   String?
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  totalCount  Int      @default(0)
+  sentCount   Int      @default(0)
+  failedCount Int      @default(0)
+  openCount   Int      @default(0)
+  clickCount  Int      @default(0)
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  recipients  CampaignRecipient[]
+}
+
+model CampaignRecipient {
+  id          String   @id @default(cuid())
+  campaignId  String
+  campaign    EmailCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  customerId  String?
+  email       String
+  name        String?
+  status      String   @default("pending") // pending, sent, delivered, opened, clicked, bounced, failed
+  sentAt      DateTime?
+  openedAt    DateTime?
+  error       String?
+  createdAt   DateTime @default(now())
+}
+
+// ============================================
+// 업무 자동화 규칙
+// ============================================
+model AutomationRule {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  trigger     String   // customer_created, customer_grade_changed, order_created, ticket_created, ticket_status_changed, voc_created
+  conditions  String   // JSON: [{field, operator, value}]
+  actions     String   // JSON: [{type, config}]
+  isActive    Boolean  @default(true)
+  lastRunAt   DateTime?
+  runCount    Int      @default(0)
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============================================
+// 고객 세분화 (Segmentation)
+// ============================================
+model CustomerSegment {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  conditions      String   // JSON: [{field, operator, value}]
+  customerCount   Int      @default(0)
+  lastCalculated  DateTime?
+  createdById     String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}

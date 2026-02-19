@@ -28,6 +28,11 @@ const protectedPaths = [
   "/shipments",
   // AI CS 모듈
   "/ai-cs",
+  // 새 기능 모듈
+  "/campaigns",
+  "/automation",
+  "/audit-logs",
+  "/orders",
 ];
 
 // Public paths that should not be protected
