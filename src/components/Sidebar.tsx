@@ -34,6 +34,12 @@ import {
   Mail,
   Zap,
   Shield,
+  Target,
+  FileSignature,
+  ShieldCheck,
+  Bell,
+  Activity,
+  PieChart,
 } from "lucide-react";
 
 interface NavGroup {
@@ -66,6 +72,8 @@ const navGroups: NavGroup[] = [
       { label: "고객 관리", icon: Users, href: "/customers" },
       { label: "커뮤니케이션", icon: MessageSquare, href: "/communications" },
       { label: "고객의 소리", icon: HeadphonesIcon, href: "/voc" },
+      { label: "계약 관리", icon: FileSignature, href: "/contracts" },
+      { label: "팔로업", icon: Bell, href: "/follow-ups" },
     ],
   },
   {
@@ -76,6 +84,7 @@ const navGroups: NavGroup[] = [
       { label: "배송 관리", icon: Truck, href: "/shipments" },
       { label: "FAQ 관리", icon: HelpCircle, href: "/faq" },
       { label: "AI 고객지원", icon: Bot, href: "/ai-cs" },
+      { label: "SLA 관리", icon: ShieldCheck, href: "/sla" },
     ],
   },
   {
@@ -85,6 +94,9 @@ const navGroups: NavGroup[] = [
       { label: "위키", icon: BookOpen, href: "/wiki" },
       { label: "리포트", icon: BarChart3, href: "/reports" },
       { label: "영업 파이프라인", icon: TrendingUp, href: "/sales" },
+      { label: "KPI 관리", icon: Target, href: "/kpi" },
+      { label: "커스텀 리포트", icon: PieChart, href: "/report-builder" },
+      { label: "활동 피드", icon: Activity, href: "/activity-feed" },
     ],
   },
   {

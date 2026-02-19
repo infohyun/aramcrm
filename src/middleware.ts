@@ -33,6 +33,13 @@ const protectedPaths = [
   "/automation",
   "/audit-logs",
   "/orders",
+  // Round 3 기능
+  "/kpi",
+  "/contracts",
+  "/sla",
+  "/report-builder",
+  "/follow-ups",
+  "/activity-feed",
 ];
 
 // Public paths that should not be protected

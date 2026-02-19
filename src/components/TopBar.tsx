@@ -43,6 +43,12 @@ const pageTitles: Record<string, string> = {
   "/automation": "업무 자동화",
   "/audit-logs": "감사 로그",
   "/orders": "주문 관리",
+  "/kpi": "KPI 관리",
+  "/contracts": "계약 관리",
+  "/sla": "SLA 관리",
+  "/report-builder": "커스텀 리포트",
+  "/follow-ups": "팔로업 리마인더",
+  "/activity-feed": "팀 활동 피드",
 };
 
 function getPageTitle(pathname: string): string {

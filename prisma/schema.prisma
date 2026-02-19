@@ -185,6 +185,9 @@ model Customer {
   orders         Order[]
   serviceTickets ServiceTicket[]
   shipments      Shipment[]
+  contracts      Contract[]
+  followUps      FollowUp[]
+  leadScore      Int       @default(0)
 }
 
 // ============================================
@@ -1064,4 +1067,92 @@ model CustomerSegment {
   createdById     String
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+// ============================================
+// KPI 목표 관리
+// ============================================
+model KpiTarget {
+  id          String   @id @default(cuid())
+  userId      String?
+  userName    String?
+  department  String?
+  period      String   // 2026-02 (월별) or 2026-Q1 (분기별)
+  metric      String   // revenue, new_customers, tickets_resolved, orders, voc_resolved
+  targetValue Float
+  actualValue Float    @default(0)
+  unit        String   @default("건") // 건, 원, 명, %
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, period, metric])
+}
+
+// ============================================
+// 계약/구독 관리
+// ============================================
+model Contract {
+  id            String   @id @default(cuid())
+  customerId    String
+  customer      Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  contractNumber String  @unique
+  title         String
+  type          String   @default("service") // subscription, service, maintenance, license
+  status        String   @default("active") // draft, active, expiring, expired, cancelled
+  startDate     DateTime
+  endDate       DateTime
+  value         Float    @default(0)
+  renewalType   String   @default("manual") // auto, manual
+  alertDays     Int      @default(30)
+  description   String?
+  attachments   String?  // JSON
+  createdById   String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// ============================================
+// SLA 정책
+// ============================================
+model SlaPolicy {
+  id              String   @id @default(cuid())
+  name            String
+  priority        String   @unique // low, medium, high, urgent
+  responseMinutes Int      // 최초 응답 시간 (분)
+  resolutionMinutes Int    // 해결 시간 (분)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ============================================
+// 커스텀 리포트
+// ============================================
+model CustomReport {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  config      String   // JSON: {dataSource, chartType, filters, groupBy, metrics}
+  createdById String
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============================================
+// 팔로업 리마인더
+// ============================================
+model FollowUp {
+  id          String    @id @default(cuid())
+  customerId  String
+  customer    Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  userId      String
+  type        String    @default("call") // call, email, meeting, visit
+  title       String
+  description String?
+  dueDate     DateTime
+  status      String    @default("pending") // pending, completed, overdue, cancelled
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
