@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -479,34 +479,86 @@ model ProjectMember {
 }
 
 model Task {
-  id          String   @id @default(cuid())
-  projectId   String
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  title       String
-  description String?
-  status      String   @default("todo") // todo, in_progress, review, done
-  priority    String   @default("medium")
-  assigneeId  String?
-  assignee    User?    @relation("TaskAssignee", fields: [assigneeId], references: [id])
-  creatorId   String
-  creator     User     @relation("TaskCreator", fields: [creatorId], references: [id])
-  dueDate     DateTime?
-  labels      String?  // JSON array
-  sortOrder   Int      @default(0)
-  parentId    String?  // 하위 태스크
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(cuid())
+  projectId      String
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title          String
+  description    String?
+  status         String   @default("todo") // todo, in_progress, review, done
+  priority       String   @default("medium")
+  assigneeId     String?
+  assignee       User?    @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  creatorId      String
+  creator        User     @relation("TaskCreator", fields: [creatorId], references: [id])
+  dueDate        DateTime?
+  startDate      DateTime?
+  labels         String?  // JSON array
+  sortOrder      Int      @default(0)
+  parentId       String?  // 하위 태스크 (서브태스크)
+  estimatedHours Float?   // 예상 소요 시간
+  actualHours    Float?   // 실제 소요 시간
+  completedAt    DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  comments    TaskComment[]
+  comments       TaskComment[]
+  checklist      ChecklistItem[]
+  attachments    TaskAttachment[]
+  activities     TaskActivity[]
 }
 
 model TaskComment {
-  id       String   @id @default(cuid())
-  taskId   String
-  task     Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  authorId String
-  author   User     @relation(fields: [authorId], references: [id])
-  content  String
+  id        String   @id @default(cuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  content   String
+  createdAt DateTime @default(now())
+}
+
+// ============================================
+// 태스크 체크리스트 항목
+// ============================================
+model ChecklistItem {
+  id          String   @id @default(cuid())
+  taskId      String
+  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  title       String
+  isCompleted Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============================================
+// 태스크 첨부파일
+// ============================================
+model TaskAttachment {
+  id         String   @id @default(cuid())
+  taskId     String
+  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  uploaderId String
+  fileName   String
+  fileUrl    String
+  fileSize   Int      @default(0)
+  mimeType   String?
+  createdAt  DateTime @default(now())
+}
+
+// ============================================
+// 태스크 활동 로그
+// ============================================
+model TaskActivity {
+  id        String   @id @default(cuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId    String
+  action    String   // created, status_changed, assigned, comment_added, checklist_updated, attachment_added, edited, deleted
+  field     String?  // 변경된 필드명
+  oldValue  String?
+  newValue  String?
   createdAt DateTime @default(now())
 }
 
