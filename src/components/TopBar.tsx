@@ -49,6 +49,14 @@ const pageTitles: Record<string, string> = {
   "/report-builder": "커스텀 리포트",
   "/follow-ups": "팔로업 리마인더",
   "/activity-feed": "팀 활동 피드",
+  "/customer-health": "고객 건강 점수",
+  "/products": "제품 카탈로그",
+  "/quotes": "견적서 관리",
+  "/surveys": "설문조사",
+  "/time-tracking": "타임 트래킹",
+  "/territories": "영업 지역 관리",
+  "/competitors": "경쟁사 추적",
+  "/directory": "직원 디렉토리",
 };
 
 function getPageTitle(pathname: string): string {

@@ -40,6 +40,13 @@ import {
   Bell,
   Activity,
   PieChart,
+  HeartPulse,
+  ShoppingBag,
+  ClipboardList,
+  Timer,
+  MapPin,
+  Swords,
+  UsersRound,
 } from "lucide-react";
 
 interface NavGroup {
@@ -74,6 +81,9 @@ const navGroups: NavGroup[] = [
       { label: "고객의 소리", icon: HeadphonesIcon, href: "/voc" },
       { label: "계약 관리", icon: FileSignature, href: "/contracts" },
       { label: "팔로업", icon: Bell, href: "/follow-ups" },
+      { label: "건강 점수", icon: HeartPulse, href: "/customer-health" },
+      { label: "견적서", icon: FileText, href: "/quotes" },
+      { label: "설문조사", icon: ClipboardList, href: "/surveys" },
     ],
   },
   {
@@ -85,6 +95,7 @@ const navGroups: NavGroup[] = [
       { label: "FAQ 관리", icon: HelpCircle, href: "/faq" },
       { label: "AI 고객지원", icon: Bot, href: "/ai-cs" },
       { label: "SLA 관리", icon: ShieldCheck, href: "/sla" },
+      { label: "제품 카탈로그", icon: ShoppingBag, href: "/products" },
     ],
   },
   {
@@ -97,6 +108,9 @@ const navGroups: NavGroup[] = [
       { label: "KPI 관리", icon: Target, href: "/kpi" },
       { label: "커스텀 리포트", icon: PieChart, href: "/report-builder" },
       { label: "활동 피드", icon: Activity, href: "/activity-feed" },
+      { label: "타임 트래킹", icon: Timer, href: "/time-tracking" },
+      { label: "영업 지역", icon: MapPin, href: "/territories" },
+      { label: "경쟁사 추적", icon: Swords, href: "/competitors" },
     ],
   },
   {
@@ -106,6 +120,7 @@ const navGroups: NavGroup[] = [
       { label: "외부 연동", icon: Link2, href: "/integrations" },
       { label: "자동화", icon: Zap, href: "/automation" },
       { label: "감사 로그", icon: Shield, href: "/audit-logs" },
+      { label: "직원 디렉토리", icon: UsersRound, href: "/directory" },
       { label: "설정", icon: Settings, href: "/settings" },
     ],
   },

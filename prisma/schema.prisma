@@ -187,7 +187,10 @@ model Customer {
   shipments      Shipment[]
   contracts      Contract[]
   followUps      FollowUp[]
+  quotes         Quote[]
   leadScore      Int       @default(0)
+  healthScore    Int       @default(100)
+  territoryId    String?
 }
 
 // ============================================
@@ -1155,4 +1158,169 @@ model FollowUp {
   completedAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+}
+
+// ============================================
+// 제품 카탈로그
+// ============================================
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  sku         String   @unique
+  category    String?
+  description String?
+  price       Float    @default(0)
+  cost        Float    @default(0)
+  unit        String   @default("EA")
+  isActive    Boolean  @default(true)
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  quoteItems  QuoteItem[]
+}
+
+// ============================================
+// 견적서
+// ============================================
+model Quote {
+  id           String   @id @default(cuid())
+  quoteNumber  String   @unique
+  customerId   String
+  customer     Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  title        String
+  status       String   @default("draft") // draft, sent, approved, rejected, converted
+  validUntil   DateTime?
+  subtotal     Float    @default(0)
+  discountRate Float    @default(0)
+  taxRate      Float    @default(10)
+  totalAmount  Float    @default(0)
+  notes        String?
+  createdById  String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  items        QuoteItem[]
+}
+
+model QuoteItem {
+  id          String   @id @default(cuid())
+  quoteId     String
+  quote       Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id])
+  description String
+  quantity    Int      @default(1)
+  unitPrice   Float
+  amount      Float
+  sortOrder   Int      @default(0)
+}
+
+// ============================================
+// 설문조사
+// ============================================
+model Survey {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  status      String   @default("draft") // draft, active, closed
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  questions   SurveyQuestion[]
+  responses   SurveyResponse[]
+}
+
+model SurveyQuestion {
+  id        String   @id @default(cuid())
+  surveyId  String
+  survey    Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  type      String   // text, radio, checkbox, rating
+  question  String
+  options   String?  // JSON array
+  required  Boolean  @default(false)
+  sortOrder Int      @default(0)
+
+  answers   SurveyAnswer[]
+}
+
+model SurveyResponse {
+  id              String   @id @default(cuid())
+  surveyId        String
+  survey          Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  customerId      String?
+  respondentName  String?
+  respondentEmail String?
+  createdAt       DateTime @default(now())
+
+  answers         SurveyAnswer[]
+}
+
+model SurveyAnswer {
+  id         String         @id @default(cuid())
+  responseId String
+  response   SurveyResponse @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  questionId String
+  question   SurveyQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answer     String
+}
+
+// ============================================
+// 타임 트래킹
+// ============================================
+model TimeEntry {
+  id          String   @id @default(cuid())
+  userId      String
+  projectId   String?
+  customerId  String?
+  date        DateTime @db.Date
+  hours       Float
+  description String?
+  category    String   @default("work") // work, meeting, admin, travel
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============================================
+// 영업 지역 관리
+// ============================================
+model Territory {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  region      String
+  description String?
+  managerId   String?
+  color       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============================================
+// 경쟁사 추적
+// ============================================
+model Competitor {
+  id          String   @id @default(cuid())
+  name        String
+  website     String?
+  description String?
+  strengths   String?
+  weaknesses  String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  deals       CompetitorDeal[]
+}
+
+model CompetitorDeal {
+  id           String     @id @default(cuid())
+  competitorId String
+  competitor   Competitor @relation(fields: [competitorId], references: [id], onDelete: Cascade)
+  dealName     String
+  customerId   String?
+  result       String     @default("pending") // won, lost, pending
+  value        Float?
+  notes        String?
+  createdAt    DateTime   @default(now())
 }

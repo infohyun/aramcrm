@@ -40,6 +40,15 @@ const protectedPaths = [
   "/report-builder",
   "/follow-ups",
   "/activity-feed",
+  // Round 4 기능
+  "/customer-health",
+  "/products",
+  "/quotes",
+  "/surveys",
+  "/time-tracking",
+  "/territories",
+  "/competitors",
+  "/directory",
 ];
 
 // Public paths that should not be protected

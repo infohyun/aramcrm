@@ -7,6 +7,7 @@ export const MODULES = [
   'settings', 'import-export', 'integrations',
   'ai-cs', 'campaigns', 'automation', 'audit-logs',
   'kpi', 'contracts', 'sla', 'report-builder', 'follow-ups', 'activity-feed',
+  'customer-health', 'products', 'quotes', 'surveys', 'time-tracking', 'territories', 'competitors', 'directory',
 ] as const;
 
 export type Module = (typeof MODULES)[number];
