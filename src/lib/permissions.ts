@@ -2,7 +2,7 @@
 export const MODULES = [
   'dashboard', 'board', 'projects', 'approvals', 'calendar',
   'customers', 'communications', 'voc',
-  'service', 'inventory', 'faq',
+  'service', 'inventory', 'shipments', 'faq',
   'documents', 'meetings', 'wiki', 'chat', 'reports', 'sales',
   'settings', 'import-export', 'integrations',
   'ai-cs',

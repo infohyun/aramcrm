@@ -24,6 +24,8 @@ const protectedPaths = [
   "/chat",
   "/reports",
   "/sales",
+  // 배송 관리
+  "/shipments",
   // AI CS 모듈
   "/ai-cs",
 ];

@@ -30,6 +30,7 @@ import {
   BarChart3,
   TrendingUp,
   Bot,
+  Truck,
 } from "lucide-react";
 
 interface NavGroup {
@@ -68,6 +69,7 @@ const navGroups: NavGroup[] = [
     items: [
       { label: "AS 관리", icon: Wrench, href: "/service" },
       { label: "재고/물류", icon: Package, href: "/inventory" },
+      { label: "배송 관리", icon: Truck, href: "/shipments" },
       { label: "FAQ 관리", icon: HelpCircle, href: "/faq" },
       { label: "AI 고객지원", icon: Bot, href: "/ai-cs" },
     ],

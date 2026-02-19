@@ -22,6 +22,9 @@ import {
   FileText,
   ShoppingBag,
   Activity,
+  History,
+  Loader2,
+  Wrench,
 } from "lucide-react";
 
 interface CustomerDetail {
@@ -104,6 +107,7 @@ interface OrderRecord {
 
 const TABS = [
   { key: "info", label: "기본 정보", icon: User },
+  { key: "timeline", label: "360° 타임라인", icon: History },
   { key: "communications", label: "커뮤니케이션", icon: MessageSquare },
   { key: "voc", label: "VOC", icon: AlertCircle },
   { key: "orders", label: "거래 내역", icon: ShoppingBag },
@@ -789,6 +793,11 @@ export default function CustomerDetailPage() {
           </div>
         )}
 
+        {/* 360° 타임라인 탭 */}
+        {activeTab === "timeline" && (
+          <CustomerTimeline customerId={customer.id} />
+        )}
+
         {/* 커뮤니케이션 탭 */}
         {activeTab === "communications" && (
           <div>
@@ -1133,6 +1142,184 @@ function InfoRow({
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// 360도 타임라인 컴포넌트
+interface TimelineEvent {
+  type: "order" | "communication" | "voc" | "service" | "activity";
+  id: string;
+  title: string;
+  subtitle: string;
+  status: string;
+  date: string;
+}
+
+const TIMELINE_ICONS: Record<string, React.ElementType> = {
+  order: ShoppingBag,
+  communication: MessageSquare,
+  voc: AlertCircle,
+  service: Wrench,
+  activity: Activity,
+};
+
+const TIMELINE_COLORS: Record<string, string> = {
+  order: "bg-green-100 border-green-400 text-green-600",
+  communication: "bg-blue-100 border-blue-400 text-blue-600",
+  voc: "bg-amber-100 border-amber-400 text-amber-600",
+  service: "bg-red-100 border-red-400 text-red-600",
+  activity: "bg-indigo-100 border-indigo-400 text-indigo-600",
+};
+
+const TIMELINE_LABELS: Record<string, string> = {
+  order: "주문",
+  communication: "커뮤니케이션",
+  voc: "VOC",
+  service: "AS",
+  activity: "활동",
+};
+
+function CustomerTimeline({ customerId }: { customerId: string }) {
+  const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
+  const [counts, setCounts] = useState<Record<string, number>>({});
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("all");
+
+  useEffect(() => {
+    async function fetchTimeline() {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/customers/${customerId}/timeline`);
+        if (res.ok) {
+          const data = await res.json();
+          setTimeline(data.timeline || []);
+          setCounts(data.counts || {});
+        }
+      } catch {} finally {
+        setLoading(false);
+      }
+    }
+    fetchTimeline();
+  }, [customerId]);
+
+  const filtered = filter === "all" ? timeline : timeline.filter((e) => e.type === filter);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-lg font-semibold text-gray-900">360° 고객 타임라인</h2>
+      </div>
+
+      {/* Summary cards */}
+      <div className="grid grid-cols-5 gap-3 mb-6">
+        {[
+          { key: "orders", label: "주문", color: "bg-green-50 text-green-700" },
+          { key: "communications", label: "소통", color: "bg-blue-50 text-blue-700" },
+          { key: "vocs", label: "VOC", color: "bg-amber-50 text-amber-700" },
+          { key: "serviceTickets", label: "AS", color: "bg-red-50 text-red-700" },
+          { key: "activities", label: "활동", color: "bg-indigo-50 text-indigo-700" },
+        ].map((c) => (
+          <div key={c.key} className={`rounded-xl p-3 text-center ${c.color}`}>
+            <p className="text-xl font-bold">{counts[c.key] || 0}</p>
+            <p className="text-[11px] mt-0.5">{c.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Filter */}
+      <div className="flex gap-2 mb-4 flex-wrap">
+        {[
+          { key: "all", label: "전체" },
+          { key: "order", label: "주문" },
+          { key: "communication", label: "소통" },
+          { key: "voc", label: "VOC" },
+          { key: "service", label: "AS" },
+          { key: "activity", label: "활동" },
+        ].map((f) => (
+          <button
+            key={f.key}
+            onClick={() => setFilter(f.key)}
+            className={`px-3 py-1.5 text-xs rounded-full font-medium transition-colors ${
+              filter === f.key
+                ? "bg-gray-900 text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+          >
+            {f.label}
+            {f.key !== "all" && (
+              <span className="ml-1 opacity-70">
+                {f.key === "order" ? counts.orders || 0 :
+                 f.key === "communication" ? counts.communications || 0 :
+                 f.key === "voc" ? counts.vocs || 0 :
+                 f.key === "service" ? counts.serviceTickets || 0 :
+                 counts.activities || 0}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Timeline */}
+      {filtered.length === 0 ? (
+        <EmptyState
+          icon={History}
+          title="기록이 없습니다"
+          description="이 고객과 관련된 활동 기록이 없습니다."
+        />
+      ) : (
+        <div className="relative">
+          <div className="absolute left-5 top-0 bottom-0 w-px bg-gray-200" />
+          <div className="space-y-3">
+            {filtered.map((event, idx) => {
+              const Icon = TIMELINE_ICONS[event.type] || Activity;
+              const colorClass = TIMELINE_COLORS[event.type] || "bg-gray-100 border-gray-400 text-gray-600";
+
+              return (
+                <div key={`${event.type}-${event.id}-${idx}`} className="relative pl-12">
+                  <div className={`absolute left-3 top-3 w-5 h-5 rounded-full border-2 flex items-center justify-center ${colorClass}`}>
+                    <Icon size={10} />
+                  </div>
+                  <div className="bg-white rounded-xl border border-gray-100 shadow-[0_1px_3px_0_rgb(0_0_0/0.04)] p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-medium ${colorClass}`}>
+                            {TIMELINE_LABELS[event.type] || event.type}
+                          </span>
+                          <span className="text-xs px-1.5 py-0.5 bg-gray-100 rounded text-gray-500">
+                            {event.status}
+                          </span>
+                        </div>
+                        <p className="text-sm font-medium text-gray-900 truncate">{event.title}</p>
+                        {event.subtitle && (
+                          <p className="text-xs text-gray-500 mt-0.5">{event.subtitle}</p>
+                        )}
+                      </div>
+                      <span className="text-[11px] text-gray-400 whitespace-nowrap">
+                        {new Date(event.date).toLocaleDateString("ko-KR", {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
