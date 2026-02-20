@@ -42,7 +42,7 @@ function nthWeekday(
   n: number
 ): string {
   const first = new Date(year, month - 1, 1);
-  let diff = (weekday - first.getDay() + 7) % 7;
+  const diff = (weekday - first.getDay() + 7) % 7;
   const day = 1 + diff + (n - 1) * 7;
   return fmt(year, month, day);
 }
@@ -54,7 +54,7 @@ function lastWeekday(
   weekday: number
 ): string {
   const last = new Date(year, month, 0); // last day of month
-  let diff = (last.getDay() - weekday + 7) % 7;
+  const diff = (last.getDay() - weekday + 7) % 7;
   const day = last.getDate() - diff;
   return fmt(year, month, day);
 }
@@ -167,7 +167,6 @@ function getFrenchHolidays(year: number): Holiday[] {
 
   // 부활절 기반 공휴일
   const easter = computeEaster(year);
-  const easterDate = new Date(year, easter.month - 1, easter.day);
   const easterStr = fmt(year, easter.month, easter.day);
 
   // Lundi de Pâques (Easter Monday = Easter + 1)

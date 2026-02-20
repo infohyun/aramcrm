@@ -146,7 +146,7 @@ export async function orchestrate(input: OrchestratorInput): Promise<Orchestrato
   }
 
   let finalResponse = primaryResult?.content || '죄송합니다. 현재 답변을 생성할 수 없습니다. 잠시 후 다시 시도해주세요.';
-  let finalAgentId = primaryResult?.agentId || ('team-3' as AgentId);
+  const finalAgentId = primaryResult?.agentId || ('team-3' as AgentId);
   const allActions = successfulResults.flatMap((r) => r.actions || []);
 
   // ─── Step 5: 품질 검수 (Team 8) ───

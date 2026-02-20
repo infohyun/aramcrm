@@ -31,6 +31,7 @@ export default function DepartmentsPage() {
     setLoading(false);
   };
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- initial data fetch on mount
   useEffect(() => { fetchDepartments(); }, []);
 
   const openCreate = () => {

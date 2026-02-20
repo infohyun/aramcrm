@@ -76,6 +76,7 @@ export default function MarkdownToolbar({ textareaRef, value, onChange }: Markdo
 
   return (
     <div className="flex items-center gap-0.5 p-1.5 bg-gray-50 border border-gray-200 rounded-t-xl border-b-0 flex-wrap">
+      {/* eslint-disable-next-line react-hooks/refs -- ref is accessed in click handlers, not during render */}
       {buttons.map((btn, i) => {
         if ("divider" in btn && btn.divider) {
           return <div key={i} className="w-px h-5 bg-gray-200 mx-1" />;

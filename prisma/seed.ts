@@ -62,12 +62,12 @@ async function main() {
   ];
   const actions = ['read', 'create', 'update', 'delete', 'manage'];
 
-  for (const module of modules) {
+  for (const mod of modules) {
     for (const action of actions) {
       await prisma.permission.upsert({
-        where: { module_action: { module, action } },
+        where: { module_action: { module: mod, action } },
         update: {},
-        create: { module, action, description: `${module} ${action}` },
+        create: { module: mod, action, description: `${mod} ${action}` },
       });
     }
   }
