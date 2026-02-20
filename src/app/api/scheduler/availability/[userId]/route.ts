@@ -93,19 +93,22 @@ export async function GET(
   const slots: { start: string; end: string }[] = [];
   const duration = config.duration;
   const buffer = config.bufferTime;
+  const stepMinutes = duration + buffer;
 
-  for (let hour = config.workStartHour; hour < config.workEndHour; hour++) {
-    for (let min = 0; min < 60; min += duration + buffer) {
-      const slotStart = new Date(`${dateStr}T${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}:00+09:00`);
-      const slotEnd = new Date(slotStart.getTime() + duration * 60 * 1000);
+  const workStart = new Date(`${dateStr}T${String(config.workStartHour).padStart(2, '0')}:00:00+09:00`);
+  const workEnd = new Date(`${dateStr}T${String(config.workEndHour).padStart(2, '0')}:00:00+09:00`);
+  const now = new Date();
 
-      // 근무시간 초과 체크
-      const workEndTime = new Date(`${dateStr}T${String(config.workEndHour).padStart(2, '0')}:00:00+09:00`);
-      if (slotEnd > workEndTime) continue;
+  let cursor = workStart.getTime();
+  while (cursor < workEnd.getTime()) {
+    const slotStart = new Date(cursor);
+    const slotEnd = new Date(cursor + duration * 60 * 1000);
 
-      // 과거 시간 체크
-      if (slotStart < new Date()) continue;
+    // 근무시간 초과 체크
+    if (slotEnd > workEnd) break;
 
+    // 과거 시간 체크
+    if (slotStart > now) {
       // busy 시간 충돌 체크
       const isBusy = busySlots.some((busy) => {
         const busyStart = new Date(busy.start);
@@ -120,6 +123,8 @@ export async function GET(
         });
       }
     }
+
+    cursor += stepMinutes * 60 * 1000;
   }
 
   return NextResponse.json({
