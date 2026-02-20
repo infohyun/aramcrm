@@ -348,7 +348,7 @@ export default function WorkflowBuilderPage() {
     const updatedNodes = [...editNodes, newNode];
 
     // Auto-create edge from the last node to the new node
-    let updatedEdges = [...editEdges];
+    const updatedEdges = [...editEdges];
     if (editNodes.length > 0) {
       // Find the last node in the chain (a node that is not the source of any edge)
       const sourceIds = new Set(editEdges.map((e) => e.source));
@@ -373,7 +373,7 @@ export default function WorkflowBuilderPage() {
     const incomingEdge = editEdges.find((e) => e.target === nodeId);
     const outgoingEdge = editEdges.find((e) => e.source === nodeId);
 
-    let updatedEdges = editEdges.filter((e) => e.source !== nodeId && e.target !== nodeId);
+    const updatedEdges = editEdges.filter((e) => e.source !== nodeId && e.target !== nodeId);
 
     // Reconnect: if the node had both an incoming and outgoing edge, bridge them
     if (incomingEdge && outgoingEdge) {

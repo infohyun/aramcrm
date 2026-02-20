@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "작업과 대상을 선택하세요" }, { status: 400 });
   }
 
-  let result = { affected: 0 };
+  const result = { affected: 0 };
 
   switch (action) {
     case "update_grade": {

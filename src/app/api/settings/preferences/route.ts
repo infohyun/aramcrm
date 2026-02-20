@@ -37,6 +37,7 @@ export async function PUT(request: NextRequest) {
     const {
       theme, language, emailNotify, pushNotify, taskReminder,
       approvalNotify, chatNotify, hiddenWidgets, dashboardLayout, sidebarCollapsed,
+      enabledMenus,
     } = body;
 
     const data: Record<string, unknown> = {};
@@ -50,6 +51,7 @@ export async function PUT(request: NextRequest) {
     if (hiddenWidgets !== undefined) data.hiddenWidgets = typeof hiddenWidgets === "string" ? hiddenWidgets : JSON.stringify(hiddenWidgets);
     if (dashboardLayout !== undefined) data.dashboardLayout = typeof dashboardLayout === "string" ? dashboardLayout : JSON.stringify(dashboardLayout);
     if (sidebarCollapsed !== undefined) data.sidebarCollapsed = sidebarCollapsed;
+    if (enabledMenus !== undefined) data.enabledMenus = typeof enabledMenus === "string" ? enabledMenus : JSON.stringify(enabledMenus);
 
     const preference = await prisma.userPreference.upsert({
       where: { userId: session.user!.id! },

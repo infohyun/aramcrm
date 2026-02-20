@@ -16,10 +16,12 @@ import {
   Moon,
   Upload,
   Camera,
+  Menu,
 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
+import { navGroups, ALWAYS_VISIBLE_MENUS, DEFAULT_AS_MENUS } from "@/components/Sidebar";
 
-type TabId = "profile" | "password" | "notifications" | "system" | "appearance";
+type TabId = "profile" | "password" | "notifications" | "system" | "appearance" | "menus";
 
 interface Tab {
   id: TabId;
@@ -30,6 +32,7 @@ interface Tab {
 const tabs: Tab[] = [
   { id: "profile", label: "내 프로필", icon: User },
   { id: "password", label: "비밀번호 변경", icon: Lock },
+  { id: "menus", label: "메뉴 관리", icon: Menu },
   { id: "notifications", label: "알림 설정", icon: Bell },
   { id: "appearance", label: "외관 설정", icon: Palette },
   { id: "system", label: "시스템 설정", icon: Building2 },
@@ -93,6 +96,12 @@ export default function SettingsPage() {
   const [appearanceSaving, setAppearanceSaving] = useState(false);
   const [appearanceMessage, setAppearanceMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
+  // Menu management
+  const [enabledMenus, setEnabledMenus] = useState<string[]>([...DEFAULT_AS_MENUS]);
+  const [menuSaving, setMenuSaving] = useState(false);
+  const [menuMessage, setMenuMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [menuInitialized, setMenuInitialized] = useState(false);
+
   const WIDGET_OPTIONS = [
     { key: "stats", label: "통계 카드" },
     { key: "quickActions", label: "빠른 작업" },
@@ -149,6 +158,17 @@ export default function SettingsPage() {
               setHiddenWidgets([]);
             }
           }
+          // enabledMenus 로드
+          if (data.enabledMenus) {
+            try {
+              setEnabledMenus(JSON.parse(data.enabledMenus));
+            } catch {
+              setEnabledMenus([...DEFAULT_AS_MENUS]);
+            }
+          } else {
+            setEnabledMenus([...DEFAULT_AS_MENUS]);
+          }
+          setMenuInitialized(true);
         }
       } catch {
         // ignore
@@ -349,6 +369,48 @@ export default function SettingsPage() {
     } finally {
       setSystemSaving(false);
     }
+  };
+
+  // Menu management handlers
+  const handleMenuSave = async () => {
+    setMenuSaving(true);
+    setMenuMessage(null);
+
+    try {
+      const res = await fetch("/api/settings/preferences", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabledMenus }),
+      });
+
+      if (res.ok) {
+        setMenuMessage({ type: "success", text: "메뉴 설정이 저장되었습니다. 사이드바에 즉시 반영됩니다." });
+        // 사이드바 리프레시를 위해 페이지 새로고침
+        setTimeout(() => window.location.reload(), 800);
+      } else {
+        setMenuMessage({ type: "error", text: "메뉴 설정 저장에 실패했습니다." });
+      }
+    } catch {
+      setMenuMessage({ type: "error", text: "메뉴 설정 저장 중 오류가 발생했습니다." });
+    } finally {
+      setMenuSaving(false);
+    }
+  };
+
+  const toggleMenu = (href: string) => {
+    setEnabledMenus((prev) =>
+      prev.includes(href) ? prev.filter((h) => h !== href) : [...prev, href]
+    );
+  };
+
+  const enableAllMenus = () => {
+    const allHrefs = navGroups.flatMap((g) => g.items.map((i) => i.href))
+      .filter((h) => !ALWAYS_VISIBLE_MENUS.includes(h));
+    setEnabledMenus(allHrefs);
+  };
+
+  const resetToDefault = () => {
+    setEnabledMenus([...DEFAULT_AS_MENUS]);
   };
 
   const ToggleSwitch = ({
@@ -683,6 +745,94 @@ export default function SettingsPage() {
                 >
                   {notificationSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                   알림 설정 저장
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Menu Management Section */}
+          {activeTab === "menus" && (
+            <div className="rounded-2xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-[0_1px_3px_0_rgb(0_0_0/0.04)]">
+              <div className="border-b border-gray-100 dark:border-gray-700 px-6 py-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">메뉴 관리</h3>
+                    <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+                      사이드바에 표시할 메뉴를 선택합니다. 기본값은 AS 관련 메뉴만 표시됩니다.
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={enableAllMenus}
+                      className="rounded-lg border border-gray-200 dark:border-gray-600 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      전체 활성화
+                    </button>
+                    <button
+                      onClick={resetToDefault}
+                      className="rounded-lg border border-gray-200 dark:border-gray-600 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      AS 기본값
+                    </button>
+                  </div>
+                </div>
+              </div>
+              {menuInitialized ? (
+                <div className="px-6 py-4 space-y-5">
+                  {navGroups.map((group) => {
+                    const toggleableItems = group.items.filter(
+                      (item) => !ALWAYS_VISIBLE_MENUS.includes(item.href)
+                    );
+                    if (toggleableItems.length === 0) return null;
+                    return (
+                      <div key={group.label}>
+                        <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
+                          {group.label}
+                        </h4>
+                        <div className="space-y-0 divide-y divide-gray-100 dark:divide-gray-700">
+                          {toggleableItems.map((item) => {
+                            const isDefault = DEFAULT_AS_MENUS.includes(item.href);
+                            const Icon = item.icon;
+                            return (
+                              <div key={item.href} className="flex items-center justify-between py-2.5">
+                                <div className="flex items-center gap-3">
+                                  <Icon className="h-4 w-4 text-gray-400" />
+                                  <span className="text-sm text-gray-700 dark:text-gray-300">{item.label}</span>
+                                  {isDefault && (
+                                    <span className="rounded-full bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 text-[10px] font-medium text-blue-600 dark:text-blue-400">
+                                      AS 기본
+                                    </span>
+                                  )}
+                                </div>
+                                <ToggleSwitch
+                                  checked={enabledMenus.includes(item.href)}
+                                  onChange={() => toggleMenu(item.href)}
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div className="pt-2 text-xs text-gray-400 dark:text-gray-500">
+                    * 대시보드와 설정은 항상 표시됩니다.
+                  </div>
+                </div>
+              ) : (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
+                </div>
+              )}
+              <div className="flex justify-end border-t border-gray-100 dark:border-gray-700 px-6 py-4">
+                <MessageBox message={menuMessage} />
+                <button
+                  onClick={handleMenuSave}
+                  disabled={menuSaving}
+                  className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700 disabled:opacity-50 shadow-sm ml-4"
+                >
+                  {menuSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                  메뉴 설정 저장
                 </button>
               </div>
             </div>

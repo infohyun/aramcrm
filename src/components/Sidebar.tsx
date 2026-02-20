@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
@@ -62,7 +62,13 @@ interface NavGroup {
   items: { label: string; icon: React.ElementType; href: string }[];
 }
 
-const navGroups: NavGroup[] = [
+// 항상 표시되는 메뉴 (토글 불가)
+export const ALWAYS_VISIBLE_MENUS = ["/dashboard", "/settings"];
+
+// 기본 AS 메뉴 (enabledMenus가 null일 때 기본으로 표시)
+export const DEFAULT_AS_MENUS = ["/service", "/ai-cs", "/sla", "/faq"];
+
+export const navGroups: NavGroup[] = [
   {
     label: "업무",
     items: [
@@ -150,6 +156,8 @@ export default function Sidebar() {
   const [expandedGroups, setExpandedGroups] = useState<string[]>(
     navGroups.map((g) => g.label)
   );
+  const [enabledMenus, setEnabledMenus] = useState<string[] | null>(null);
+  const [prefsLoaded, setPrefsLoaded] = useState(false);
 
   const user = session?.user;
   const userName = user?.name || "사용자";
@@ -157,11 +165,62 @@ export default function Sidebar() {
   const userInitial = userName.charAt(0);
   const userDept = (user as Record<string, unknown>)?.departmentName as string || (user as Record<string, unknown>)?.department as string || "";
 
+  // 사용자 설정 로드
+  useEffect(() => {
+    async function loadPrefs() {
+      try {
+        const res = await fetch("/api/settings/preferences");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.enabledMenus) {
+            try {
+              const parsed = JSON.parse(data.enabledMenus);
+              setEnabledMenus(parsed);
+            } catch {
+              setEnabledMenus(null);
+            }
+          } else {
+            setEnabledMenus(null);
+          }
+        }
+      } catch {
+        // ignore
+      } finally {
+        setPrefsLoaded(true);
+      }
+    }
+    if (session?.user) {
+      loadPrefs();
+    } else {
+      setPrefsLoaded(true);
+    }
+  }, [session?.user]);
+
+  // 메뉴 항목이 표시되어야 하는지 판단
+  const isMenuVisible = (href: string): boolean => {
+    // 항상 표시되는 메뉴
+    if (ALWAYS_VISIBLE_MENUS.includes(href)) return true;
+    // enabledMenus가 null이면 AS 기본 메뉴만 표시
+    if (enabledMenus === null) return DEFAULT_AS_MENUS.includes(href);
+    // enabledMenus에 포함된 메뉴만 표시
+    return enabledMenus.includes(href);
+  };
+
   const toggleGroup = (label: string) => {
     setExpandedGroups((prev) =>
       prev.includes(label) ? prev.filter((g) => g !== label) : [...prev, label]
     );
   };
+
+  // 필터링된 navGroups (표시할 항목이 있는 그룹만)
+  const filteredGroups = prefsLoaded
+    ? navGroups
+        .map((group) => ({
+          ...group,
+          items: group.items.filter((item) => isMenuVisible(item.href)),
+        }))
+        .filter((group) => group.items.length > 0)
+    : [];
 
   return (
     <>
@@ -205,7 +264,7 @@ export default function Sidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto px-3 py-4">
-          {navGroups.map((group) => {
+          {filteredGroups.map((group) => {
             const isExpanded = expandedGroups.includes(group.label);
 
             return (
