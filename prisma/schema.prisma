@@ -65,6 +65,7 @@ model User {
   wikiPages           WikiPage[]
   channelMembers      ChannelMember[]
   messages            Message[]
+  schedulerConfig     SchedulerConfig? @relation("SchedulerOwner")
 }
 
 // ============================================
@@ -195,6 +196,7 @@ model Customer {
   healthScore    Int       @default(100)
   territoryId    String?
   journeyStage   String    @default("lead") // lead, consultation, proposal, negotiation, contract, retention, churn_risk
+  bookings       Booking[]
 }
 
 // ============================================
@@ -641,6 +643,7 @@ model CalendarEvent {
   updatedAt     DateTime  @updatedAt
 
   attendees     EventAttendee[]
+  bookings      Booking[]
 }
 
 model EventAttendee {
@@ -1480,4 +1483,48 @@ model Workflow {
   createdById String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+// ============================================
+// 미팅 스케줄러 (Google Calendar 연동)
+// ============================================
+model SchedulerConfig {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation("SchedulerOwner", fields: [userId], references: [id])
+  title           String   @default("미팅 예약")
+  description     String?
+  duration        Int      @default(30)      // 미팅 시간(분)
+  bufferTime      Int      @default(10)      // 미팅 간 여유 시간(분)
+  workStartHour   Int      @default(9)
+  workEndHour     Int      @default(18)
+  workDays        String   @default("1,2,3,4,5")  // 월~금
+  timezone        String   @default("Asia/Seoul")
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  bookings        Booking[]
+}
+
+model Booking {
+  id                String   @id @default(cuid())
+  schedulerConfigId String
+  schedulerConfig   SchedulerConfig @relation(fields: [schedulerConfigId], references: [id])
+  customerName      String
+  customerEmail     String
+  customerPhone     String?
+  customerCompany   String?
+  customerId        String?
+  customer          Customer? @relation(fields: [customerId], references: [id])
+  title             String
+  startTime         DateTime
+  endTime           DateTime
+  status            String   @default("confirmed")  // confirmed, cancelled, completed
+  googleEventId     String?
+  calendarEventId   String?
+  calendarEvent     CalendarEvent? @relation(fields: [calendarEventId], references: [id])
+  notes             String?
+  cancelToken       String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }

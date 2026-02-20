@@ -65,6 +65,7 @@ const pageTitles: Record<string, string> = {
   "/report-schedules": "리포트 스케줄",
   "/nps": "NPS 대시보드",
   "/workflow-builder": "워크플로우 빌더",
+  "/scheduler": "미팅 스케줄러",
 };
 
 function getPageTitle(pathname: string): string {

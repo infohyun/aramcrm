@@ -58,6 +58,8 @@ const protectedPaths = [
   "/report-schedules",
   "/nps",
   "/workflow-builder",
+  // 미팅 스케줄러 (내부 관리)
+  "/scheduler",
 ];
 
 // Public paths that should not be protected

@@ -67,6 +67,23 @@ export async function listCalendarEvents(accessToken: string, timeMin: string, t
   return res.json();
 }
 
+// Google Calendar FreeBusy API
+export async function getFreeBusy(accessToken: string, timeMin: string, timeMax: string, calendarId = 'primary') {
+  const res = await fetch('https://www.googleapis.com/calendar/v3/freeBusy', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      timeMin,
+      timeMax,
+      items: [{ id: calendarId }],
+    }),
+  });
+  return res.json();
+}
+
 export async function createCalendarEvent(accessToken: string, event: {
   summary: string;
   description?: string;

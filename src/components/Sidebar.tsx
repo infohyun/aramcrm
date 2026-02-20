@@ -71,6 +71,7 @@ const navGroups: NavGroup[] = [
       { label: "결재", icon: ClipboardCheck, href: "/approvals" },
       { label: "캘린더", icon: Calendar, href: "/calendar" },
       { label: "경비 관리", icon: Receipt, href: "/expenses" },
+      { label: "스케줄러", icon: CalendarClock, href: "/scheduler" },
       { label: "OKR", icon: Crosshair, href: "/okr" },
     ],
   },
