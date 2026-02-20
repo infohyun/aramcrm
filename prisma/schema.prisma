@@ -188,9 +188,13 @@ model Customer {
   contracts      Contract[]
   followUps      FollowUp[]
   quotes         Quote[]
+  portalTokens   CustomerPortalToken[]
+  journeyStages  CustomerJourney[]
+  npsScores      NpsScore[]
   leadScore      Int       @default(0)
   healthScore    Int       @default(100)
   territoryId    String?
+  journeyStage   String    @default("lead") // lead, consultation, proposal, negotiation, contract, retention, churn_risk
 }
 
 // ============================================
@@ -1323,4 +1327,157 @@ model CompetitorDeal {
   value        Float?
   notes        String?
   createdAt    DateTime   @default(now())
+}
+
+// ============================================
+// 고객 포탈 토큰
+// ============================================
+model CustomerPortalToken {
+  id          String   @id @default(cuid())
+  customerId  String
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  token       String   @unique
+  expiresAt   DateTime
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+// ============================================
+// OKR 목표 관리
+// ============================================
+model Objective {
+  id           String   @id @default(cuid())
+  title        String
+  description  String?
+  type         String   @default("company") // company, team, personal
+  ownerId      String
+  departmentId String?
+  parentId     String?
+  period       String   // 2026-Q1
+  status       String   @default("on_track") // on_track, at_risk, behind, completed
+  progress     Float    @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  keyResults   KeyResult[]
+}
+
+model KeyResult {
+  id           String    @id @default(cuid())
+  objectiveId  String
+  objective    Objective @relation(fields: [objectiveId], references: [id], onDelete: Cascade)
+  title        String
+  targetValue  Float
+  currentValue Float     @default(0)
+  unit         String    @default("건")
+  progress     Float     @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+// ============================================
+// 비용/경비 관리
+// ============================================
+model Expense {
+  id           String    @id @default(cuid())
+  userId       String
+  title        String
+  amount       Float
+  category     String    // travel, meal, supplies, transport, other
+  date         DateTime  @db.Date
+  description  String?
+  receiptUrl   String?
+  status       String    @default("pending") // pending, approved, rejected, reimbursed
+  approvedById String?
+  approvedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+// ============================================
+// 고객 여정 맵
+// ============================================
+model CustomerJourney {
+  id          String    @id @default(cuid())
+  customerId  String
+  customer    Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  stage       String    // lead, consultation, proposal, negotiation, contract, retention, churn_risk
+  enteredAt   DateTime  @default(now())
+  exitedAt    DateTime?
+  notes       String?
+}
+
+// ============================================
+// 재고 알림
+// ============================================
+model InventoryAlert {
+  id          String   @id @default(cuid())
+  inventoryId String
+  type        String   // low_stock, out_of_stock, overstock
+  message     String
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model PurchaseRequest {
+  id            String    @id @default(cuid())
+  inventoryId   String
+  productName   String
+  quantity      Int
+  reason        String?
+  status        String    @default("pending") // pending, approved, ordered, received
+  requestedById String
+  approvedById  String?
+  approvedAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// ============================================
+// 리포트 스케줄링
+// ============================================
+model ReportSchedule {
+  id          String    @id @default(cuid())
+  name        String
+  reportType  String    // sales, customer, service, inventory, custom
+  config      String    // JSON
+  frequency   String    // daily, weekly, monthly
+  recipients  String    // JSON array of emails
+  nextRunAt   DateTime
+  lastRunAt   DateTime?
+  isActive    Boolean   @default(true)
+  createdById String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// ============================================
+// NPS 추적
+// ============================================
+model NpsScore {
+  id          String   @id @default(cuid())
+  customerId  String?
+  customer    Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  score       Int      // 0-10
+  comment     String?
+  source      String   @default("manual") // survey, email, manual
+  createdAt   DateTime @default(now())
+}
+
+// ============================================
+// 워크플로우 빌더
+// ============================================
+model Workflow {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  trigger     String   // customer_created, order_created, ticket_created, schedule
+  nodes       String   // JSON array
+  edges       String   // JSON array
+  isActive    Boolean  @default(true)
+  lastRunAt   DateTime?
+  runCount    Int      @default(0)
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

@@ -47,6 +47,14 @@ import {
   MapPin,
   Swords,
   UsersRound,
+  Globe,
+  Crosshair,
+  Receipt,
+  Route,
+  AlertCircle,
+  CalendarClock,
+  ThumbsUp,
+  GitBranch,
 } from "lucide-react";
 
 interface NavGroup {
@@ -62,6 +70,8 @@ const navGroups: NavGroup[] = [
       { label: "프로젝트", icon: FolderKanban, href: "/projects" },
       { label: "결재", icon: ClipboardCheck, href: "/approvals" },
       { label: "캘린더", icon: Calendar, href: "/calendar" },
+      { label: "경비 관리", icon: Receipt, href: "/expenses" },
+      { label: "OKR", icon: Crosshair, href: "/okr" },
     ],
   },
   {
@@ -84,6 +94,9 @@ const navGroups: NavGroup[] = [
       { label: "건강 점수", icon: HeartPulse, href: "/customer-health" },
       { label: "견적서", icon: FileText, href: "/quotes" },
       { label: "설문조사", icon: ClipboardList, href: "/surveys" },
+      { label: "고객 포탈", icon: Globe, href: "/portal" },
+      { label: "고객 여정", icon: Route, href: "/customer-journey" },
+      { label: "NPS", icon: ThumbsUp, href: "/nps" },
     ],
   },
   {
@@ -96,6 +109,7 @@ const navGroups: NavGroup[] = [
       { label: "AI 고객지원", icon: Bot, href: "/ai-cs" },
       { label: "SLA 관리", icon: ShieldCheck, href: "/sla" },
       { label: "제품 카탈로그", icon: ShoppingBag, href: "/products" },
+      { label: "재고 알림", icon: AlertCircle, href: "/inventory-alerts" },
     ],
   },
   {
@@ -111,6 +125,7 @@ const navGroups: NavGroup[] = [
       { label: "타임 트래킹", icon: Timer, href: "/time-tracking" },
       { label: "영업 지역", icon: MapPin, href: "/territories" },
       { label: "경쟁사 추적", icon: Swords, href: "/competitors" },
+      { label: "리포트 스케줄", icon: CalendarClock, href: "/report-schedules" },
     ],
   },
   {
@@ -122,6 +137,7 @@ const navGroups: NavGroup[] = [
       { label: "감사 로그", icon: Shield, href: "/audit-logs" },
       { label: "직원 디렉토리", icon: UsersRound, href: "/directory" },
       { label: "설정", icon: Settings, href: "/settings" },
+      { label: "워크플로우", icon: GitBranch, href: "/workflow-builder" },
     ],
   },
 ];

@@ -390,9 +390,9 @@ export default function NpsPage() {
                           outerRadius={100}
                           paddingAngle={3}
                           dataKey="value"
-                          label={({ name, percent }) =>
-                            `${name} ${(percent * 100).toFixed(0)}%`
-                          }
+                          label={((props: Record<string, unknown>) =>
+                            `${props.name} ${(((props.percent as number) ?? 0) * 100).toFixed(0)}%`
+                          ) as unknown as undefined}
                         >
                           {pieData.map((_, index) => (
                             <Cell

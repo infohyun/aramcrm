@@ -57,6 +57,14 @@ const pageTitles: Record<string, string> = {
   "/territories": "영업 지역 관리",
   "/competitors": "경쟁사 추적",
   "/directory": "직원 디렉토리",
+  "/portal": "고객 포탈",
+  "/okr": "OKR 목표 관리",
+  "/expenses": "경비 관리",
+  "/customer-journey": "고객 여정 맵",
+  "/inventory-alerts": "재고 알림",
+  "/report-schedules": "리포트 스케줄",
+  "/nps": "NPS 대시보드",
+  "/workflow-builder": "워크플로우 빌더",
 };
 
 function getPageTitle(pathname: string): string {

@@ -49,6 +49,15 @@ const protectedPaths = [
   "/territories",
   "/competitors",
   "/directory",
+  // Round 5 기능
+  "/portal",
+  "/okr",
+  "/expenses",
+  "/customer-journey",
+  "/inventory-alerts",
+  "/report-schedules",
+  "/nps",
+  "/workflow-builder",
 ];
 
 // Public paths that should not be protected
