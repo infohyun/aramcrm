@@ -128,6 +128,7 @@ export default function AICSPage() {
   const [chatLoading, setChatLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
+  const [newChatMode, setNewChatMode] = useState(false);
   const [currentSentiment, setCurrentSentiment] = useState<SentimentResult | null>(null);
   const [currentCategory, setCurrentCategory] = useState<string | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
@@ -183,6 +184,7 @@ export default function AICSPage() {
   const handleSelectConversation = useCallback(
     async (id: string) => {
       setActiveConversationId(id);
+      setNewChatMode(false);
       setChatLoading(true);
       setMessages([]);
       setCurrentSentiment(null);
@@ -198,7 +200,8 @@ export default function AICSPage() {
     setMessages([]);
     setCurrentSentiment(null);
     setCurrentCategory(null);
-    inputRef.current?.focus();
+    setNewChatMode(true);
+    setTimeout(() => inputRef.current?.focus(), 100);
   };
 
   // ─── Send message ──────────────────────────────────────
@@ -237,6 +240,7 @@ export default function AICSPage() {
         // 새 대화인 경우 대화 ID 설정
         if (!activeConversationId && data.conversationId) {
           setActiveConversationId(data.conversationId);
+          setNewChatMode(false);
           fetchConversations();
         }
 
@@ -470,7 +474,7 @@ export default function AICSPage() {
 
         {/* Right Panel: Chat Area */}
         <div className="flex-1 flex flex-col">
-          {activeConversationId || messages.length > 0 ? (
+          {activeConversationId || messages.length > 0 || newChatMode ? (
             <>
               {/* Chat Header */}
               {activeConv && (
