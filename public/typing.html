@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TYPING SPEED PROTOCOL</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+:root{
+  --cyan:#00f0ff;
+  --purple:#a855f7;
+  --gold:#f59e0b;
+  --red:#ef4444;
+  --green:#22c55e;
+  --bg:#05050f;
+  --glass:rgba(255,255,255,0.02);
+  --glass-border:rgba(255,255,255,0.06);
+  --text:#e2e8f0;
+  --text-dim:rgba(255,255,255,0.35);
+}
+
+html{scroll-behavior:smooth;}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Rajdhani','Noto Sans KR',sans-serif;
+  min-height:100vh;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ===== STAR BACKGROUND ===== */
+.bg-canvas{
+  position:fixed;top:0;left:0;
+  width:100%;height:100%;
+  z-index:0;pointer-events:none;
+}
+
+/* ===== AMBIENT GLOW ===== */
+.ambient-glow{
+  position:fixed;
+  border-radius:50%;
+  filter:blur(120px);
+  pointer-events:none;
+  z-index:0;
+}
+.glow-1{
+  width:600px;height:600px;
+  background:radial-gradient(circle,rgba(0,240,255,0.06),transparent 70%);
+  top:-200px;left:-100px;
+  animation:glowDrift1 20s ease-in-out infinite;
+}
+.glow-2{
+  width:500px;height:500px;
+  background:radial-gradient(circle,rgba(168,85,247,0.05),transparent 70%);
+  bottom:-150px;right:-100px;
+  animation:glowDrift2 25s ease-in-out infinite;
+}
+.glow-3{
+  width:400px;height:400px;
+  background:radial-gradient(circle,rgba(245,158,11,0.04),transparent 70%);
+  top:40%;left:50%;
+  animation:glowDrift3 18s ease-in-out infinite;
+}
+@keyframes glowDrift1{0%,100%{transform:translate(0,0);}50%{transform:translate(80px,60px);}}
+@keyframes glowDrift2{0%,100%{transform:translate(0,0);}50%{transform:translate(-60px,-80px);}}
+@keyframes glowDrift3{0%,100%{transform:translate(-50%,-50%);}50%{transform:translate(calc(-50% + 100px),calc(-50% - 60px));}}
+
+/* ===== HEADER ===== */
+.header{
+  position:relative;z-index:10;
+  padding:20px 40px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--glass-border);
+  background:rgba(5,5,15,0.8);
+  backdrop-filter:blur(20px);
+}
+.back-btn{
+  display:flex;align-items:center;gap:8px;
+  color:var(--text-dim);
+  text-decoration:none;
+  font-family:'Rajdhani',sans-serif;
+  font-size:15px;font-weight:500;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  transition:all .3s;
+  padding:8px 16px;
+  border:1px solid transparent;
+  border-radius:8px;
+}
+.back-btn:hover{
+  color:var(--cyan);
+  border-color:rgba(0,240,255,0.2);
+  background:rgba(0,240,255,0.05);
+}
+.back-btn svg{width:18px;height:18px;transition:transform .3s;}
+.back-btn:hover svg{transform:translateX(-3px);}
+
+.logo{
+  display:flex;align-items:center;gap:12px;
+}
+.logo-icon{
+  width:40px;height:40px;
+  border-radius:10px;
+  background:linear-gradient(135deg,var(--cyan),var(--purple));
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;
+  box-shadow:0 0 20px rgba(0,240,255,0.3);
+}
+.logo-text{
+  font-family:'Orbitron',sans-serif;
+  font-size:14px;font-weight:700;
+  letter-spacing:3px;
+  background:linear-gradient(135deg,var(--cyan),var(--purple));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+.best-wpm-header{
+  font-family:'Orbitron',sans-serif;
+  font-size:12px;
+  color:var(--gold);
+  letter-spacing:2px;
+  display:flex;align-items:center;gap:8px;
+}
+.best-wpm-header .val{
+  font-size:18px;font-weight:700;
+}
+
+/* ===== MAIN CONTAINER ===== */
+.container{
+  position:relative;z-index:10;
+  max-width:960px;
+  margin:0 auto;
+  padding:30px 20px 60px;
+}
+
+/* ===== TITLE SECTION ===== */
+.title-section{
+  text-align:center;
+  margin-bottom:30px;
+}
+.title-main{
+  font-family:'Orbitron',sans-serif;
+  font-size:clamp(36px,6vw,56px);
+  font-weight:900;
+  letter-spacing:8px;
+  background:linear-gradient(135deg,#fff 0%,var(--cyan) 50%,var(--purple) 100%);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  text-shadow:none;
+  line-height:1.1;
+}
+.title-sub{
+  font-family:'Orbitron',sans-serif;
+  font-size:clamp(12px,2vw,16px);
+  letter-spacing:12px;
+  color:var(--purple);
+  margin-top:4px;
+  opacity:0.8;
+}
+.title-line{
+  width:120px;height:2px;
+  margin:16px auto 0;
+  background:linear-gradient(90deg,transparent,var(--cyan),var(--purple),transparent);
+  border-radius:2px;
+}
+
+/* ===== GLASS PANEL ===== */
+.glass-panel{
+  background:var(--glass);
+  border:1px solid var(--glass-border);
+  border-radius:16px;
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  overflow:hidden;
+}
+
+/* ===== STATS BAR ===== */
+.stats-bar{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+  margin-bottom:20px;
+}
+.stat-card{
+  text-align:center;
+  padding:16px 10px;
+}
+.stat-card .label{
+  font-size:11px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:var(--text-dim);
+  margin-bottom:6px;
+  font-weight:500;
+}
+.stat-card .value{
+  font-family:'Orbitron',sans-serif;
+  font-size:clamp(24px,4vw,36px);
+  font-weight:700;
+  line-height:1;
+}
+.stat-wpm .value{color:var(--cyan);text-shadow:0 0 20px rgba(0,240,255,0.4);}
+.stat-acc .value{color:var(--green);}
+.stat-time .value{color:var(--gold);}
+.stat-chars .value{color:var(--purple);}
+
+/* ===== WPM ZONE INDICATOR ===== */
+.wpm-zone{
+  text-align:center;
+  margin-bottom:16px;
+  height:28px;
+  display:flex;align-items:center;justify-content:center;
+}
+.wpm-zone-label{
+  font-family:'Orbitron',sans-serif;
+  font-size:11px;
+  letter-spacing:4px;
+  padding:4px 20px;
+  border-radius:20px;
+  border:1px solid;
+  transition:all .5s;
+}
+
+/* ===== TEXT DISPLAY AREA ===== */
+.text-area-wrapper{
+  position:relative;
+  margin-bottom:20px;
+}
+.text-display{
+  padding:30px;
+  min-height:180px;
+  font-size:clamp(18px,2.5vw,24px);
+  line-height:2;
+  letter-spacing:0.5px;
+  font-weight:500;
+  position:relative;
+  user-select:none;
+  cursor:text;
+}
+.text-display .word{
+  display:inline-block;
+  margin-right:8px;
+  margin-bottom:4px;
+  padding:2px 1px;
+  border-radius:4px;
+  transition:background .15s;
+}
+.text-display .word.current{
+  background:rgba(0,240,255,0.08);
+  border-bottom:2px solid var(--cyan);
+}
+.text-display .word.completed{
+  color:rgba(34,197,94,0.5);
+}
+.text-display .word.error-word{
+  color:var(--red);
+  text-decoration:underline wavy var(--red);
+}
+.text-display .char{
+  position:relative;
+  transition:color .1s;
+}
+.text-display .char.correct{
+  color:var(--green);
+}
+.text-display .char.incorrect{
+  color:var(--red);
+  background:rgba(239,68,68,0.15);
+  border-radius:2px;
+}
+.text-display .char.cursor{
+  border-left:2px solid var(--cyan);
+  animation:cursorBlink 1s step-end infinite;
+  margin-left:-1px;
+}
+.text-display .char.current-char{
+  color:#fff;
+}
+
+@keyframes cursorBlink{
+  0%,100%{border-color:var(--cyan);}
+  50%{border-color:transparent;}
+}
+
+/* ===== INPUT (Hidden) ===== */
+.hidden-input{
+  position:absolute;
+  opacity:0;
+  width:0;height:0;
+  pointer-events:none;
+}
+
+/* ===== SHAKE ANIMATION ===== */
+@keyframes shake{
+  0%,100%{transform:translateX(0);}
+  20%{transform:translateX(-4px);}
+  40%{transform:translateX(4px);}
+  60%{transform:translateX(-3px);}
+  80%{transform:translateX(3px);}
+}
+.shake{animation:shake .3s ease;}
+
+/* ===== PARTICLE CANVAS ===== */
+.particle-canvas{
+  position:absolute;
+  top:0;left:0;
+  width:100%;height:100%;
+  pointer-events:none;
+  z-index:20;
+}
+
+/* ===== WPM GRAPH ===== */
+.graph-section{
+  margin-bottom:20px;
+}
+.graph-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 20px 0;
+}
+.graph-title{
+  font-family:'Orbitron',sans-serif;
+  font-size:11px;
+  letter-spacing:3px;
+  color:var(--text-dim);
+}
+.graph-canvas-wrapper{
+  padding:10px 20px 14px;
+  height:100px;
+  position:relative;
+}
+.graph-canvas-wrapper canvas{
+  width:100%;
+  height:100%;
+}
+
+/* ===== DURATION SELECT ===== */
+.menu-section{
+  margin-bottom:20px;
+}
+.menu-inner{
+  padding:24px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.menu-label{
+  font-family:'Orbitron',sans-serif;
+  font-size:11px;
+  letter-spacing:3px;
+  color:var(--text-dim);
+  text-transform:uppercase;
+}
+.duration-btn{
+  font-family:'Orbitron',sans-serif;
+  font-size:14px;font-weight:600;
+  letter-spacing:2px;
+  padding:10px 24px;
+  border-radius:10px;
+  border:1px solid var(--glass-border);
+  background:var(--glass);
+  color:var(--text-dim);
+  cursor:pointer;
+  transition:all .3s;
+}
+.duration-btn:hover{
+  border-color:rgba(0,240,255,0.3);
+  color:var(--cyan);
+  background:rgba(0,240,255,0.05);
+}
+.duration-btn.active{
+  border-color:var(--cyan);
+  color:var(--cyan);
+  background:rgba(0,240,255,0.1);
+  box-shadow:0 0 20px rgba(0,240,255,0.15);
+}
+
+/* ===== START / RESTART BUTTON ===== */
+.action-row{
+  text-align:center;
+  margin-bottom:20px;
+}
+.action-btn{
+  font-family:'Orbitron',sans-serif;
+  font-size:15px;font-weight:700;
+  letter-spacing:4px;
+  text-transform:uppercase;
+  padding:14px 50px;
+  border:none;
+  border-radius:12px;
+  cursor:pointer;
+  position:relative;
+  overflow:hidden;
+  background:linear-gradient(135deg,var(--cyan),var(--purple));
+  color:#05050f;
+  transition:all .3s;
+  box-shadow:0 0 30px rgba(0,240,255,0.2);
+}
+.action-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 0 40px rgba(0,240,255,0.35);
+}
+.action-btn:active{transform:translateY(0);}
+.action-btn::after{
+  content:'';position:absolute;
+  top:0;left:-100%;
+  width:100%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent);
+  transition:left .5s;
+}
+.action-btn:hover::after{left:100%;}
+
+/* ===== FOCUS PROMPT ===== */
+.focus-prompt{
+  text-align:center;
+  padding:40px 20px;
+  font-family:'Rajdhani',sans-serif;
+  font-size:18px;
+  color:var(--text-dim);
+  letter-spacing:2px;
+}
+.focus-prompt .key-hint{
+  display:inline-block;
+  padding:4px 12px;
+  border:1px solid var(--glass-border);
+  border-radius:6px;
+  background:rgba(255,255,255,0.04);
+  font-family:'Orbitron',sans-serif;
+  font-size:12px;
+  color:var(--cyan);
+  margin:0 4px;
+}
+
+/* ===== RESULTS OVERLAY ===== */
+.results-overlay{
+  display:none;
+  position:fixed;
+  top:0;left:0;
+  width:100%;height:100%;
+  z-index:1000;
+  background:rgba(5,5,15,0.92);
+  backdrop-filter:blur(30px);
+  -webkit-backdrop-filter:blur(30px);
+  align-items:center;justify-content:center;
+  animation:fadeIn .4s;
+}
+.results-overlay.show{display:flex;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+
+.results-card{
+  width:90%;max-width:520px;
+  border-radius:20px;
+  padding:40px 36px;
+  text-align:center;
+  animation:resultSlideUp .5s ease;
+  position:relative;
+  overflow:hidden;
+}
+@keyframes resultSlideUp{
+  from{opacity:0;transform:translateY(40px);}
+  to{opacity:1;transform:translateY(0);}
+}
+.results-card::before{
+  content:'';position:absolute;
+  top:-50%;left:-50%;
+  width:200%;height:200%;
+  background:conic-gradient(from 0deg,transparent,rgba(0,240,255,0.03),transparent,rgba(168,85,247,0.03),transparent);
+  animation:resultSpin 8s linear infinite;
+}
+@keyframes resultSpin{from{transform:rotate(0);}to{transform:rotate(360deg);}}
+
+.results-inner{position:relative;z-index:2;}
+
+.result-title{
+  font-family:'Orbitron',sans-serif;
+  font-size:14px;
+  letter-spacing:6px;
+  color:var(--text-dim);
+  margin-bottom:20px;
+}
+
+.rank-badge{
+  width:110px;height:110px;
+  margin:0 auto 20px;
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',sans-serif;
+  font-size:48px;font-weight:900;
+  position:relative;
+  animation:rankPulse 2s ease-in-out infinite;
+}
+@keyframes rankPulse{
+  0%,100%{box-shadow:0 0 30px var(--rank-glow);}
+  50%{box-shadow:0 0 60px var(--rank-glow);}
+}
+.rank-S{
+  background:linear-gradient(135deg,#ffd700,#ff8c00);
+  color:#1a0a00;
+  border:2px solid #ffd700;
+  --rank-glow:rgba(255,215,0,0.4);
+}
+.rank-A{
+  background:linear-gradient(135deg,var(--cyan),#0080ff);
+  color:#001a20;
+  border:2px solid var(--cyan);
+  --rank-glow:rgba(0,240,255,0.4);
+}
+.rank-B{
+  background:linear-gradient(135deg,var(--green),#15803d);
+  color:#001a08;
+  border:2px solid var(--green);
+  --rank-glow:rgba(34,197,94,0.3);
+}
+.rank-C{
+  background:linear-gradient(135deg,var(--purple),#7c3aed);
+  color:#1a0030;
+  border:2px solid var(--purple);
+  --rank-glow:rgba(168,85,247,0.3);
+}
+.rank-D{
+  background:linear-gradient(135deg,#6b7280,#374151);
+  color:#e5e7eb;
+  border:2px solid #6b7280;
+  --rank-glow:rgba(107,114,128,0.3);
+}
+
+.rank-label{
+  font-family:'Orbitron',sans-serif;
+  font-size:12px;
+  letter-spacing:3px;
+  color:var(--text-dim);
+  margin-bottom:24px;
+}
+
+.result-wpm{
+  font-family:'Orbitron',sans-serif;
+  font-size:clamp(48px,10vw,72px);
+  font-weight:900;
+  background:linear-gradient(135deg,var(--cyan),var(--purple));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  line-height:1;
+}
+.result-wpm-label{
+  font-family:'Orbitron',sans-serif;
+  font-size:13px;
+  letter-spacing:6px;
+  color:var(--cyan);
+  margin-bottom:24px;
+  opacity:0.7;
+}
+
+.result-stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+  margin-bottom:28px;
+}
+.r-stat{
+  padding:12px;
+  border-radius:10px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid var(--glass-border);
+}
+.r-stat .r-label{
+  font-size:10px;letter-spacing:2px;
+  color:var(--text-dim);text-transform:uppercase;
+  margin-bottom:4px;
+}
+.r-stat .r-val{
+  font-family:'Orbitron',sans-serif;
+  font-size:20px;font-weight:700;
+}
+
+.new-best{
+  display:none;
+  font-family:'Orbitron',sans-serif;
+  font-size:13px;
+  letter-spacing:4px;
+  color:var(--gold);
+  margin-bottom:16px;
+  animation:newBestPulse 1s ease-in-out infinite;
+}
+.new-best.show{display:block;}
+@keyframes newBestPulse{
+  0%,100%{opacity:1;}50%{opacity:0.5;}
+}
+
+.result-actions{
+  display:flex;gap:12px;
+  justify-content:center;
+  flex-wrap:wrap;
+}
+.result-btn{
+  font-family:'Orbitron',sans-serif;
+  font-size:12px;font-weight:600;
+  letter-spacing:3px;
+  padding:12px 28px;
+  border-radius:10px;
+  cursor:pointer;
+  transition:all .3s;
+  text-transform:uppercase;
+}
+.result-btn.primary{
+  background:linear-gradient(135deg,var(--cyan),var(--purple));
+  border:none;color:#05050f;
+  box-shadow:0 0 20px rgba(0,240,255,0.2);
+}
+.result-btn.primary:hover{
+  box-shadow:0 0 35px rgba(0,240,255,0.35);
+  transform:translateY(-2px);
+}
+.result-btn.secondary{
+  background:transparent;
+  border:1px solid var(--glass-border);
+  color:var(--text-dim);
+}
+.result-btn.secondary:hover{
+  border-color:rgba(0,240,255,0.3);
+  color:var(--cyan);
+}
+
+/* ===== COUNTDOWN OVERLAY ===== */
+.countdown-overlay{
+  display:none;
+  position:fixed;top:0;left:0;
+  width:100%;height:100%;z-index:900;
+  background:rgba(5,5,15,0.7);
+  backdrop-filter:blur(10px);
+  align-items:center;justify-content:center;
+}
+.countdown-overlay.show{display:flex;}
+.countdown-num{
+  font-family:'Orbitron',sans-serif;
+  font-size:120px;font-weight:900;
+  background:linear-gradient(135deg,var(--cyan),var(--purple));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  animation:countPop .5s ease;
+}
+@keyframes countPop{
+  from{transform:scale(2);opacity:0;}
+  to{transform:scale(1);opacity:1;}
+}
+
+/* ===== PROGRESS BAR ===== */
+.progress-bar-wrap{
+  height:3px;
+  background:rgba(255,255,255,0.04);
+  border-radius:3px;
+  margin-bottom:20px;
+  overflow:hidden;
+}
+.progress-bar-inner{
+  height:100%;
+  background:linear-gradient(90deg,var(--cyan),var(--purple));
+  border-radius:3px;
+  transition:width .3s linear;
+  box-shadow:0 0 10px rgba(0,240,255,0.3);
+}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:640px){
+  .header{padding:14px 16px;}
+  .container{padding:20px 12px 40px;}
+  .stats-bar{grid-template-columns:repeat(2,1fr);gap:8px;}
+  .stat-card{padding:12px 8px;}
+  .text-display{padding:20px 16px;font-size:17px;min-height:150px;}
+  .menu-inner{padding:16px;}
+  .results-card{padding:28px 20px;}
+  .result-stats{grid-template-columns:repeat(3,1fr);gap:8px;}
+  .r-stat .r-val{font-size:16px;}
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.2);}
+</style>
+</head>
+<body>
+
+<canvas class="bg-canvas" id="bgCanvas"></canvas>
+<div class="ambient-glow glow-1"></div>
+<div class="ambient-glow glow-2"></div>
+<div class="ambient-glow glow-3"></div>
+
+<!-- HEADER -->
+<header class="header">
+  <a href="/games.html" class="back-btn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+    ARCADE
+  </a>
+  <div class="logo">
+    <div class="logo-icon">&#9000;</div>
+    <div class="logo-text">TYPING</div>
+  </div>
+  <div class="best-wpm-header">
+    BEST <span class="val" id="bestWpmHeader">0</span> WPM
+  </div>
+</header>
+
+<!-- MAIN -->
+<div class="container">
+
+  <!-- TITLE -->
+  <div class="title-section">
+    <div class="title-main">TYPING</div>
+    <div class="title-sub">SPEED PROTOCOL</div>
+    <div class="title-line"></div>
+  </div>
+
+  <!-- STATS BAR -->
+  <div class="stats-bar">
+    <div class="glass-panel stat-card stat-wpm">
+      <div class="label">WPM</div>
+      <div class="value" id="statWpm">0</div>
+    </div>
+    <div class="glass-panel stat-card stat-acc">
+      <div class="label">Accuracy</div>
+      <div class="value" id="statAcc">100<span style="font-size:60%;opacity:.6">%</span></div>
+    </div>
+    <div class="glass-panel stat-card stat-time">
+      <div class="label">Time</div>
+      <div class="value" id="statTime">30</div>
+    </div>
+    <div class="glass-panel stat-card stat-chars">
+      <div class="label">Chars</div>
+      <div class="value" id="statChars">0</div>
+    </div>
+  </div>
+
+  <!-- WPM ZONE -->
+  <div class="wpm-zone">
+    <span class="wpm-zone-label" id="wpmZone" style="opacity:0;">READY</span>
+  </div>
+
+  <!-- PROGRESS BAR -->
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-inner" id="progressBar" style="width:100%;"></div>
+  </div>
+
+  <!-- TEXT DISPLAY -->
+  <div class="text-area-wrapper glass-panel" id="textAreaWrapper">
+    <canvas class="particle-canvas" id="particleCanvas"></canvas>
+    <div class="text-display" id="textDisplay">
+      <div class="focus-prompt" id="focusPrompt">
+        Click here or press any key to start typing<br>
+        <span class="key-hint">TAB</span> to restart &nbsp; <span class="key-hint">ESC</span> to reset
+      </div>
+    </div>
+    <input type="text" class="hidden-input" id="hiddenInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  </div>
+
+  <!-- WPM GRAPH -->
+  <div class="glass-panel graph-section">
+    <div class="graph-header">
+      <div class="graph-title">WPM TIMELINE</div>
+      <div class="graph-title" id="graphPeak" style="color:var(--cyan);">PEAK: 0</div>
+    </div>
+    <div class="graph-canvas-wrapper">
+      <canvas id="graphCanvas"></canvas>
+    </div>
+  </div>
+
+  <!-- DURATION SELECT -->
+  <div class="glass-panel menu-section">
+    <div class="menu-inner">
+      <span class="menu-label">Duration</span>
+      <button class="duration-btn active" data-time="30" onclick="setDuration(30)">30s</button>
+      <button class="duration-btn" data-time="60" onclick="setDuration(60)">60s</button>
+      <button class="duration-btn" data-time="120" onclick="setDuration(120)">120s</button>
+    </div>
+  </div>
+
+  <!-- ACTION -->
+  <div class="action-row">
+    <button class="action-btn" id="actionBtn" onclick="startGame()">START TEST</button>
+  </div>
+
+</div>
+
+<!-- COUNTDOWN OVERLAY -->
+<div class="countdown-overlay" id="countdownOverlay">
+  <div class="countdown-num" id="countdownNum">3</div>
+</div>
+
+<!-- RESULTS OVERLAY -->
+<div class="results-overlay" id="resultsOverlay">
+  <div class="glass-panel results-card">
+    <div class="results-inner">
+      <div class="result-title">TEST COMPLETE</div>
+      <div class="rank-badge" id="rankBadge">S</div>
+      <div class="rank-label" id="rankLabel">LEGENDARY</div>
+      <div class="new-best" id="newBest">&#9733; NEW PERSONAL BEST &#9733;</div>
+      <div class="result-wpm" id="resultWpm">0</div>
+      <div class="result-wpm-label">WORDS PER MINUTE</div>
+      <div class="result-stats">
+        <div class="r-stat">
+          <div class="r-label">Accuracy</div>
+          <div class="r-val" id="resultAcc" style="color:var(--green);">100%</div>
+        </div>
+        <div class="r-stat">
+          <div class="r-label">Characters</div>
+          <div class="r-val" id="resultChars" style="color:var(--purple);">0</div>
+        </div>
+        <div class="r-stat">
+          <div class="r-label">Correct</div>
+          <div class="r-val" id="resultCorrect" style="color:var(--cyan);">0</div>
+        </div>
+      </div>
+      <div class="result-actions">
+        <button class="result-btn primary" onclick="restartFromResults()">RETRY</button>
+        <button class="result-btn secondary" onclick="closeResults()">CLOSE</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== WORD LIST (150+ common words) =====
+const WORDS = [
+  "the","be","to","of","and","a","in","that","have","it","for","not","on","with","he","as","you",
+  "do","at","this","but","his","by","from","they","we","say","her","she","or","an","will","my",
+  "one","all","would","there","their","what","so","up","out","if","about","who","get","which",
+  "go","me","when","make","can","like","time","no","just","him","know","take","people","into",
+  "year","your","good","some","could","them","see","other","than","then","now","look","only",
+  "come","its","over","think","also","back","after","use","two","how","our","work","first",
+  "well","way","even","new","want","because","any","these","give","day","most","us","great",
+  "between","need","large","often","hand","high","place","hold","free","real","life","few",
+  "north","open","seem","together","next","white","children","begin","got","walk","example",
+  "ease","paper","group","always","music","those","both","mark","book","letter","until","mile",
+  "river","car","feet","care","second","enough","plain","girl","usual","young","ready","above",
+  "ever","red","list","though","feel","talk","bird","soon","body","dog","family","direct",
+  "pose","leave","song","measure","door","product","black","short","numeral","class","wind",
+  "question","happen","complete","ship","area","half","rock","order","fire","south","problem",
+  "piece","told","knew","pass","since","top","whole","king","space","heard","best","hour",
+  "better","true","during","hundred","five","remember","step","early","left","right","world",
+  "still","last","school","night","point","never","under","should","found","city","system",
+  "close","power","every","state","keep","start","might","story","head","thought","being",
+  "long","small","much","each","down","side","been","call","move","find","water","before"
+];
+
+// ===== AUDIO ENGINE =====
+class AudioEngine {
+  constructor() {
+    this.ctx = null;
+    this.ready = false;
+  }
+  init() {
+    if (this.ready) return;
+    try {
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      this.ready = true;
+    } catch(e) {}
+  }
+  play(type) {
+    if (!this.ready) this.init();
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    if (type === 'key') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(800 + Math.random()*400, now);
+      gain.gain.setValueAtTime(0.03, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+      osc.start(now);
+      osc.stop(now + 0.06);
+    } else if (type === 'error') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(150, now);
+      gain.gain.setValueAtTime(0.06, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+      osc.start(now);
+      osc.stop(now + 0.12);
+    } else if (type === 'complete') {
+      // Three-tone chime
+      [523, 659, 784].forEach((freq, i) => {
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.connect(g); g.connect(this.ctx.destination);
+        o.type = 'sine';
+        o.frequency.setValueAtTime(freq, now + i*0.12);
+        g.gain.setValueAtTime(0, now + i*0.12);
+        g.gain.linearRampToValueAtTime(0.08, now + i*0.12 + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.001, now + i*0.12 + 0.4);
+        o.start(now + i*0.12);
+        o.stop(now + i*0.12 + 0.4);
+      });
+    } else if (type === 'countdown') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(440, now);
+      gain.gain.setValueAtTime(0.06, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+      osc.start(now);
+      osc.stop(now + 0.15);
+    } else if (type === 'go') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, now);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+      osc.start(now);
+      osc.stop(now + 0.25);
+    } else if (type === 'word') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1200, now);
+      gain.gain.setValueAtTime(0.04, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+      osc.start(now);
+      osc.stop(now + 0.08);
+    }
+  }
+}
+const audio = new AudioEngine();
+
+// ===== STAR BACKGROUND =====
+(function(){
+  const c = document.getElementById('bgCanvas');
+  const ctx = c.getContext('2d');
+  let stars = [];
+  function resize(){
+    c.width = window.innerWidth;
+    c.height = window.innerHeight;
+    stars = [];
+    for(let i=0;i<180;i++){
+      stars.push({
+        x:Math.random()*c.width,
+        y:Math.random()*c.height,
+        r:Math.random()*1.2+0.2,
+        a:Math.random()*0.5+0.1,
+        s:Math.random()*0.3+0.05,
+        p:Math.random()*Math.PI*2
+      });
+    }
+  }
+  resize();
+  window.addEventListener('resize',resize);
+  function draw(){
+    ctx.clearRect(0,0,c.width,c.height);
+    const t = Date.now()*0.001;
+    stars.forEach(s=>{
+      const alpha = s.a*(0.5+0.5*Math.sin(t*s.s+s.p));
+      ctx.beginPath();
+      ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(255,255,255,${alpha})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ===== PARTICLE SYSTEM =====
+class ParticleSystem {
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext('2d');
+    this.particles = [];
+    this.resize();
+    window.addEventListener('resize', () => this.resize());
+    this.animate();
+  }
+  resize() {
+    const r = this.canvas.parentElement.getBoundingClientRect();
+    this.canvas.width = r.width;
+    this.canvas.height = r.height;
+  }
+  burst(x, y, color, count=8) {
+    for(let i=0;i<count;i++){
+      const angle = (Math.PI*2/count)*i + Math.random()*0.5;
+      const speed = 1.5 + Math.random()*2.5;
+      this.particles.push({
+        x,y,
+        vx:Math.cos(angle)*speed,
+        vy:Math.sin(angle)*speed,
+        life:1,
+        decay:0.02+Math.random()*0.02,
+        r:1.5+Math.random()*1.5,
+        color
+      });
+    }
+  }
+  animate() {
+    this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
+    this.particles = this.particles.filter(p=>{
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.04;
+      p.vx *= 0.98;
+      p.life -= p.decay;
+      if(p.life <= 0) return false;
+      this.ctx.globalAlpha = p.life;
+      this.ctx.beginPath();
+      this.ctx.arc(p.x,p.y,p.r*p.life,0,Math.PI*2);
+      this.ctx.fillStyle = p.color;
+      this.ctx.fill();
+      this.ctx.globalAlpha = 1;
+      return true;
+    });
+    requestAnimationFrame(() => this.animate());
+  }
+}
+const pCanvas = document.getElementById('particleCanvas');
+const particles = new ParticleSystem(pCanvas);
+
+// ===== GAME STATE =====
+let duration = 30;
+let timeLeft = 30;
+let gameState = 'idle'; // idle, countdown, running, finished
+let words = [];
+let currentWordIdx = 0;
+let currentCharIdx = 0;
+let totalKeystrokes = 0;
+let correctKeystrokes = 0;
+let wpmHistory = [];
+let wpmPeak = 0;
+let startTime = 0;
+let timerInterval = null;
+let wpmInterval = null;
+let inputBuffer = '';
+
+const textDisplay = document.getElementById('textDisplay');
+const hiddenInput = document.getElementById('hiddenInput');
+const focusPrompt = document.getElementById('focusPrompt');
+const statWpm = document.getElementById('statWpm');
+const statAcc = document.getElementById('statAcc');
+const statTime = document.getElementById('statTime');
+const statChars = document.getElementById('statChars');
+const wpmZone = document.getElementById('wpmZone');
+const progressBar = document.getElementById('progressBar');
+const actionBtn = document.getElementById('actionBtn');
+const graphCanvas = document.getElementById('graphCanvas');
+const graphPeak = document.getElementById('graphPeak');
+
+// ===== BEST WPM =====
+let bestWpm = parseInt(localStorage.getItem('typing_best_wpm') || '0');
+document.getElementById('bestWpmHeader').textContent = bestWpm;
+
+// ===== GENERATE WORDS =====
+function generateWords(count=80) {
+  const arr = [];
+  for(let i=0;i<count;i++){
+    arr.push(WORDS[Math.floor(Math.random()*WORDS.length)]);
+  }
+  return arr;
+}
+
+// ===== RENDER TEXT =====
+function renderText() {
+  let html = '';
+  words.forEach((word, wi) => {
+    let cls = '';
+    if(wi < currentWordIdx) cls = 'completed';
+    else if(wi === currentWordIdx) cls = 'current';
+
+    html += `<span class="word ${cls}" data-word="${wi}">`;
+    for(let ci=0;ci<word.length;ci++){
+      let charCls = '';
+      if(wi < currentWordIdx) {
+        charCls = 'correct';
+      } else if(wi === currentWordIdx) {
+        if(ci < currentCharIdx) {
+          if(inputBuffer[ci] === word[ci]) charCls = 'correct';
+          else charCls = 'incorrect';
+        } else if(ci === currentCharIdx) {
+          charCls = 'cursor current-char';
+        }
+      }
+      html += `<span class="char ${charCls}">${word[ci]}</span>`;
+    }
+    // Show extra typed characters beyond word length
+    if(wi === currentWordIdx && inputBuffer.length > word.length) {
+      for(let ci=word.length;ci<inputBuffer.length;ci++){
+        html += `<span class="char incorrect">${inputBuffer[ci]}</span>`;
+      }
+    }
+    html += '</span>';
+  });
+  textDisplay.innerHTML = html;
+
+  // Scroll to keep current word visible
+  const currentEl = textDisplay.querySelector('.word.current');
+  if(currentEl) {
+    const wrapRect = textDisplay.getBoundingClientRect();
+    const wordRect = currentEl.getBoundingClientRect();
+    if(wordRect.top - wrapRect.top > 120) {
+      textDisplay.scrollTop += wordRect.top - wrapRect.top - 40;
+    }
+  }
+}
+
+// ===== SET DURATION =====
+function setDuration(t) {
+  if(gameState === 'running') return;
+  duration = t;
+  timeLeft = t;
+  statTime.textContent = t;
+  document.querySelectorAll('.duration-btn').forEach(b=>{
+    b.classList.toggle('active', parseInt(b.dataset.time)===t);
+  });
+  progressBar.style.width = '100%';
+}
+
+// ===== START GAME =====
+function startGame() {
+  if(gameState === 'running' || gameState === 'countdown') return;
+  audio.init();
+  gameState = 'countdown';
+  actionBtn.style.display = 'none';
+
+  // Show countdown
+  const overlay = document.getElementById('countdownOverlay');
+  const numEl = document.getElementById('countdownNum');
+  overlay.classList.add('show');
+  let count = 3;
+  numEl.textContent = count;
+  audio.play('countdown');
+
+  const countInterval = setInterval(()=>{
+    count--;
+    if(count > 0){
+      numEl.textContent = count;
+      numEl.style.animation = 'none';
+      numEl.offsetHeight; // reflow
+      numEl.style.animation = 'countPop .5s ease';
+      audio.play('countdown');
+    } else {
+      clearInterval(countInterval);
+      overlay.classList.remove('show');
+      audio.play('go');
+      beginTyping();
+    }
+  }, 700);
+}
+
+function beginTyping() {
+  gameState = 'running';
+  words = generateWords(duration <= 30 ? 60 : duration <= 60 ? 100 : 160);
+  currentWordIdx = 0;
+  currentCharIdx = 0;
+  totalKeystrokes = 0;
+  correctKeystrokes = 0;
+  wpmHistory = [];
+  wpmPeak = 0;
+  inputBuffer = '';
+  timeLeft = duration;
+  startTime = Date.now();
+
+  statWpm.textContent = '0';
+  statAcc.innerHTML = '100<span style="font-size:60%;opacity:.6">%</span>';
+  statChars.textContent = '0';
+  statTime.textContent = timeLeft;
+  progressBar.style.width = '100%';
+  wpmZone.style.opacity = '1';
+  updateWpmZone(0);
+
+  focusPrompt.style.display = 'none';
+  textDisplay.style.overflow = 'hidden';
+  textDisplay.style.maxHeight = '180px';
+  textDisplay.scrollTop = 0;
+
+  renderText();
+  hiddenInput.value = '';
+  hiddenInput.focus();
+
+  // Timer
+  timerInterval = setInterval(()=>{
+    timeLeft--;
+    statTime.textContent = timeLeft;
+    progressBar.style.width = ((timeLeft/duration)*100)+'%';
+    if(timeLeft <= 10) {
+      statTime.closest('.stat-card').querySelector('.value').style.color = 'var(--red)';
+    }
+    if(timeLeft <= 0){
+      endGame();
+    }
+  },1000);
+
+  // WPM update
+  wpmInterval = setInterval(()=>{
+    const wpm = calcWpm();
+    wpmHistory.push(wpm);
+    if(wpm > wpmPeak) wpmPeak = wpm;
+    graphPeak.textContent = 'PEAK: ' + wpmPeak;
+    drawGraph();
+  },1000);
+}
+
+// ===== INPUT HANDLING =====
+hiddenInput.addEventListener('input', (e) => {
+  if(gameState !== 'running') return;
+  const val = hiddenInput.value;
+
+  // Detect space at end (word complete attempt)
+  if(val.endsWith(' ')) {
+    const typed = val.slice(0,-1);
+    handleWordComplete(typed);
+    hiddenInput.value = '';
+    inputBuffer = '';
+    return;
+  }
+
+  inputBuffer = val;
+  currentCharIdx = val.length;
+
+  // Character validation
+  const word = words[currentWordIdx];
+  if(val.length > 0) {
+    const lastIdx = val.length - 1;
+    const lastChar = val[lastIdx];
+    totalKeystrokes++;
+
+    if(lastIdx < word.length && lastChar === word[lastIdx]) {
+      correctKeystrokes++;
+      audio.play('key');
+      // Particle burst at cursor position
+      const charEls = textDisplay.querySelectorAll('.word.current .char');
+      if(charEls[lastIdx]) {
+        const r = charEls[lastIdx].getBoundingClientRect();
+        const pr = pCanvas.getBoundingClientRect();
+        particles.burst(r.left - pr.left + r.width/2, r.top - pr.top + r.height/2, '#00f0ff', 6);
+      }
+    } else {
+      audio.play('error');
+      // Shake
+      const wordEl = textDisplay.querySelector('.word.current');
+      if(wordEl) {
+        wordEl.classList.remove('shake');
+        wordEl.offsetHeight;
+        wordEl.classList.add('shake');
+      }
+    }
+  }
+
+  // Update stats
+  updateLiveStats();
+  renderText();
+});
+
+// Also handle keydown for special keys
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Tab') {
+    e.preventDefault();
+    if(gameState === 'running' || gameState === 'finished') {
+      resetGame();
+      startGame();
+    }
+    return;
+  }
+  if(e.key === 'Escape') {
+    e.preventDefault();
+    resetGame();
+    return;
+  }
+
+  // Focus the input on any keypress if idle
+  if(gameState === 'idle' && e.key.length === 1) {
+    startGame();
+    return;
+  }
+
+  // Prevent backspace beyond current word
+  // (handled by browser naturally)
+});
+
+// Click on text area focuses input
+document.getElementById('textAreaWrapper').addEventListener('click', ()=>{
+  if(gameState === 'idle') {
+    startGame();
+  } else if(gameState === 'running') {
+    hiddenInput.focus();
+  }
+});
+
+function handleWordComplete(typed) {
+  const word = words[currentWordIdx];
+  const isCorrect = (typed === word);
+
+  if(!isCorrect) {
+    // Count the space as a keystroke
+    totalKeystrokes++;
+    // Mark individual chars
+    for(let i=0;i<Math.max(typed.length,word.length);i++){
+      if(i < typed.length && i < word.length && typed[i] === word[i]){
+        // already counted
+      }
+    }
+  } else {
+    totalKeystrokes++; // space
+    correctKeystrokes++; // space correct
+    audio.play('word');
+  }
+
+  currentWordIdx++;
+  currentCharIdx = 0;
+
+  // Generate more words if running low
+  if(currentWordIdx >= words.length - 10) {
+    const moreWords = generateWords(40);
+    words = words.concat(moreWords);
+  }
+
+  updateLiveStats();
+  renderText();
+}
+
+// ===== CALCULATIONS =====
+function calcWpm() {
+  const elapsed = (Date.now() - startTime) / 60000; // minutes
+  if(elapsed <= 0) return 0;
+  // Standard: 5 chars = 1 word
+  return Math.round(correctKeystrokes / 5 / elapsed);
+}
+
+function calcAccuracy() {
+  if(totalKeystrokes === 0) return 100;
+  return Math.round((correctKeystrokes / totalKeystrokes) * 100);
+}
+
+function updateLiveStats() {
+  const wpm = calcWpm();
+  const acc = calcAccuracy();
+  statWpm.textContent = wpm;
+  statAcc.innerHTML = acc + '<span style="font-size:60%;opacity:.6">%</span>';
+  statChars.textContent = totalKeystrokes;
+  updateWpmZone(wpm);
+}
+
+function updateWpmZone(wpm) {
+  let text, color;
+  if(wpm === 0) { text = 'WARMING UP'; color = 'var(--text-dim)'; }
+  else if(wpm < 20) { text = 'BEGINNER'; color = '#6b7280'; }
+  else if(wpm < 35) { text = 'DEVELOPING'; color = 'var(--purple)'; }
+  else if(wpm < 50) { text = 'INTERMEDIATE'; color = 'var(--green)'; }
+  else if(wpm < 70) { text = 'PROFICIENT'; color = 'var(--cyan)'; }
+  else if(wpm < 90) { text = 'ADVANCED'; color = 'var(--gold)'; }
+  else if(wpm < 120) { text = 'EXPERT'; color = '#f97316'; }
+  else { text = 'LEGENDARY'; color = '#ef4444'; }
+
+  wpmZone.textContent = text;
+  wpmZone.style.color = color;
+  wpmZone.style.borderColor = color;
+}
+
+// ===== GRAPH =====
+function drawGraph() {
+  const c = graphCanvas;
+  const parent = c.parentElement;
+  c.width = parent.clientWidth;
+  c.height = parent.clientHeight;
+  const ctx = c.getContext('2d');
+  const w = c.width;
+  const h = c.height;
+  const data = wpmHistory;
+  if(data.length < 2) return;
+
+  const maxVal = Math.max(...data, 40);
+  const padding = { top:10, bottom:16, left:5, right:5 };
+  const chartW = w - padding.left - padding.right;
+  const chartH = h - padding.top - padding.bottom;
+
+  ctx.clearRect(0,0,w,h);
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 1;
+  for(let i=0;i<4;i++){
+    const y = padding.top + (chartH/3)*i;
+    ctx.beginPath();
+    ctx.moveTo(padding.left,y);
+    ctx.lineTo(w-padding.right,y);
+    ctx.stroke();
+  }
+
+  // Gradient fill
+  const grad = ctx.createLinearGradient(0,padding.top,0,h-padding.bottom);
+  grad.addColorStop(0,'rgba(0,240,255,0.15)');
+  grad.addColorStop(1,'rgba(0,240,255,0)');
+
+  ctx.beginPath();
+  ctx.moveTo(padding.left, h-padding.bottom);
+
+  data.forEach((val,i)=>{
+    const x = padding.left + (i/(data.length-1))*chartW;
+    const y = padding.top + chartH - (val/maxVal)*chartH;
+    if(i===0) ctx.lineTo(x,y);
+    else ctx.lineTo(x,y);
+  });
+
+  ctx.lineTo(padding.left + chartW, h-padding.bottom);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Line
+  const lineGrad = ctx.createLinearGradient(0,0,w,0);
+  lineGrad.addColorStop(0,'#00f0ff');
+  lineGrad.addColorStop(1,'#a855f7');
+  ctx.beginPath();
+  data.forEach((val,i)=>{
+    const x = padding.left + (i/(data.length-1))*chartW;
+    const y = padding.top + chartH - (val/maxVal)*chartH;
+    if(i===0) ctx.moveTo(x,y);
+    else ctx.lineTo(x,y);
+  });
+  ctx.strokeStyle = lineGrad;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Last point dot
+  if(data.length > 0) {
+    const last = data[data.length-1];
+    const lx = padding.left + ((data.length-1)/(data.length-1))*chartW;
+    const ly = padding.top + chartH - (last/maxVal)*chartH;
+    ctx.beginPath();
+    ctx.arc(lx,ly,4,0,Math.PI*2);
+    ctx.fillStyle = '#00f0ff';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(lx,ly,8,0,Math.PI*2);
+    ctx.fillStyle = 'rgba(0,240,255,0.2)';
+    ctx.fill();
+  }
+
+  // WPM labels
+  ctx.fillStyle = 'rgba(255,255,255,0.2)';
+  ctx.font = '10px Orbitron';
+  ctx.textAlign = 'left';
+  ctx.fillText(maxVal, padding.left + 2, padding.top + 10);
+  ctx.fillText('0', padding.left + 2, h - padding.bottom - 2);
+}
+
+// ===== END GAME =====
+function endGame() {
+  gameState = 'finished';
+  clearInterval(timerInterval);
+  clearInterval(wpmInterval);
+  audio.play('complete');
+
+  const finalWpm = calcWpm();
+  const finalAcc = calcAccuracy();
+
+  // Rank
+  let rank, rankName;
+  if(finalWpm >= 100) { rank = 'S'; rankName = 'LEGENDARY'; }
+  else if(finalWpm >= 70) { rank = 'A'; rankName = 'EXCELLENT'; }
+  else if(finalWpm >= 50) { rank = 'B'; rankName = 'GOOD'; }
+  else if(finalWpm >= 30) { rank = 'C'; rankName = 'AVERAGE'; }
+  else { rank = 'D'; rankName = 'BEGINNER'; }
+
+  // Best WPM
+  let isNewBest = false;
+  if(finalWpm > bestWpm) {
+    bestWpm = finalWpm;
+    localStorage.setItem('typing_best_wpm', bestWpm.toString());
+    document.getElementById('bestWpmHeader').textContent = bestWpm;
+    isNewBest = true;
+  }
+
+  // Show results
+  document.getElementById('rankBadge').className = 'rank-badge rank-' + rank;
+  document.getElementById('rankBadge').textContent = rank;
+  document.getElementById('rankLabel').textContent = rankName;
+  document.getElementById('resultWpm').textContent = finalWpm;
+  document.getElementById('resultAcc').textContent = finalAcc + '%';
+  document.getElementById('resultChars').textContent = totalKeystrokes;
+  document.getElementById('resultCorrect').textContent = correctKeystrokes;
+  document.getElementById('newBest').classList.toggle('show', isNewBest);
+
+  document.getElementById('resultsOverlay').classList.add('show');
+}
+
+// ===== RESET =====
+function resetGame() {
+  gameState = 'idle';
+  clearInterval(timerInterval);
+  clearInterval(wpmInterval);
+  timeLeft = duration;
+  currentWordIdx = 0;
+  currentCharIdx = 0;
+  totalKeystrokes = 0;
+  correctKeystrokes = 0;
+  wpmHistory = [];
+  wpmPeak = 0;
+  inputBuffer = '';
+
+  statWpm.textContent = '0';
+  statAcc.innerHTML = '100<span style="font-size:60%;opacity:.6">%</span>';
+  statTime.textContent = duration;
+  statTime.closest('.stat-card').querySelector('.value').style.color = 'var(--gold)';
+  statChars.textContent = '0';
+  progressBar.style.width = '100%';
+  wpmZone.style.opacity = '0';
+  graphPeak.textContent = 'PEAK: 0';
+
+  focusPrompt.style.display = 'block';
+  textDisplay.innerHTML = '';
+  textDisplay.appendChild(focusPrompt);
+  textDisplay.style.overflow = '';
+  textDisplay.style.maxHeight = '';
+
+  hiddenInput.value = '';
+  actionBtn.style.display = '';
+  actionBtn.textContent = 'START TEST';
+
+  // Clear graph
+  const ctx = graphCanvas.getContext('2d');
+  graphCanvas.width = graphCanvas.parentElement.clientWidth;
+  ctx.clearRect(0,0,graphCanvas.width,graphCanvas.height);
+
+  document.getElementById('resultsOverlay').classList.remove('show');
+  document.getElementById('countdownOverlay').classList.remove('show');
+}
+
+function restartFromResults() {
+  resetGame();
+  setTimeout(()=>startGame(), 100);
+}
+
+function closeResults() {
+  document.getElementById('resultsOverlay').classList.remove('show');
+  resetGame();
+}
+
+// Keep input focused when game is running
+setInterval(()=>{
+  if(gameState === 'running' && document.activeElement !== hiddenInput) {
+    hiddenInput.focus();
+  }
+},200);
+
+// ===== GRAPH RESIZE =====
+window.addEventListener('resize', ()=>{
+  particles.resize();
+  if(wpmHistory.length >= 2) drawGraph();
+});
+</script>
+</body>
+</html>
