@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>SUDOKU - Logic Matrix</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --cyan: #00f0ff;
+  --cyan-dim: rgba(0, 240, 255, 0.15);
+  --cyan-glow: rgba(0, 240, 255, 0.4);
+  --purple: #a855f7;
+  --purple-dim: rgba(168, 85, 247, 0.15);
+  --gold: #f59e0b;
+  --gold-dim: rgba(245, 158, 11, 0.15);
+  --red: #ef4444;
+  --red-dim: rgba(239, 68, 68, 0.15);
+  --green: #22c55e;
+  --bg: #05050f;
+  --glass: rgba(255, 255, 255, 0.02);
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --glass-hover: rgba(255, 255, 255, 0.05);
+  --text: #e2e8f0;
+  --text-dim: rgba(255, 255, 255, 0.35);
+}
+
+html, body {
+  width: 100%; height: 100%;
+  overflow-x: hidden;
+  background: var(--bg);
+  font-family: 'Rajdhani', sans-serif;
+  color: var(--text);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Star background */
+#starCanvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Main container */
+.game-wrapper {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 560px;
+  margin-bottom: 12px;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  color: var(--text-dim);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.3s;
+  backdrop-filter: blur(10px);
+}
+
+.back-btn:hover {
+  color: var(--cyan);
+  border-color: rgba(0, 240, 255, 0.2);
+  background: rgba(0, 240, 255, 0.05);
+}
+
+.back-btn svg {
+  width: 16px; height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Title area */
+.title-area {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.game-title {
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(28px, 6vw, 42px);
+  font-weight: 900;
+  letter-spacing: 8px;
+  background: linear-gradient(135deg, var(--cyan), var(--purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: none;
+  filter: drop-shadow(0 0 20px rgba(0, 240, 255, 0.3));
+}
+
+.game-subtitle {
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(10px, 2.5vw, 13px);
+  font-weight: 400;
+  letter-spacing: 6px;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+
+/* Info bar */
+.info-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 420px;
+  margin-bottom: 12px;
+  gap: 8px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  font-family: 'Orbitron', monospace;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.info-item .label {
+  color: var(--text-dim);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.info-item .value {
+  color: var(--cyan);
+  font-size: 15px;
+}
+
+.difficulty-display {
+  color: var(--gold);
+}
+
+.difficulty-display .value {
+  color: var(--gold) !important;
+}
+
+.hints-display .value {
+  color: var(--purple) !important;
+}
+
+/* Sudoku Grid */
+.grid-container {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.sudoku-grid {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 1px;
+  width: min(90vw, 420px);
+  height: min(90vw, 420px);
+  background: rgba(255, 255, 255, 0.04);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 0 40px rgba(0, 240, 255, 0.05), inset 0 0 40px rgba(0, 0, 0, 0.3);
+}
+
+.cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 10, 30, 0.6);
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(16px, 4vw, 22px);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+  border: 1px solid transparent;
+}
+
+/* 3x3 box borders */
+.cell[data-col="2"], .cell[data-col="5"] {
+  border-right: 2px solid rgba(255, 255, 255, 0.12);
+}
+
+.cell[data-row="2"], .cell[data-row="5"] {
+  border-bottom: 2px solid rgba(255, 255, 255, 0.12);
+}
+
+.cell[data-col="3"], .cell[data-col="6"] {
+  border-left: none;
+}
+
+.cell[data-row="3"], .cell[data-row="6"] {
+  border-top: none;
+}
+
+/* Cell states */
+.cell.given {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.cell.player {
+  color: var(--cyan);
+}
+
+.cell.selected {
+  background: rgba(0, 240, 255, 0.12) !important;
+  border: 1px solid var(--cyan) !important;
+  box-shadow: inset 0 0 15px rgba(0, 240, 255, 0.15), 0 0 12px rgba(0, 240, 255, 0.2);
+  z-index: 2;
+}
+
+.cell.highlighted {
+  background: rgba(0, 240, 255, 0.04);
+}
+
+.cell.same-number {
+  background: rgba(168, 85, 247, 0.1);
+  color: var(--purple);
+  text-shadow: 0 0 8px rgba(168, 85, 247, 0.5);
+}
+
+.cell.same-number.given {
+  color: #d8b4fe;
+}
+
+.cell.same-number.player {
+  color: var(--purple);
+}
+
+.cell.conflict {
+  color: var(--red) !important;
+  text-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+  animation: conflictPulse 0.6s ease;
+}
+
+.cell.conflict-zone {
+  background: rgba(239, 68, 68, 0.06);
+}
+
+@keyframes conflictPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.cell:hover:not(.selected) {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* Notes/pencil marks */
+.cell .notes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0; left: 0;
+  padding: 2px;
+}
+
+.cell .notes span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(7px, 1.8vw, 10px);
+  font-weight: 400;
+  color: rgba(0, 240, 255, 0.5);
+  font-family: 'Rajdhani', sans-serif;
+}
+
+/* Controls */
+.controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 420px;
+}
+
+/* Number pad */
+.numpad {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 6px;
+  width: 100%;
+}
+
+.num-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  max-height: 52px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(16px, 4vw, 20px);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  backdrop-filter: blur(10px);
+  position: relative;
+}
+
+.num-btn:hover {
+  background: var(--glass-hover);
+  border-color: rgba(0, 240, 255, 0.2);
+  color: var(--cyan);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 240, 255, 0.15);
+}
+
+.num-btn:active {
+  transform: translateY(0);
+}
+
+.num-btn.completed {
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+.num-btn .count-badge {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  font-size: 8px;
+  color: var(--text-dim);
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 400;
+}
+
+/* Action buttons */
+.action-bar {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 8px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  color: var(--text-dim);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  backdrop-filter: blur(10px);
+}
+
+.action-btn:hover {
+  background: var(--glass-hover);
+  color: var(--text);
+  border-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+.action-btn.active {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  background: rgba(0, 240, 255, 0.08);
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.1);
+}
+
+.action-btn svg {
+  width: 16px; height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.action-btn.hint-btn:hover {
+  color: var(--purple);
+  border-color: rgba(168, 85, 247, 0.3);
+}
+
+.action-btn.erase-btn:hover {
+  color: var(--red);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.action-btn.new-btn:hover {
+  color: var(--gold);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+/* Menu overlay */
+.overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(5, 5, 15, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s;
+}
+
+.overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.modal {
+  background: rgba(15, 15, 35, 0.95);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 36px;
+  max-width: 400px;
+  width: 90%;
+  backdrop-filter: blur(30px);
+  box-shadow: 0 0 60px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 240, 255, 0.05);
+  transform: scale(0.9);
+  transition: transform 0.4s;
+  text-align: center;
+}
+
+.overlay.active .modal {
+  transform: scale(1);
+}
+
+.modal-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  margin-bottom: 6px;
+  background: linear-gradient(135deg, var(--cyan), var(--purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.modal-subtitle {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-bottom: 24px;
+  letter-spacing: 1px;
+}
+
+.difficulty-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.diff-btn {
+  padding: 14px 12px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  color: var(--text);
+  font-family: 'Orbitron', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.3s;
+  backdrop-filter: blur(10px);
+}
+
+.diff-btn .diff-label {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.diff-btn .diff-best {
+  display: block;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-dim);
+  letter-spacing: 0;
+}
+
+.diff-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 240, 255, 0.15);
+}
+
+.diff-btn.easy { border-color: rgba(34, 197, 94, 0.3); }
+.diff-btn.easy:hover { background: rgba(34, 197, 94, 0.1); color: var(--green); border-color: var(--green); }
+
+.diff-btn.medium { border-color: rgba(0, 240, 255, 0.3); }
+.diff-btn.medium:hover { background: rgba(0, 240, 255, 0.1); color: var(--cyan); border-color: var(--cyan); }
+
+.diff-btn.hard { border-color: rgba(245, 158, 11, 0.3); }
+.diff-btn.hard:hover { background: rgba(245, 158, 11, 0.1); color: var(--gold); border-color: var(--gold); }
+
+.diff-btn.expert { border-color: rgba(239, 68, 68, 0.3); }
+.diff-btn.expert:hover { background: rgba(239, 68, 68, 0.1); color: var(--red); border-color: var(--red); }
+
+/* Win screen */
+.win-modal .modal-title {
+  font-size: 28px;
+  background: linear-gradient(135deg, var(--gold), var(--green));
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.win-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.win-stat {
+  padding: 12px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+}
+
+.win-stat .stat-label {
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-family: 'Orbitron', monospace;
+}
+
+.win-stat .stat-value {
+  font-family: 'Orbitron', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--cyan);
+  margin-top: 4px;
+}
+
+.win-stat .stat-value.best {
+  color: var(--gold);
+}
+
+.win-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.win-btn {
+  flex: 1;
+  padding: 12px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.win-btn:hover {
+  transform: translateY(-2px);
+  border-color: var(--cyan);
+  color: var(--cyan);
+  box-shadow: 0 4px 16px rgba(0, 240, 255, 0.15);
+}
+
+.win-btn.primary {
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.15), rgba(168, 85, 247, 0.15));
+  border-color: rgba(0, 240, 255, 0.3);
+}
+
+/* Celebration canvas */
+#celebrationCanvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 99;
+  pointer-events: none;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .game-wrapper { padding: 10px; }
+  .info-bar { gap: 4px; }
+  .info-item { padding: 5px 8px; }
+  .info-item .label { font-size: 8px; }
+  .info-item .value { font-size: 12px; }
+  .action-btn { padding: 8px 4px; font-size: 11px; }
+  .numpad { gap: 4px; }
+  .modal { padding: 24px; }
+}
+
+@media (min-height: 800px) {
+  .game-wrapper { padding-top: 24px; }
+  .title-area { margin-bottom: 20px; }
+}
+
+/* Animations */
+@keyframes cellReveal {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes winGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(0, 240, 255, 0.1); }
+  50% { box-shadow: 0 0 30px rgba(0, 240, 255, 0.3), 0 0 60px rgba(168, 85, 247, 0.15); }
+}
+
+.cell.reveal-anim {
+  animation: cellReveal 0.3s ease forwards;
+}
+
+.sudoku-grid.win {
+  animation: winGlow 2s ease-in-out infinite;
+}
+</style>
+</head>
+<body>
+
+<canvas id="starCanvas"></canvas>
+<canvas id="celebrationCanvas"></canvas>
+
+<!-- Menu Overlay -->
+<div class="overlay" id="menuOverlay">
+  <div class="modal">
+    <div class="modal-title">SUDOKU</div>
+    <div class="modal-subtitle">LOGIC MATRIX</div>
+    <div class="difficulty-grid">
+      <button class="diff-btn easy" onclick="startGame('easy')">
+        <span class="diff-label">EASY</span>
+        <span class="diff-best" id="bestEasy">--:--</span>
+      </button>
+      <button class="diff-btn medium" onclick="startGame('medium')">
+        <span class="diff-label">MEDIUM</span>
+        <span class="diff-best" id="bestMedium">--:--</span>
+      </button>
+      <button class="diff-btn hard" onclick="startGame('hard')">
+        <span class="diff-label">HARD</span>
+        <span class="diff-best" id="bestHard">--:--</span>
+      </button>
+      <button class="diff-btn expert" onclick="startGame('expert')">
+        <span class="diff-label">EXPERT</span>
+        <span class="diff-best" id="bestExpert">--:--</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Win Overlay -->
+<div class="overlay" id="winOverlay">
+  <div class="modal win-modal">
+    <div class="modal-title">COMPLETE</div>
+    <div class="modal-subtitle">PUZZLE SOLVED</div>
+    <div class="win-stats">
+      <div class="win-stat">
+        <div class="stat-label">TIME</div>
+        <div class="stat-value" id="winTime">00:00</div>
+      </div>
+      <div class="win-stat">
+        <div class="stat-label">BEST</div>
+        <div class="stat-value best" id="winBest">00:00</div>
+      </div>
+      <div class="win-stat">
+        <div class="stat-label">DIFFICULTY</div>
+        <div class="stat-value" id="winDiff">EASY</div>
+      </div>
+      <div class="win-stat">
+        <div class="stat-label">HINTS USED</div>
+        <div class="stat-value" id="winHints">0</div>
+      </div>
+    </div>
+    <div class="win-buttons">
+      <button class="win-btn" onclick="showMenu()">MENU</button>
+      <button class="win-btn primary" onclick="playAgain()">NEW GAME</button>
+    </div>
+  </div>
+</div>
+
+<!-- Game UI -->
+<div class="game-wrapper">
+  <div class="header">
+    <a href="/games.html" class="back-btn">
+      <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      GAMES
+    </a>
+    <div style="width: 80px"></div>
+  </div>
+
+  <div class="title-area">
+    <div class="game-title">SUDOKU</div>
+    <div class="game-subtitle">LOGIC MATRIX</div>
+  </div>
+
+  <div class="info-bar">
+    <div class="info-item difficulty-display">
+      <span class="label">DIFF</span>
+      <span class="value" id="diffLabel">EASY</span>
+    </div>
+    <div class="info-item">
+      <span class="label">TIME</span>
+      <span class="value" id="timerDisplay">00:00</span>
+    </div>
+    <div class="info-item hints-display">
+      <span class="label">HINTS</span>
+      <span class="value" id="hintsDisplay">3</span>
+    </div>
+  </div>
+
+  <div class="grid-container">
+    <div class="sudoku-grid" id="sudokuGrid"></div>
+  </div>
+
+  <div class="controls">
+    <div class="numpad" id="numpad"></div>
+    <div class="action-bar">
+      <button class="action-btn" id="undoBtn" onclick="undo()">
+        <svg viewBox="0 0 24 24"><path d="M3 10h10a5 5 0 0 1 0 10H13M3 10l4-4M3 10l4 4"/></svg>
+        UNDO
+      </button>
+      <button class="action-btn erase-btn" onclick="eraseCell()">
+        <svg viewBox="0 0 24 24"><path d="M20 5H9l-7 7 7 7h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zM18 9l-6 6M12 9l6 6"/></svg>
+        ERASE
+      </button>
+      <button class="action-btn" id="notesBtn" onclick="toggleNotes()">
+        <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        NOTES
+      </button>
+      <button class="action-btn hint-btn" onclick="useHint()">
+        <svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7zM9 21h6M10 21v1h4v-1"/></svg>
+        HINT
+      </button>
+      <button class="action-btn new-btn" onclick="showMenu()">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+        NEW
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== AUDIO ENGINE =====
+const AudioEngine = (() => {
+  let ctx = null;
+  const getCtx = () => {
+    if (!ctx) {
+      try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+    }
+    return ctx;
+  };
+
+  const play = (freq, type, dur, vol = 0.12) => {
+    const c = getCtx();
+    if (!c) return;
+    const o = c.createOscillator();
+    const g = c.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, c.currentTime);
+    g.gain.setValueAtTime(vol, c.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + dur);
+    o.connect(g);
+    g.connect(c.destination);
+    o.start();
+    o.stop(c.currentTime + dur);
+  };
+
+  return {
+    select: () => play(880, 'sine', 0.08, 0.06),
+    place: () => play(660, 'sine', 0.1, 0.08),
+    erase: () => play(330, 'triangle', 0.12, 0.06),
+    error: () => { play(200, 'sawtooth', 0.15, 0.08); setTimeout(() => play(160, 'sawtooth', 0.15, 0.06), 80); },
+    hint: () => { play(523, 'sine', 0.12, 0.08); setTimeout(() => play(784, 'sine', 0.15, 0.08), 100); },
+    note: () => play(1200, 'sine', 0.06, 0.04),
+    undo: () => play(440, 'triangle', 0.1, 0.06),
+    win: () => {
+      const notes = [523, 659, 784, 1047];
+      notes.forEach((n, i) => setTimeout(() => play(n, 'sine', 0.3, 0.1), i * 150));
+    }
+  };
+})();
+
+// ===== STAR BACKGROUND =====
+(() => {
+  const canvas = document.getElementById('starCanvas');
+  const c = canvas.getContext('2d');
+  let stars = [];
+  const resize = () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    stars = Array.from({ length: 120 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 1.2 + 0.3,
+      a: Math.random(),
+      s: Math.random() * 0.008 + 0.002,
+      d: Math.random() > 0.5 ? 1 : -1
+    }));
+  };
+  resize();
+  window.addEventListener('resize', resize);
+
+  const animate = () => {
+    c.clearRect(0, 0, canvas.width, canvas.height);
+    stars.forEach(s => {
+      s.a += s.s * s.d;
+      if (s.a >= 1 || s.a <= 0.1) s.d *= -1;
+      s.a = Math.max(0.1, Math.min(1, s.a));
+      c.beginPath();
+      c.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      c.fillStyle = `rgba(200, 220, 255, ${s.a * 0.5})`;
+      c.fill();
+    });
+    requestAnimationFrame(animate);
+  };
+  animate();
+})();
+
+// ===== CELEBRATION PARTICLES =====
+const Celebration = (() => {
+  const canvas = document.getElementById('celebrationCanvas');
+  const c = canvas.getContext('2d');
+  let particles = [];
+  let animating = false;
+
+  const resize = () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  };
+  resize();
+  window.addEventListener('resize', resize);
+
+  const colors = ['#00f0ff', '#a855f7', '#f59e0b', '#22c55e', '#ec4899', '#3b82f6'];
+
+  const start = () => {
+    particles = [];
+    for (let i = 0; i < 150; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: canvas.height + Math.random() * 100,
+        vx: (Math.random() - 0.5) * 6,
+        vy: -(Math.random() * 12 + 6),
+        r: Math.random() * 4 + 2,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        gravity: 0.12,
+        life: 1,
+        decay: Math.random() * 0.008 + 0.004,
+        spin: Math.random() * 0.2 - 0.1,
+        angle: 0,
+        shape: Math.random() > 0.5 ? 'circle' : 'rect'
+      });
+    }
+    if (!animating) {
+      animating = true;
+      animateParticles();
+    }
+  };
+
+  const animateParticles = () => {
+    c.clearRect(0, 0, canvas.width, canvas.height);
+    particles = particles.filter(p => p.life > 0);
+    if (particles.length === 0) { animating = false; return; }
+
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.vy += p.gravity;
+      p.y += p.vy;
+      p.life -= p.decay;
+      p.angle += p.spin;
+
+      c.save();
+      c.translate(p.x, p.y);
+      c.rotate(p.angle);
+      c.globalAlpha = p.life;
+      c.fillStyle = p.color;
+      if (p.shape === 'circle') {
+        c.beginPath();
+        c.arc(0, 0, p.r, 0, Math.PI * 2);
+        c.fill();
+      } else {
+        c.fillRect(-p.r, -p.r, p.r * 2, p.r * 2);
+      }
+      c.restore();
+    });
+
+    requestAnimationFrame(animateParticles);
+  };
+
+  return { start };
+})();
+
+// ===== SUDOKU ENGINE =====
+const EMPTY = 0;
+
+function isValid(board, row, col, num) {
+  for (let i = 0; i < 9; i++) {
+    if (board[row][i] === num) return false;
+    if (board[i][col] === num) return false;
+  }
+  const br = Math.floor(row / 3) * 3;
+  const bc = Math.floor(col / 3) * 3;
+  for (let i = br; i < br + 3; i++) {
+    for (let j = bc; j < bc + 3; j++) {
+      if (board[i][j] === num) return false;
+    }
+  }
+  return true;
+}
+
+function solveSudoku(board) {
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 9; c++) {
+      if (board[r][c] === EMPTY) {
+        const nums = shuffle([1,2,3,4,5,6,7,8,9]);
+        for (const n of nums) {
+          if (isValid(board, r, c, n)) {
+            board[r][c] = n;
+            if (solveSudoku(board)) return true;
+            board[r][c] = EMPTY;
+          }
+        }
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+function countSolutions(board, limit = 2) {
+  let count = 0;
+  const solve = (b) => {
+    if (count >= limit) return;
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        if (b[r][c] === EMPTY) {
+          for (let n = 1; n <= 9; n++) {
+            if (isValid(b, r, c, n)) {
+              b[r][c] = n;
+              solve(b);
+              b[r][c] = EMPTY;
+              if (count >= limit) return;
+            }
+          }
+          return;
+        }
+      }
+    }
+    count++;
+  };
+  solve(board);
+  return count;
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function generatePuzzle(difficulty) {
+  // Create solved board
+  const solution = Array.from({ length: 9 }, () => Array(9).fill(EMPTY));
+  solveSudoku(solution);
+
+  // Clue counts per difficulty
+  const clues = { easy: 42, medium: 34, hard: 28, expert: 23 };
+  const targetClues = clues[difficulty] || 36;
+  const toRemove = 81 - targetClues;
+
+  // Create puzzle by removing cells
+  const puzzle = solution.map(r => [...r]);
+  const cells = shuffle(Array.from({ length: 81 }, (_, i) => [Math.floor(i / 9), i % 9]));
+
+  let removed = 0;
+  for (const [r, c] of cells) {
+    if (removed >= toRemove) break;
+    const backup = puzzle[r][c];
+    puzzle[r][c] = EMPTY;
+
+    const test = puzzle.map(row => [...row]);
+    if (countSolutions(test) === 1) {
+      removed++;
+    } else {
+      puzzle[r][c] = backup;
+    }
+  }
+
+  return { puzzle, solution };
+}
+
+// ===== GAME STATE =====
+let board = [];           // Current player board
+let solution = [];        // Solved board
+let given = [];           // Boolean mask for given cells
+let notes = [];           // Notes[r][c] = Set of numbers
+let selectedCell = null;  // { row, col }
+let notesMode = false;
+let timer = 0;
+let timerInterval = null;
+let currentDifficulty = 'easy';
+let hintsRemaining = 3;
+let hintsUsed = 0;
+let history = [];         // Undo stack
+let gameActive = false;
+
+// ===== DOM SETUP =====
+const grid = document.getElementById('sudokuGrid');
+const numpad = document.getElementById('numpad');
+const cells = [];
+
+// Build grid
+for (let r = 0; r < 9; r++) {
+  for (let c = 0; c < 9; c++) {
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    cell.dataset.row = r;
+    cell.dataset.col = c;
+    cell.addEventListener('click', () => selectCell(r, c));
+    cell.addEventListener('touchstart', (e) => { e.preventDefault(); selectCell(r, c); }, { passive: false });
+    grid.appendChild(cell);
+    if (!cells[r]) cells[r] = [];
+    cells[r][c] = cell;
+  }
+}
+
+// Build numpad
+for (let n = 1; n <= 9; n++) {
+  const btn = document.createElement('button');
+  btn.className = 'num-btn';
+  btn.dataset.num = n;
+  btn.innerHTML = `${n}<span class="count-badge" id="count${n}">9</span>`;
+  btn.addEventListener('click', () => enterNumber(n));
+  numpad.appendChild(btn);
+}
+
+// ===== GAME LOGIC =====
+function startGame(difficulty) {
+  currentDifficulty = difficulty;
+  const { puzzle, solution: sol } = generatePuzzle(difficulty);
+
+  board = puzzle.map(r => [...r]);
+  solution = sol;
+  given = puzzle.map(r => r.map(v => v !== EMPTY));
+  notes = Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => new Set()));
+  selectedCell = null;
+  notesMode = false;
+  history = [];
+  hintsRemaining = difficulty === 'easy' ? 5 : difficulty === 'medium' ? 4 : difficulty === 'hard' ? 3 : 2;
+  hintsUsed = 0;
+  timer = 0;
+  gameActive = true;
+
+  document.getElementById('notesBtn').classList.remove('active');
+  document.getElementById('diffLabel').textContent = difficulty.toUpperCase();
+  document.getElementById('hintsDisplay').textContent = hintsRemaining;
+
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    if (gameActive) {
+      timer++;
+      document.getElementById('timerDisplay').textContent = formatTime(timer);
+    }
+  }, 1000);
+  document.getElementById('timerDisplay').textContent = '00:00';
+
+  renderGrid();
+  updateNumCounts();
+  hideOverlay('menuOverlay');
+  AudioEngine.select();
+}
+
+function selectCell(r, c) {
+  if (!gameActive) return;
+  selectedCell = { row: r, col: c };
+  AudioEngine.select();
+  renderGrid();
+}
+
+function enterNumber(num) {
+  if (!selectedCell || !gameActive) return;
+  const { row, col } = selectedCell;
+  if (given[row][col]) return;
+
+  if (notesMode) {
+    // Save state for undo
+    const prevNotes = new Set(notes[row][col]);
+    history.push({ type: 'note', row, col, prevNotes, prevVal: board[row][col] });
+
+    if (notes[row][col].has(num)) {
+      notes[row][col].delete(num);
+    } else {
+      notes[row][col].add(num);
+    }
+    // Clear the cell value when adding notes
+    if (board[row][col] !== EMPTY) {
+      board[row][col] = EMPTY;
+    }
+    AudioEngine.note();
+  } else {
+    // Save state for undo
+    const prevVal = board[row][col];
+    const prevNotes = new Set(notes[row][col]);
+    history.push({ type: 'value', row, col, prevVal, prevNotes });
+
+    board[row][col] = num;
+    notes[row][col].clear();
+
+    if (num !== solution[row][col]) {
+      AudioEngine.error();
+    } else {
+      AudioEngine.place();
+      // Auto-remove this number from notes in same row/col/box
+      for (let i = 0; i < 9; i++) {
+        notes[row][i].delete(num);
+        notes[i][col].delete(num);
+      }
+      const br = Math.floor(row / 3) * 3;
+      const bc = Math.floor(col / 3) * 3;
+      for (let i = br; i < br + 3; i++) {
+        for (let j = bc; j < bc + 3; j++) {
+          notes[i][j].delete(num);
+        }
+      }
+    }
+  }
+
+  renderGrid();
+  updateNumCounts();
+  checkWin();
+}
+
+function eraseCell() {
+  if (!selectedCell || !gameActive) return;
+  const { row, col } = selectedCell;
+  if (given[row][col]) return;
+
+  const prevVal = board[row][col];
+  const prevNotes = new Set(notes[row][col]);
+  if (prevVal === EMPTY && prevNotes.size === 0) return;
+
+  history.push({ type: 'erase', row, col, prevVal, prevNotes });
+  board[row][col] = EMPTY;
+  notes[row][col].clear();
+
+  AudioEngine.erase();
+  renderGrid();
+  updateNumCounts();
+}
+
+function undo() {
+  if (history.length === 0 || !gameActive) return;
+  const action = history.pop();
+  const { row, col, prevVal, prevNotes } = action;
+
+  board[row][col] = prevVal;
+  notes[row][col] = prevNotes;
+
+  AudioEngine.undo();
+  renderGrid();
+  updateNumCounts();
+}
+
+function toggleNotes() {
+  notesMode = !notesMode;
+  document.getElementById('notesBtn').classList.toggle('active', notesMode);
+  AudioEngine.note();
+}
+
+function useHint() {
+  if (hintsRemaining <= 0 || !gameActive) return;
+
+  // Find empty cells that are wrong or empty
+  const emptyCells = [];
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 9; c++) {
+      if (!given[r][c] && board[r][c] !== solution[r][c]) {
+        emptyCells.push([r, c]);
+      }
+    }
+  }
+
+  if (emptyCells.length === 0) return;
+
+  // Prefer selected cell if it's empty/wrong
+  let target;
+  if (selectedCell && !given[selectedCell.row][selectedCell.col] && board[selectedCell.row][selectedCell.col] !== solution[selectedCell.row][selectedCell.col]) {
+    target = [selectedCell.row, selectedCell.col];
+  } else {
+    target = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+  }
+
+  const [r, c] = target;
+  const prevVal = board[r][c];
+  const prevNotes = new Set(notes[r][c]);
+  history.push({ type: 'hint', row: r, col: c, prevVal, prevNotes });
+
+  board[r][c] = solution[r][c];
+  notes[r][c].clear();
+  given[r][c] = true; // Mark as given so it can't be changed
+  hintsRemaining--;
+  hintsUsed++;
+
+  document.getElementById('hintsDisplay').textContent = hintsRemaining;
+  selectedCell = { row: r, col: c };
+
+  AudioEngine.hint();
+
+  // Animate the hint cell
+  cells[r][c].classList.add('reveal-anim');
+  setTimeout(() => cells[r][c].classList.remove('reveal-anim'), 300);
+
+  renderGrid();
+  updateNumCounts();
+  checkWin();
+}
+
+function hasConflict(row, col, num) {
+  if (num === EMPTY) return false;
+  // Check row
+  for (let c = 0; c < 9; c++) {
+    if (c !== col && board[row][c] === num) return true;
+  }
+  // Check col
+  for (let r = 0; r < 9; r++) {
+    if (r !== row && board[r][col] === num) return true;
+  }
+  // Check box
+  const br = Math.floor(row / 3) * 3;
+  const bc = Math.floor(col / 3) * 3;
+  for (let i = br; i < br + 3; i++) {
+    for (let j = bc; j < bc + 3; j++) {
+      if (i !== row || j !== col) {
+        if (board[i][j] === num) return true;
+      }
+    }
+  }
+  return false;
+}
+
+function renderGrid() {
+  const selNum = selectedCell ? board[selectedCell.row][selectedCell.col] : 0;
+
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 9; c++) {
+      const cell = cells[r][c];
+      const val = board[r][c];
+      const isGiven = given[r][c];
+      const isSelected = selectedCell && selectedCell.row === r && selectedCell.col === c;
+      const isHighlighted = selectedCell && (
+        selectedCell.row === r || selectedCell.col === c ||
+        (Math.floor(selectedCell.row / 3) === Math.floor(r / 3) && Math.floor(selectedCell.col / 3) === Math.floor(c / 3))
+      );
+      const isSameNumber = selNum !== EMPTY && val === selNum && !isSelected;
+      const isConflict = val !== EMPTY && !isGiven && hasConflict(r, c, val);
+
+      // Build classes
+      let cls = 'cell';
+      if (isGiven) cls += ' given';
+      else if (val !== EMPTY) cls += ' player';
+      if (isSelected) cls += ' selected';
+      else if (isSameNumber) cls += ' same-number';
+      else if (isHighlighted) cls += ' highlighted';
+      if (isConflict) cls += ' conflict';
+
+      cell.className = cls;
+      cell.dataset.row = r;
+      cell.dataset.col = c;
+
+      // Content
+      if (val !== EMPTY) {
+        cell.innerHTML = val;
+      } else if (notes[r][c].size > 0) {
+        let html = '<div class="notes">';
+        for (let n = 1; n <= 9; n++) {
+          html += `<span>${notes[r][c].has(n) ? n : ''}</span>`;
+        }
+        html += '</div>';
+        cell.innerHTML = html;
+      } else {
+        cell.innerHTML = '';
+      }
+    }
+  }
+}
+
+function updateNumCounts() {
+  for (let n = 1; n <= 9; n++) {
+    let count = 0;
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        if (board[r][c] === n) count++;
+      }
+    }
+    const remaining = 9 - count;
+    const badge = document.getElementById(`count${n}`);
+    const btn = badge.parentElement;
+    badge.textContent = remaining;
+    btn.classList.toggle('completed', remaining === 0);
+  }
+}
+
+function checkWin() {
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 9; c++) {
+      if (board[r][c] !== solution[r][c]) return;
+    }
+  }
+
+  // Win!
+  gameActive = false;
+  if (timerInterval) clearInterval(timerInterval);
+
+  grid.classList.add('win');
+
+  // Save best time
+  const key = `sudoku_best_${currentDifficulty}`;
+  const best = localStorage.getItem(key);
+  const isNewBest = !best || timer < parseInt(best);
+  if (isNewBest) {
+    localStorage.setItem(key, timer);
+  }
+
+  // Show win screen
+  setTimeout(() => {
+    document.getElementById('winTime').textContent = formatTime(timer);
+    document.getElementById('winBest').textContent = formatTime(isNewBest ? timer : parseInt(best));
+    document.getElementById('winDiff').textContent = currentDifficulty.toUpperCase();
+    document.getElementById('winHints').textContent = hintsUsed;
+
+    if (isNewBest) {
+      document.getElementById('winBest').parentElement.querySelector('.stat-label').textContent = 'NEW BEST!';
+    } else {
+      document.getElementById('winBest').parentElement.querySelector('.stat-label').textContent = 'BEST';
+    }
+
+    showOverlay('winOverlay');
+    Celebration.start();
+    AudioEngine.win();
+  }, 600);
+}
+
+function formatTime(s) {
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+}
+
+function showMenu() {
+  gameActive = false;
+  if (timerInterval) clearInterval(timerInterval);
+  grid.classList.remove('win');
+
+  // Load best times
+  ['easy', 'medium', 'hard', 'expert'].forEach(d => {
+    const best = localStorage.getItem(`sudoku_best_${d}`);
+    document.getElementById(`best${d.charAt(0).toUpperCase() + d.slice(1)}`).textContent =
+      best ? formatTime(parseInt(best)) : '--:--';
+  });
+
+  hideOverlay('winOverlay');
+  showOverlay('menuOverlay');
+}
+
+function playAgain() {
+  hideOverlay('winOverlay');
+  grid.classList.remove('win');
+  startGame(currentDifficulty);
+}
+
+function showOverlay(id) {
+  document.getElementById(id).classList.add('active');
+}
+
+function hideOverlay(id) {
+  document.getElementById(id).classList.remove('active');
+}
+
+// ===== KEYBOARD SUPPORT =====
+document.addEventListener('keydown', (e) => {
+  if (!gameActive) return;
+
+  if (e.key >= '1' && e.key <= '9') {
+    enterNumber(parseInt(e.key));
+    return;
+  }
+
+  if (e.key === 'Backspace' || e.key === 'Delete') {
+    eraseCell();
+    return;
+  }
+
+  if (e.key === 'n' || e.key === 'N') {
+    toggleNotes();
+    return;
+  }
+
+  if ((e.key === 'z' || e.key === 'Z') && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault();
+    undo();
+    return;
+  }
+
+  if (!selectedCell) return;
+
+  let { row, col } = selectedCell;
+  switch (e.key) {
+    case 'ArrowUp':    row = Math.max(0, row - 1); break;
+    case 'ArrowDown':  row = Math.min(8, row + 1); break;
+    case 'ArrowLeft':  col = Math.max(0, col - 1); break;
+    case 'ArrowRight': col = Math.min(8, col + 1); break;
+    default: return;
+  }
+  e.preventDefault();
+  selectCell(row, col);
+});
+
+// ===== INIT =====
+showMenu();
+</script>
+</body>
+</html>
