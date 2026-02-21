@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>BUBBLE - Chromatic Burst</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --cyan: #00f0ff;
+  --cyan-dim: #00f0ff44;
+  --purple: #a855f7;
+  --purple-dim: #a855f744;
+  --gold: #f59e0b;
+  --gold-dim: #f59e0b44;
+  --red: #ef4444;
+  --green: #22c55e;
+  --pink: #ec4899;
+  --bg: #05050f;
+  --panel: rgba(10, 10, 30, 0.7);
+  --glass: rgba(255, 255, 255, 0.02);
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --text: #e2e8f0;
+  --text-dim: rgba(255, 255, 255, 0.4);
+}
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  font-family: 'Rajdhani', 'Noto Sans KR', sans-serif;
+  color: var(--text);
+  cursor: default;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+canvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 1;
+}
+
+/* ===== OVERLAY SYSTEM ===== */
+.overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  transition: opacity 0.6s ease, visibility 0.6s ease;
+  pointer-events: none;
+}
+
+.overlay.active {
+  pointer-events: all;
+}
+
+.overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* ===== GLASS PANEL ===== */
+.glass-panel {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 40px 48px;
+  text-align: center;
+  max-width: 420px;
+  width: 90%;
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,240,255,0.3), transparent);
+}
+
+.glass-panel::after {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: radial-gradient(ellipse at center, rgba(0,240,255,0.03) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ===== TITLE ===== */
+.game-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 52px;
+  font-weight: 900;
+  letter-spacing: 12px;
+  background: linear-gradient(135deg, var(--cyan), var(--purple), var(--cyan));
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 4s ease infinite;
+  text-shadow: none;
+  filter: drop-shadow(0 0 20px rgba(0,240,255,0.3));
+  margin-bottom: 4px;
+}
+
+.game-subtitle {
+  font-family: 'Orbitron', monospace;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 8px;
+  color: var(--purple);
+  opacity: 0.7;
+  margin-bottom: 32px;
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* ===== BUTTONS ===== */
+.btn {
+  font-family: 'Orbitron', monospace;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 4px;
+  padding: 14px 40px;
+  border: 1px solid var(--cyan);
+  background: rgba(0, 240, 255, 0.06);
+  color: var(--cyan);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+  margin: 6px;
+}
+
+.btn:hover {
+  background: rgba(0, 240, 255, 0.15);
+  box-shadow: 0 0 30px rgba(0, 240, 255, 0.2), inset 0 0 30px rgba(0, 240, 255, 0.05);
+  transform: translateY(-2px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn.secondary {
+  border-color: var(--purple);
+  color: var(--purple);
+  background: rgba(168, 85, 247, 0.06);
+  font-size: 12px;
+  padding: 10px 28px;
+}
+
+.btn.secondary:hover {
+  background: rgba(168, 85, 247, 0.15);
+  box-shadow: 0 0 30px rgba(168, 85, 247, 0.2);
+}
+
+/* ===== STATS ===== */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 24px 0;
+}
+
+.stat-box {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 12px;
+  padding: 16px 12px;
+}
+
+.stat-label {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  font-family: 'Orbitron', monospace;
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.stat-value.cyan { color: var(--cyan); }
+.stat-value.purple { color: var(--purple); }
+.stat-value.gold { color: var(--gold); }
+.stat-value.green { color: var(--green); }
+
+/* ===== HIGH SCORE ===== */
+.high-score-line {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  margin-top: 8px;
+  margin-bottom: 24px;
+}
+
+.high-score-line span {
+  color: var(--gold);
+  font-family: 'Orbitron', monospace;
+  font-weight: 600;
+}
+
+/* ===== HUD ===== */
+.hud {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background: linear-gradient(180deg, rgba(5,5,15,0.9) 0%, transparent 100%);
+  pointer-events: none;
+  transition: opacity 0.4s;
+}
+
+.hud.hidden { opacity: 0; }
+
+.hud-item {
+  text-align: center;
+  pointer-events: all;
+}
+
+.hud-label {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.hud-value {
+  font-family: 'Orbitron', monospace;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.hud-value.cyan { color: var(--cyan); }
+.hud-value.gold { color: var(--gold); }
+.hud-value.purple { color: var(--purple); }
+
+/* ===== COMBO POPUP ===== */
+.combo-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  font-family: 'Orbitron', monospace;
+  font-size: 48px;
+  font-weight: 900;
+  color: var(--gold);
+  text-shadow: 0 0 40px rgba(245,158,11,0.6);
+  z-index: 8;
+  pointer-events: none;
+  opacity: 0;
+  transition: none;
+}
+
+.combo-popup.show {
+  animation: comboAnim 1s ease forwards;
+}
+
+@keyframes comboAnim {
+  0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+  20% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+  40% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -60%) scale(0.8); opacity: 0; }
+}
+
+/* ===== BACK LINK ===== */
+.back-link {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 12;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.back-link:hover { color: var(--cyan); }
+
+/* ===== DANGER WARNING ===== */
+.danger-bar {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+  z-index: 6;
+  background: transparent;
+  transition: background 0.3s;
+}
+
+.danger-bar.warning {
+  background: linear-gradient(90deg, transparent, var(--red), transparent);
+  animation: dangerPulse 0.8s ease infinite;
+}
+
+@keyframes dangerPulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 480px) {
+  .game-title { font-size: 36px; letter-spacing: 6px; }
+  .game-subtitle { font-size: 11px; letter-spacing: 5px; }
+  .glass-panel { padding: 28px 24px; }
+  .btn { font-size: 13px; padding: 12px 28px; }
+  .hud-value { font-size: 17px; }
+  .stat-value { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="gameCanvas"></canvas>
+
+<!-- HUD -->
+<div class="hud hidden" id="hud">
+  <div class="hud-item">
+    <div class="hud-label">SCORE</div>
+    <div class="hud-value cyan" id="hudScore">0</div>
+  </div>
+  <div class="hud-item">
+    <div class="hud-label">COMBO</div>
+    <div class="hud-value gold" id="hudCombo">x1</div>
+  </div>
+  <div class="hud-item">
+    <div class="hud-label">LEVEL</div>
+    <div class="hud-value purple" id="hudLevel">1</div>
+  </div>
+</div>
+
+<!-- DANGER BAR -->
+<div class="danger-bar" id="dangerBar"></div>
+
+<!-- COMBO POPUP -->
+<div class="combo-popup" id="comboPopup"></div>
+
+<!-- MENU OVERLAY -->
+<div class="overlay active" id="menuOverlay">
+  <div class="glass-panel">
+    <div class="game-title">BUBBLE</div>
+    <div class="game-subtitle">CHROMATIC BURST</div>
+    <div class="high-score-line">BEST SCORE: <span id="menuHighScore">0</span></div>
+    <button class="btn" onclick="startGame()">LAUNCH</button>
+    <br>
+    <a href="/games.html" class="btn secondary" style="margin-top:12px;">GAME HUB</a>
+  </div>
+</div>
+
+<!-- GAME OVER OVERLAY -->
+<div class="overlay hidden" id="gameOverOverlay">
+  <div class="glass-panel">
+    <div class="game-title" style="font-size:36px; letter-spacing:6px;">GAME OVER</div>
+    <div class="game-subtitle">FINAL RESULTS</div>
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-label">SCORE</div>
+        <div class="stat-value cyan" id="goScore">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">BEST</div>
+        <div class="stat-value gold" id="goBest">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">BUBBLES</div>
+        <div class="stat-value purple" id="goBubbles">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">MAX COMBO</div>
+        <div class="stat-value green" id="goCombo">0</div>
+      </div>
+    </div>
+    <button class="btn" onclick="startGame()">RETRY</button>
+    <br>
+    <a href="/games.html" class="btn secondary" style="margin-top:12px;">GAME HUB</a>
+  </div>
+</div>
+
+<a href="/games.html" class="back-link" id="backLink" style="display:none;">&larr; GAME HUB</a>
+
+<script>
+// ===== CONSTANTS =====
+const BUBBLE_RADIUS = 18;
+const BUBBLE_DIAMETER = BUBBLE_RADIUS * 2;
+const ROW_HEIGHT = BUBBLE_RADIUS * Math.sqrt(3);
+const SHOOT_SPEED = 14;
+const COLORS = [
+  { name: 'cyan',   hex: '#00f0ff', r: 0,   g: 240, b: 255 },
+  { name: 'purple', hex: '#a855f7', r: 168, g: 85,  b: 247 },
+  { name: 'gold',   hex: '#f59e0b', r: 245, g: 158, b: 11  },
+  { name: 'pink',   hex: '#ec4899', r: 236, g: 72,  b: 153 },
+  { name: 'green',  hex: '#22c55e', r: 34,  g: 197, b: 94  },
+  { name: 'red',    hex: '#ef4444', r: 239, g: 68,  b: 68  },
+];
+
+// ===== CANVAS SETUP =====
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+let W, H, COLS, GRID_OFFSET_X;
+let dpr = window.devicePixelRatio || 1;
+
+function resizeCanvas() {
+  W = window.innerWidth;
+  H = window.innerHeight;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  COLS = Math.floor((W - BUBBLE_RADIUS) / BUBBLE_DIAMETER);
+  if (COLS < 6) COLS = 6;
+  if (COLS > 16) COLS = 16;
+  GRID_OFFSET_X = (W - COLS * BUBBLE_DIAMETER) / 2 + BUBBLE_RADIUS;
+}
+
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// ===== GAME STATE =====
+let state = 'menu'; // menu, playing, gameover
+let grid = []; // 2D array of bubbles (or null)
+let shooterBubble = null;
+let nextBubble = null;
+let aimAngle = -Math.PI / 2;
+let flyingBubble = null;
+let particles = [];
+let fallingBubbles = [];
+let stars = [];
+let score = 0;
+let combo = 0;
+let maxCombo = 0;
+let comboMultiplier = 1;
+let bubblesPopped = 0;
+let level = 1;
+let ceilingOffset = 0;
+let ceilingTimer = 0;
+let ceilingInterval = 30000; // ms between ceiling drops
+let lastTime = 0;
+let highScore = parseInt(localStorage.getItem('bubble_highscore')) || 0;
+let shootCooldown = 0;
+let dangerLevel = 0;
+
+// ===== AUDIO SYSTEM =====
+let audioCtx = null;
+function ensureAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playSound(type) {
+  if (!audioCtx) return;
+  try {
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    switch (type) {
+      case 'shoot':
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, now);
+        osc.frequency.exponentialRampToValueAtTime(400, now + 0.1);
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+        osc.start(now);
+        osc.stop(now + 0.15);
+        break;
+      case 'pop':
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800 + Math.random() * 400, now);
+        osc.frequency.exponentialRampToValueAtTime(200, now + 0.15);
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+        osc.start(now);
+        osc.stop(now + 0.2);
+        break;
+      case 'combo': {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(500, now);
+        osc.frequency.exponentialRampToValueAtTime(1200, now + 0.2);
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+        osc.start(now);
+        osc.stop(now + 0.35);
+        // second tone
+        const osc2 = audioCtx.createOscillator();
+        const gain2 = audioCtx.createGain();
+        osc2.connect(gain2); gain2.connect(audioCtx.destination);
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(700, now + 0.05);
+        osc2.frequency.exponentialRampToValueAtTime(1400, now + 0.25);
+        gain2.gain.setValueAtTime(0.1, now + 0.05);
+        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+        osc2.start(now + 0.05);
+        osc2.stop(now + 0.35);
+        break;
+      }
+      case 'fall':
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(300, now);
+        osc.frequency.exponentialRampToValueAtTime(100, now + 0.3);
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+        osc.start(now);
+        osc.stop(now + 0.3);
+        break;
+      case 'gameover':
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(400, now);
+        osc.frequency.exponentialRampToValueAtTime(80, now + 0.8);
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 1);
+        osc.start(now);
+        osc.stop(now + 1);
+        break;
+      case 'snap':
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(1200, now);
+        osc.frequency.exponentialRampToValueAtTime(600, now + 0.05);
+        gain.gain.setValueAtTime(0.06, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+        osc.start(now);
+        osc.stop(now + 0.08);
+        break;
+    }
+  } catch (e) {}
+}
+
+// ===== STARS =====
+function initStars() {
+  stars = [];
+  for (let i = 0; i < 120; i++) {
+    stars.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      size: Math.random() * 1.5 + 0.3,
+      speed: Math.random() * 0.3 + 0.05,
+      twinkle: Math.random() * Math.PI * 2,
+      twinkleSpeed: Math.random() * 2 + 1,
+    });
+  }
+}
+initStars();
+
+function drawStars(dt) {
+  for (const s of stars) {
+    s.twinkle += s.twinkleSpeed * dt;
+    s.y += s.speed;
+    if (s.y > H + 5) { s.y = -5; s.x = Math.random() * W; }
+    const alpha = 0.3 + 0.4 * Math.sin(s.twinkle);
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(200, 220, 255, ${alpha})`;
+    ctx.fill();
+  }
+}
+
+// ===== GRID HELPERS =====
+function gridToScreen(row, col) {
+  const offset = (row % 2 === 1) ? BUBBLE_RADIUS : 0;
+  const x = GRID_OFFSET_X + col * BUBBLE_DIAMETER + offset;
+  const y = 60 + row * ROW_HEIGHT + ceilingOffset;
+  return { x, y };
+}
+
+function getMaxColsForRow(row) {
+  return (row % 2 === 1) ? COLS - 1 : COLS;
+}
+
+function initGrid() {
+  grid = [];
+  const initialRows = 6;
+  for (let r = 0; r < initialRows; r++) {
+    const rowArr = [];
+    const maxC = getMaxColsForRow(r);
+    for (let c = 0; c < maxC; c++) {
+      // leave some gaps for variety
+      if (Math.random() < 0.15 && r > 1) {
+        rowArr.push(null);
+      } else {
+        const ci = Math.floor(Math.random() * COLORS.length);
+        rowArr.push({ colorIdx: ci, pop: false });
+      }
+    }
+    grid.push(rowArr);
+  }
+  // ensure enough rows exist
+  while (grid.length < 30) {
+    grid.push([]);
+  }
+}
+
+function getNeighbors(row, col) {
+  const neighbors = [];
+  const even = row % 2 === 0;
+  // same row
+  if (col > 0) neighbors.push([row, col - 1]);
+  if (col < getMaxColsForRow(row) - 1) neighbors.push([row, col + 1]);
+  // row above
+  if (row > 0) {
+    if (even) {
+      if (col - 1 >= 0 && col - 1 < getMaxColsForRow(row - 1)) neighbors.push([row - 1, col - 1]);
+      if (col >= 0 && col < getMaxColsForRow(row - 1)) neighbors.push([row - 1, col]);
+    } else {
+      if (col >= 0 && col < getMaxColsForRow(row - 1)) neighbors.push([row - 1, col]);
+      if (col + 1 >= 0 && col + 1 < getMaxColsForRow(row - 1)) neighbors.push([row - 1, col + 1]);
+    }
+  }
+  // row below
+  if (row < grid.length - 1) {
+    if (even) {
+      if (col - 1 >= 0 && col - 1 < getMaxColsForRow(row + 1)) neighbors.push([row + 1, col - 1]);
+      if (col >= 0 && col < getMaxColsForRow(row + 1)) neighbors.push([row + 1, col]);
+    } else {
+      if (col >= 0 && col < getMaxColsForRow(row + 1)) neighbors.push([row + 1, col]);
+      if (col + 1 >= 0 && col + 1 < getMaxColsForRow(row + 1)) neighbors.push([row + 1, col + 1]);
+    }
+  }
+  return neighbors;
+}
+
+function snapToGrid(x, y) {
+  let bestRow = 0, bestCol = 0, bestDist = Infinity;
+  for (let r = 0; r < grid.length; r++) {
+    const maxC = getMaxColsForRow(r);
+    for (let c = 0; c < maxC; c++) {
+      const pos = gridToScreen(r, c);
+      const dx = x - pos.x;
+      const dy = y - pos.y;
+      const dist = dx * dx + dy * dy;
+      if (dist < bestDist && (!grid[r] || !grid[r][c])) {
+        bestDist = dist;
+        bestRow = r;
+        bestCol = c;
+      }
+    }
+  }
+  return { row: bestRow, col: bestCol };
+}
+
+function findMatches(row, col, colorIdx) {
+  const visited = new Set();
+  const matches = [];
+  const stack = [[row, col]];
+  while (stack.length > 0) {
+    const [r, c] = stack.pop();
+    const key = r + ',' + c;
+    if (visited.has(key)) continue;
+    visited.add(key);
+    if (!grid[r] || !grid[r][c] || grid[r][c].colorIdx !== colorIdx) continue;
+    matches.push([r, c]);
+    const neighbors = getNeighbors(r, c);
+    for (const [nr, nc] of neighbors) {
+      stack.push([nr, nc]);
+    }
+  }
+  return matches;
+}
+
+function findConnected() {
+  // BFS from top row to find all connected bubbles
+  const visited = new Set();
+  const queue = [];
+  // seed from row 0
+  if (grid[0]) {
+    for (let c = 0; c < grid[0].length; c++) {
+      if (grid[0][c]) {
+        queue.push([0, c]);
+        visited.add('0,' + c);
+      }
+    }
+  }
+  while (queue.length > 0) {
+    const [r, c] = queue.shift();
+    const neighbors = getNeighbors(r, c);
+    for (const [nr, nc] of neighbors) {
+      const key = nr + ',' + nc;
+      if (visited.has(key)) continue;
+      if (grid[nr] && grid[nr][nc]) {
+        visited.add(key);
+        queue.push([nr, nc]);
+      }
+    }
+  }
+  return visited;
+}
+
+function removeDisconnected() {
+  const connected = findConnected();
+  const falling = [];
+  for (let r = 0; r < grid.length; r++) {
+    if (!grid[r]) continue;
+    for (let c = 0; c < grid[r].length; c++) {
+      if (grid[r][c] && !connected.has(r + ',' + c)) {
+        const pos = gridToScreen(r, c);
+        falling.push({
+          x: pos.x, y: pos.y,
+          vx: (Math.random() - 0.5) * 3,
+          vy: -Math.random() * 3 - 1,
+          colorIdx: grid[r][c].colorIdx,
+          life: 1,
+          radius: BUBBLE_RADIUS,
+        });
+        grid[r][c] = null;
+      }
+    }
+  }
+  return falling;
+}
+
+// ===== SHOOTER =====
+function randomColor() {
+  // pick from colors that exist in grid (or any if few left)
+  const existing = new Set();
+  for (let r = 0; r < grid.length; r++) {
+    if (!grid[r]) continue;
+    for (let c = 0; c < grid[r].length; c++) {
+      if (grid[r][c]) existing.add(grid[r][c].colorIdx);
+    }
+  }
+  if (existing.size === 0) return Math.floor(Math.random() * COLORS.length);
+  const arr = [...existing];
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function createShooterBubble() {
+  if (nextBubble !== null) {
+    shooterBubble = nextBubble;
+  } else {
+    shooterBubble = randomColor();
+  }
+  nextBubble = randomColor();
+}
+
+function getShooterPos() {
+  return { x: W / 2, y: H - 60 };
+}
+
+// ===== PARTICLES =====
+function spawnParticles(x, y, colorIdx, count) {
+  const c = COLORS[colorIdx];
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = Math.random() * 5 + 2;
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: 1,
+      decay: Math.random() * 0.015 + 0.01,
+      size: Math.random() * 4 + 2,
+      color: c,
+    });
+  }
+}
+
+// ===== DRAW BUBBLE =====
+function drawBubble(x, y, colorIdx, radius, alpha) {
+  if (alpha === undefined) alpha = 1;
+  const c = COLORS[colorIdx];
+  const r = radius || BUBBLE_RADIUS;
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+
+  // Outer glow
+  const glow = ctx.createRadialGradient(x, y, r * 0.5, x, y, r * 2);
+  glow.addColorStop(0, `rgba(${c.r},${c.g},${c.b},0.15)`);
+  glow.addColorStop(1, `rgba(${c.r},${c.g},${c.b},0)`);
+  ctx.beginPath();
+  ctx.arc(x, y, r * 2, 0, Math.PI * 2);
+  ctx.fillStyle = glow;
+  ctx.fill();
+
+  // Main bubble body
+  const grad = ctx.createRadialGradient(x - r * 0.25, y - r * 0.25, r * 0.1, x, y, r);
+  grad.addColorStop(0, `rgba(${Math.min(c.r + 80, 255)},${Math.min(c.g + 80, 255)},${Math.min(c.b + 80, 255)},0.95)`);
+  grad.addColorStop(0.5, `rgba(${c.r},${c.g},${c.b},0.9)`);
+  grad.addColorStop(1, `rgba(${Math.max(c.r - 40, 0)},${Math.max(c.g - 40, 0)},${Math.max(c.b - 40, 0)},0.85)`);
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Border ring
+  ctx.strokeStyle = `rgba(${c.r},${c.g},${c.b},0.5)`;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Glass sheen highlight
+  const sheen = ctx.createRadialGradient(x - r * 0.3, y - r * 0.35, 0, x - r * 0.15, y - r * 0.2, r * 0.6);
+  sheen.addColorStop(0, 'rgba(255,255,255,0.45)');
+  sheen.addColorStop(0.5, 'rgba(255,255,255,0.1)');
+  sheen.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.beginPath();
+  ctx.arc(x, y, r * 0.85, 0, Math.PI * 2);
+  ctx.fillStyle = sheen;
+  ctx.fill();
+
+  ctx.restore();
+}
+
+// ===== DRAW AIM LINE =====
+function drawAimLine() {
+  const sPos = getShooterPos();
+  const step = 8;
+  const maxBounces = 3;
+  let px = sPos.x, py = sPos.y;
+  let dx = Math.cos(aimAngle) * step;
+  let dy = Math.sin(aimAngle) * step;
+  let bounces = 0;
+  const leftWall = GRID_OFFSET_X - BUBBLE_RADIUS;
+  const rightWall = GRID_OFFSET_X + (COLS - 1) * BUBBLE_DIAMETER + BUBBLE_RADIUS;
+
+  ctx.save();
+  let dashIdx = 0;
+  const points = [];
+
+  for (let i = 0; i < 400; i++) {
+    px += dx;
+    py += dy;
+
+    // Wall bounce
+    if (px < leftWall) { px = leftWall; dx = -dx; bounces++; }
+    if (px > rightWall) { px = rightWall; dx = -dx; bounces++; }
+    if (bounces > maxBounces) break;
+    if (py < 50) break;
+
+    // Check collision with grid
+    let hit = false;
+    for (let r = 0; r < grid.length; r++) {
+      if (!grid[r]) continue;
+      for (let c = 0; c < grid[r].length; c++) {
+        if (!grid[r][c]) continue;
+        const gp = gridToScreen(r, c);
+        const ddx = px - gp.x, ddy = py - gp.y;
+        if (ddx * ddx + ddy * ddy < (BUBBLE_RADIUS * 2 - 2) * (BUBBLE_RADIUS * 2 - 2)) {
+          hit = true;
+          break;
+        }
+      }
+      if (hit) break;
+    }
+    if (hit) break;
+
+    points.push({ x: px, y: py });
+  }
+
+  // Draw dotted line
+  const c = COLORS[shooterBubble] || COLORS[0];
+  for (let i = 0; i < points.length; i++) {
+    const seg = Math.floor(i / 6);
+    if (seg % 2 === 1) continue;
+    const alpha = 0.6 - (i / points.length) * 0.4;
+    ctx.beginPath();
+    ctx.arc(points[i].x, points[i].y, 2, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${c.r},${c.g},${c.b},${alpha})`;
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+// ===== DRAW SHOOTER =====
+function drawShooter() {
+  const pos = getShooterPos();
+
+  // Shooter base ring
+  ctx.save();
+  ctx.translate(pos.x, pos.y);
+
+  // Rotating outer ring
+  const time = Date.now() / 2000;
+  ctx.beginPath();
+  ctx.arc(0, 0, BUBBLE_RADIUS + 14, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(0,240,255,0.08)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // aim indicator line
+  ctx.rotate(aimAngle);
+  ctx.beginPath();
+  ctx.moveTo(BUBBLE_RADIUS + 6, 0);
+  ctx.lineTo(BUBBLE_RADIUS + 20, 0);
+  ctx.strokeStyle = 'rgba(0,240,255,0.4)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // arrow head
+  ctx.beginPath();
+  ctx.moveTo(BUBBLE_RADIUS + 22, 0);
+  ctx.lineTo(BUBBLE_RADIUS + 16, -4);
+  ctx.lineTo(BUBBLE_RADIUS + 16, 4);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(0,240,255,0.4)';
+  ctx.fill();
+
+  ctx.restore();
+
+  // Draw current bubble at shooter
+  if (shooterBubble !== null && !flyingBubble) {
+    drawBubble(pos.x, pos.y, shooterBubble);
+  }
+
+  // Draw next bubble preview
+  if (nextBubble !== null) {
+    const nx = pos.x + 50;
+    const ny = pos.y + 5;
+    ctx.save();
+    ctx.globalAlpha = 0.5;
+    ctx.font = '10px Orbitron';
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.textAlign = 'center';
+    ctx.fillText('NEXT', nx, ny - 20);
+    ctx.restore();
+    drawBubble(nx, ny, nextBubble, BUBBLE_RADIUS * 0.65, 0.6);
+  }
+}
+
+// ===== SHOOTING =====
+function shoot() {
+  if (flyingBubble || shootCooldown > 0 || state !== 'playing') return;
+  ensureAudio();
+  playSound('shoot');
+
+  const pos = getShooterPos();
+  flyingBubble = {
+    x: pos.x,
+    y: pos.y,
+    vx: Math.cos(aimAngle) * SHOOT_SPEED,
+    vy: Math.sin(aimAngle) * SHOOT_SPEED,
+    colorIdx: shooterBubble,
+  };
+  shootCooldown = 0.2;
+}
+
+function updateFlyingBubble(dt) {
+  if (!flyingBubble) return;
+  const fb = flyingBubble;
+  fb.x += fb.vx;
+  fb.y += fb.vy;
+
+  const leftWall = GRID_OFFSET_X - BUBBLE_RADIUS;
+  const rightWall = GRID_OFFSET_X + (COLS - 1) * BUBBLE_DIAMETER + BUBBLE_RADIUS;
+
+  // Wall bounce
+  if (fb.x - BUBBLE_RADIUS < leftWall) { fb.x = leftWall + BUBBLE_RADIUS; fb.vx = -fb.vx; }
+  if (fb.x + BUBBLE_RADIUS > rightWall) { fb.x = rightWall - BUBBLE_RADIUS; fb.vx = -fb.vx; }
+
+  // Ceiling
+  if (fb.y - BUBBLE_RADIUS < 60 + ceilingOffset) {
+    landBubble(fb);
+    return;
+  }
+
+  // Grid collision
+  for (let r = 0; r < grid.length; r++) {
+    if (!grid[r]) continue;
+    for (let c = 0; c < grid[r].length; c++) {
+      if (!grid[r][c]) continue;
+      const gp = gridToScreen(r, c);
+      const ddx = fb.x - gp.x, ddy = fb.y - gp.y;
+      const dist = Math.sqrt(ddx * ddx + ddy * ddy);
+      if (dist < BUBBLE_RADIUS * 1.85) {
+        landBubble(fb);
+        return;
+      }
+    }
+  }
+
+  // Off screen
+  if (fb.y < -50 || fb.y > H + 50) {
+    flyingBubble = null;
+    createShooterBubble();
+  }
+}
+
+function landBubble(fb) {
+  playSound('snap');
+  const { row, col } = snapToGrid(fb.x, fb.y);
+
+  // Ensure row exists
+  while (grid.length <= row) {
+    grid.push([]);
+  }
+  while (grid[row].length <= col) {
+    grid[row].push(null);
+  }
+
+  grid[row][col] = { colorIdx: fb.colorIdx, pop: false };
+  flyingBubble = null;
+
+  // Check matches
+  const matches = findMatches(row, col, fb.colorIdx);
+
+  if (matches.length >= 3) {
+    combo++;
+    if (combo > maxCombo) maxCombo = combo;
+    comboMultiplier = Math.min(combo, 8);
+
+    // Pop matched bubbles
+    for (const [mr, mc] of matches) {
+      const pos = gridToScreen(mr, mc);
+      spawnParticles(pos.x, pos.y, grid[mr][mc].colorIdx, 12);
+      grid[mr][mc] = null;
+      bubblesPopped++;
+    }
+
+    const matchScore = matches.length * 10 * comboMultiplier;
+    score += matchScore;
+
+    playSound('pop');
+
+    if (combo >= 2) {
+      playSound('combo');
+      showComboPopup(combo);
+    }
+
+    // Remove disconnected
+    const fallen = removeDisconnected();
+    if (fallen.length > 0) {
+      playSound('fall');
+      for (const f of fallen) {
+        fallingBubbles.push(f);
+        bubblesPopped++;
+        score += 5 * comboMultiplier;
+      }
+    }
+
+    // Level up
+    const newLevel = Math.floor(bubblesPopped / 30) + 1;
+    if (newLevel > level) {
+      level = newLevel;
+      ceilingInterval = Math.max(10000, 30000 - level * 2000);
+    }
+  } else {
+    combo = 0;
+    comboMultiplier = 1;
+  }
+
+  // Check game over
+  if (checkGameOver()) {
+    gameOver();
+    return;
+  }
+
+  createShooterBubble();
+  updateHUD();
+}
+
+function checkGameOver() {
+  const threshold = H - 120;
+  for (let r = 0; r < grid.length; r++) {
+    if (!grid[r]) continue;
+    for (let c = 0; c < grid[r].length; c++) {
+      if (grid[r][c]) {
+        const pos = gridToScreen(r, c);
+        if (pos.y + BUBBLE_RADIUS > threshold) return true;
+      }
+    }
+  }
+  return false;
+}
+
+// ===== GAME FLOW =====
+function startGame() {
+  ensureAudio();
+  state = 'playing';
+  score = 0;
+  combo = 0;
+  maxCombo = 0;
+  comboMultiplier = 1;
+  bubblesPopped = 0;
+  level = 1;
+  ceilingOffset = 0;
+  ceilingTimer = 0;
+  ceilingInterval = 30000;
+  particles = [];
+  fallingBubbles = [];
+  flyingBubble = null;
+  dangerLevel = 0;
+
+  resizeCanvas();
+  initGrid();
+  createShooterBubble();
+  updateHUD();
+
+  document.getElementById('menuOverlay').classList.add('hidden');
+  document.getElementById('menuOverlay').classList.remove('active');
+  document.getElementById('gameOverOverlay').classList.add('hidden');
+  document.getElementById('gameOverOverlay').classList.remove('active');
+  document.getElementById('hud').classList.remove('hidden');
+  document.getElementById('backLink').style.display = 'block';
+  document.getElementById('dangerBar').classList.remove('warning');
+}
+
+function gameOver() {
+  state = 'gameover';
+  playSound('gameover');
+
+  if (score > highScore) {
+    highScore = score;
+    localStorage.setItem('bubble_highscore', highScore);
+  }
+
+  document.getElementById('goScore').textContent = score.toLocaleString();
+  document.getElementById('goBest').textContent = highScore.toLocaleString();
+  document.getElementById('goBubbles').textContent = bubblesPopped;
+  document.getElementById('goCombo').textContent = 'x' + maxCombo;
+
+  document.getElementById('hud').classList.add('hidden');
+  document.getElementById('backLink').style.display = 'none';
+
+  setTimeout(() => {
+    document.getElementById('gameOverOverlay').classList.remove('hidden');
+    document.getElementById('gameOverOverlay').classList.add('active');
+  }, 600);
+}
+
+function updateHUD() {
+  document.getElementById('hudScore').textContent = score.toLocaleString();
+  document.getElementById('hudCombo').textContent = 'x' + comboMultiplier;
+  document.getElementById('hudLevel').textContent = level;
+}
+
+function showComboPopup(c) {
+  const el = document.getElementById('comboPopup');
+  el.textContent = 'x' + c + ' COMBO!';
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+}
+
+// ===== INPUT =====
+let mouseX = 0, mouseY = 0;
+
+function updateAim(clientX, clientY) {
+  const pos = getShooterPos();
+  const dx = clientX - pos.x;
+  const dy = clientY - pos.y;
+  let angle = Math.atan2(dy, dx);
+  // Clamp to upward range
+  if (angle > -0.15) angle = -0.15;
+  if (angle < -Math.PI + 0.15) angle = -Math.PI + 0.15;
+  aimAngle = angle;
+  mouseX = clientX;
+  mouseY = clientY;
+}
+
+canvas.addEventListener('mousemove', (e) => {
+  updateAim(e.clientX, e.clientY);
+});
+
+canvas.addEventListener('click', (e) => {
+  if (state === 'playing') shoot();
+});
+
+canvas.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  const t = e.touches[0];
+  updateAim(t.clientX, t.clientY);
+}, { passive: false });
+
+canvas.addEventListener('touchmove', (e) => {
+  e.preventDefault();
+  const t = e.touches[0];
+  updateAim(t.clientX, t.clientY);
+}, { passive: false });
+
+canvas.addEventListener('touchend', (e) => {
+  e.preventDefault();
+  if (state === 'playing') shoot();
+}, { passive: false });
+
+// ===== MAIN LOOP =====
+function gameLoop(timestamp) {
+  const dt = Math.min((timestamp - lastTime) / 1000, 0.05);
+  lastTime = timestamp;
+
+  // Clear
+  ctx.fillStyle = '#05050f';
+  ctx.fillRect(0, 0, W, H);
+
+  // Stars always
+  drawStars(dt);
+
+  if (state === 'playing') {
+    // Ceiling descent
+    ceilingTimer += dt * 1000;
+    if (ceilingTimer >= ceilingInterval) {
+      ceilingTimer = 0;
+      ceilingOffset += ROW_HEIGHT * 0.5;
+      // Check game over after ceiling drop
+      if (checkGameOver()) {
+        gameOver();
+      }
+    }
+
+    // Danger level calculation
+    let maxBubbleY = 0;
+    for (let r = 0; r < grid.length; r++) {
+      if (!grid[r]) continue;
+      for (let c = 0; c < grid[r].length; c++) {
+        if (grid[r][c]) {
+          const pos = gridToScreen(r, c);
+          if (pos.y > maxBubbleY) maxBubbleY = pos.y;
+        }
+      }
+    }
+    const threshold = H - 120;
+    dangerLevel = Math.max(0, (maxBubbleY - threshold + 200) / 200);
+    if (dangerLevel > 0.5) {
+      document.getElementById('dangerBar').classList.add('warning');
+    } else {
+      document.getElementById('dangerBar').classList.remove('warning');
+    }
+
+    // Shoot cooldown
+    if (shootCooldown > 0) shootCooldown -= dt;
+
+    // Update flying bubble
+    updateFlyingBubble(dt);
+
+    // Draw grid bubbles
+    for (let r = 0; r < grid.length; r++) {
+      if (!grid[r]) continue;
+      for (let c = 0; c < grid[r].length; c++) {
+        if (!grid[r][c]) continue;
+        const pos = gridToScreen(r, c);
+        if (pos.y > -BUBBLE_RADIUS * 2 && pos.y < H + BUBBLE_RADIUS) {
+          drawBubble(pos.x, pos.y, grid[r][c].colorIdx);
+        }
+      }
+    }
+
+    // Draw danger line
+    if (dangerLevel > 0) {
+      const lineY = H - 120;
+      ctx.save();
+      ctx.setLineDash([8, 8]);
+      ctx.strokeStyle = `rgba(239, 68, 68, ${0.15 + dangerLevel * 0.3})`;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, lineY);
+      ctx.lineTo(W, lineY);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Draw flying bubble
+    if (flyingBubble) {
+      drawBubble(flyingBubble.x, flyingBubble.y, flyingBubble.colorIdx);
+    }
+
+    // Draw aim line
+    if (!flyingBubble && shooterBubble !== null) {
+      drawAimLine();
+    }
+
+    // Draw shooter
+    drawShooter();
+
+    // Draw ceiling indicator
+    if (ceilingOffset > 0) {
+      const ceilY = 60 + ceilingOffset - ROW_HEIGHT;
+      ctx.save();
+      const ceilGrad = ctx.createLinearGradient(0, ceilY - 20, 0, ceilY);
+      ceilGrad.addColorStop(0, 'rgba(168, 85, 247, 0)');
+      ceilGrad.addColorStop(1, 'rgba(168, 85, 247, 0.1)');
+      ctx.fillStyle = ceilGrad;
+      ctx.fillRect(0, ceilY - 20, W, 20);
+      ctx.strokeStyle = 'rgba(168, 85, 247, 0.2)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, ceilY);
+      ctx.lineTo(W, ceilY);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Update & draw falling bubbles
+    for (let i = fallingBubbles.length - 1; i >= 0; i--) {
+      const fb = fallingBubbles[i];
+      fb.vy += 15 * dt;
+      fb.x += fb.vx;
+      fb.y += fb.vy;
+      fb.life -= dt * 0.8;
+      fb.radius *= 0.997;
+      if (fb.life <= 0 || fb.y > H + 50) {
+        fallingBubbles.splice(i, 1);
+        continue;
+      }
+      drawBubble(fb.x, fb.y, fb.colorIdx, fb.radius, fb.life);
+    }
+
+    // Update & draw particles
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 5 * dt;
+      p.life -= p.decay;
+      if (p.life <= 0) {
+        particles.splice(i, 1);
+        continue;
+      }
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${p.color.r},${p.color.g},${p.color.b},${p.life * 0.8})`;
+      ctx.fill();
+      // glow
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * p.life * 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${p.color.r},${p.color.g},${p.color.b},${p.life * 0.15})`;
+      ctx.fill();
+    }
+
+    // Draw side borders
+    ctx.save();
+    const leftX = GRID_OFFSET_X - BUBBLE_RADIUS;
+    const rightX = GRID_OFFSET_X + (COLS - 1) * BUBBLE_DIAMETER + BUBBLE_RADIUS;
+    const borderGrad = ctx.createLinearGradient(leftX, 0, leftX, H);
+    borderGrad.addColorStop(0, 'rgba(0,240,255,0.1)');
+    borderGrad.addColorStop(0.5, 'rgba(0,240,255,0.03)');
+    borderGrad.addColorStop(1, 'rgba(0,240,255,0)');
+    ctx.strokeStyle = borderGrad;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(leftX, 55);
+    ctx.lineTo(leftX, H - 90);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(rightX, 55);
+    ctx.lineTo(rightX, H - 90);
+    ctx.stroke();
+    ctx.restore();
+
+  } else if (state === 'menu' || state === 'gameover') {
+    // Still draw particles during menu/gameover for flair
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 5 * dt;
+      p.life -= p.decay;
+      if (p.life <= 0) {
+        particles.splice(i, 1);
+        continue;
+      }
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${p.color.r},${p.color.g},${p.color.b},${p.life * 0.8})`;
+      ctx.fill();
+    }
+    // ambient floating bubbles in menu
+    if (state === 'menu' && Math.random() < 0.03) {
+      const ci = Math.floor(Math.random() * COLORS.length);
+      const c = COLORS[ci];
+      for (let j = 0; j < 2; j++) {
+        particles.push({
+          x: Math.random() * W,
+          y: H + 10,
+          vx: (Math.random() - 0.5) * 1.5,
+          vy: -(Math.random() * 2 + 1),
+          life: 1,
+          decay: 0.003 + Math.random() * 0.002,
+          size: Math.random() * 5 + 3,
+          color: c,
+        });
+      }
+    }
+  }
+
+  requestAnimationFrame(gameLoop);
+}
+
+// ===== INIT =====
+document.getElementById('menuHighScore').textContent = highScore.toLocaleString();
+lastTime = performance.now();
+requestAnimationFrame(gameLoop);
+</script>
+</body>
+</html>
