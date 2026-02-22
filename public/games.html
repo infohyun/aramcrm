@@ -17,6 +17,7 @@
   --green: #22c55e;
   --blue: #3b82f6;
   --pink: #ec4899;
+  --orange: #f97316;
   --bg: #05050f;
   --glass: rgba(255, 255, 255, 0.02);
   --glass-border: rgba(255, 255, 255, 0.06);
@@ -24,9 +25,7 @@
   --text-dim: rgba(255, 255, 255, 0.35);
 }
 
-html {
-  scroll-behavior: smooth;
-}
+html { scroll-behavior: smooth; }
 
 body {
   background: var(--bg);
@@ -37,7 +36,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ===== BACKGROUND ===== */
 .bg-canvas {
   position: fixed;
   top: 0; left: 0;
@@ -51,7 +49,7 @@ body {
   position: relative;
   z-index: 10;
   text-align: center;
-  padding: 80px 24px 40px;
+  padding: 60px 24px 24px;
 }
 
 .header-badge {
@@ -66,14 +64,14 @@ body {
   text-transform: uppercase;
   color: var(--cyan);
   background: rgba(0, 240, 255, 0.04);
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   opacity: 0;
   animation: fadeUp 0.8s ease 0.1s forwards;
 }
 
 .header-title {
   font-family: 'Orbitron', sans-serif;
-  font-size: clamp(40px, 8vw, 72px);
+  font-size: clamp(36px, 8vw, 68px);
   font-weight: 900;
   letter-spacing: 12px;
   background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.6) 50%, #fff 100%);
@@ -83,17 +81,12 @@ body {
   background-clip: text;
   animation: fadeUp 0.8s ease 0.2s forwards, shimmer 8s ease infinite;
   opacity: 0;
-  margin-bottom: 12px;
-}
-
-@keyframes shimmer {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+  margin-bottom: 8px;
 }
 
 .header-subtitle {
   font-family: 'Rajdhani', sans-serif;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 400;
   letter-spacing: 3px;
   color: var(--text-dim);
@@ -101,24 +94,73 @@ body {
   animation: fadeUp 0.8s ease 0.4s forwards;
 }
 
+.game-count {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 11px;
+  color: var(--cyan);
+  letter-spacing: 2px;
+  margin-top: 12px;
+  opacity: 0;
+  animation: fadeUp 0.8s ease 0.5s forwards;
+}
+
+@keyframes shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* ===== FEATURED GAME ===== */
+/* ===== FILTER TABS ===== */
+.filter-bar {
+  position: relative;
+  z-index: 10;
+  max-width: 1200px;
+  margin: 0 auto 40px;
+  padding: 0 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  opacity: 0;
+  animation: fadeUp 0.8s ease 0.5s forwards;
+}
+
+.filter-btn {
+  padding: 6px 18px;
+  border: 1px solid var(--glass-border);
+  border-radius: 100px;
+  background: var(--glass);
+  color: var(--text-dim);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.filter-btn:hover, .filter-btn.active {
+  border-color: rgba(0, 240, 255, 0.2);
+  color: var(--cyan);
+  background: rgba(0, 240, 255, 0.05);
+}
+
+/* ===== FEATURED ===== */
 .featured {
   position: relative;
   z-index: 10;
-  max-width: 1100px;
-  margin: 0 auto 60px;
+  max-width: 1200px;
+  margin: 0 auto 48px;
   padding: 0 24px;
 }
 
 .featured-card {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0;
   border: 1px solid rgba(0, 240, 255, 0.1);
   border-radius: 24px;
   overflow: hidden;
@@ -130,64 +172,50 @@ body {
   animation: fadeUp 0.8s ease 0.5s forwards;
   position: relative;
 }
-
 .featured-card::before {
   content: '';
   position: absolute;
-  top: -1px; left: -1px; right: -1px; bottom: -1px;
+  inset: -1px;
   border-radius: 25px;
   background: linear-gradient(135deg, rgba(0, 240, 255, 0.15), transparent, rgba(168, 85, 247, 0.15));
   z-index: -1;
   opacity: 0;
   transition: opacity 0.5s ease;
 }
-
 .featured-card:hover::before { opacity: 1; }
-
 .featured-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 24px 64px rgba(0, 240, 255, 0.08),
-              0 8px 24px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 24px 64px rgba(0, 240, 255, 0.08), 0 8px 24px rgba(0, 0, 0, 0.3);
   border-color: rgba(0, 240, 255, 0.2);
 }
 
 .featured-visual {
   position: relative;
-  min-height: 280px;
+  min-height: 240px;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
 }
-
 .featured-visual-bg {
   position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
+  inset: 0;
   background: radial-gradient(ellipse at 30% 40%, rgba(0, 240, 255, 0.08) 0%, transparent 60%),
               radial-gradient(ellipse at 70% 70%, rgba(168, 85, 247, 0.06) 0%, transparent 50%);
 }
-
 .featured-icon {
   position: relative;
   z-index: 2;
-  font-size: 100px;
+  font-size: 90px;
   filter: drop-shadow(0 0 40px rgba(0, 240, 255, 0.3));
   animation: float 6s ease-in-out infinite;
 }
-
 @keyframes float {
   0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-15px) rotate(2deg); }
+  50% { transform: translateY(-12px) rotate(2deg); }
 }
 
-.featured-content {
-  padding: 40px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
+.featured-content { padding: 36px; display: flex; flex-direction: column; justify-content: center; }
 .featured-badge {
   display: inline-flex;
   align-items: center;
@@ -202,53 +230,33 @@ body {
   letter-spacing: 3px;
   color: var(--cyan);
   width: fit-content;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
-
 .featured-badge-dot {
   width: 5px; height: 5px;
   border-radius: 50%;
   background: var(--cyan);
   animation: pulse 2s ease infinite;
 }
-
-@keyframes pulse {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 1; }
-}
+@keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
 
 .featured-title {
   font-family: 'Orbitron', sans-serif;
-  font-size: clamp(28px, 4vw, 40px);
+  font-size: clamp(26px, 4vw, 38px);
   font-weight: 800;
   letter-spacing: 6px;
   background: linear-gradient(135deg, var(--cyan), var(--purple));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin-bottom: 12px;
-  line-height: 1.2;
+  margin-bottom: 10px;
 }
-
-.featured-desc {
-  font-size: 14px;
-  line-height: 1.7;
-  color: var(--text-dim);
-  margin-bottom: 24px;
-  max-width: 360px;
-}
-
-.featured-tags {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 24px;
-}
-
+.featured-desc { font-size: 14px; line-height: 1.7; color: var(--text-dim); margin-bottom: 20px; max-width: 360px; }
+.featured-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
 .featured-tag {
-  padding: 4px 12px;
-  border-radius: 6px;
-  font-size: 10px;
+  padding: 3px 10px;
+  border-radius: 5px;
+  font-size: 9px;
   font-weight: 600;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -256,96 +264,73 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.06);
   color: var(--text-dim);
 }
-
 .play-btn {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 32px;
+  padding: 11px 28px;
   border-radius: 10px;
   background: linear-gradient(135deg, rgba(0, 240, 255, 0.1), rgba(168, 85, 247, 0.1));
   border: 1px solid rgba(0, 240, 255, 0.2);
   font-family: 'Orbitron', sans-serif;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 3px;
   color: var(--cyan);
   width: fit-content;
   transition: all 0.3s ease;
 }
-
 .featured-card:hover .play-btn {
   background: linear-gradient(135deg, rgba(0, 240, 255, 0.15), rgba(168, 85, 247, 0.15));
   box-shadow: 0 4px 20px rgba(0, 240, 255, 0.15);
 }
-
-.play-arrow {
-  transition: transform 0.3s ease;
-}
+.play-arrow { transition: transform 0.3s ease; }
 .featured-card:hover .play-arrow { transform: translateX(4px); }
 
 /* ===== SECTION HEADER ===== */
 .section-header {
   position: relative;
   z-index: 10;
-  max-width: 1100px;
-  margin: 0 auto 32px;
+  max-width: 1200px;
+  margin: 48px auto 24px;
   padding: 0 24px;
   display: flex;
   align-items: center;
   gap: 16px;
 }
-
-.section-line {
-  height: 1px;
-  flex: 1;
-  background: linear-gradient(90deg, var(--glass-border), transparent);
-}
-
+.section-line { height: 1px; flex: 1; background: linear-gradient(90deg, var(--glass-border), transparent); }
 .section-title {
   font-family: 'Orbitron', sans-serif;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 5px;
   color: var(--text-dim);
+  white-space: nowrap;
 }
 
 /* ===== GAME GRID ===== */
 .grid {
   position: relative;
   z-index: 10;
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 0 24px 80px;
+  padding: 0 24px 20px;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
 }
 
 .card {
   position: relative;
   border: 1px solid var(--glass-border);
-  border-radius: 20px;
-  padding: 32px 28px;
+  border-radius: 16px;
+  padding: 24px 22px;
   background: var(--glass);
   text-decoration: none;
   color: inherit;
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
-  opacity: 0;
-  animation: fadeUp 0.6s ease forwards;
 }
-
-.card:nth-child(1) { animation-delay: 0.6s; }
-.card:nth-child(2) { animation-delay: 0.7s; }
-.card:nth-child(3) { animation-delay: 0.8s; }
-.card:nth-child(4) { animation-delay: 0.9s; }
-.card:nth-child(5) { animation-delay: 1.0s; }
-.card:nth-child(6) { animation-delay: 1.1s; }
-.card:nth-child(7) { animation-delay: 1.2s; }
-.card:nth-child(8) { animation-delay: 1.3s; }
-.card:nth-child(9) { animation-delay: 1.4s; }
-
 .card::before {
   content: '';
   position: absolute;
@@ -355,38 +340,30 @@ body {
   transition: left 0.8s ease;
 }
 .card:hover::before { left: 100%; }
-
 .card:hover {
   border-color: rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.04);
-  transform: translateY(-6px);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3),
-              0 0 0 1px rgba(255, 255, 255, 0.05);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
 }
 
-.card-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-
+.card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
 .card-icon-wrap {
-  width: 52px; height: 52px;
-  border-radius: 14px;
+  width: 46px; height: 46px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 26px;
+  font-size: 22px;
   transition: transform 0.4s ease;
 }
 .card:hover .card-icon-wrap { transform: scale(1.1) rotate(-3deg); }
 
 .card-tag {
-  padding: 4px 12px;
+  padding: 3px 10px;
   border-radius: 100px;
   font-family: 'Orbitron', sans-serif;
-  font-size: 8px;
+  font-size: 7px;
   font-weight: 600;
   letter-spacing: 2px;
   text-transform: uppercase;
@@ -399,64 +376,47 @@ body {
 .tag-strategy { background: rgba(59, 130, 246, 0.08); color: var(--blue); border: 1px solid rgba(59, 130, 246, 0.12); }
 .tag-action { background: rgba(0, 240, 255, 0.08); color: var(--cyan); border: 1px solid rgba(0, 240, 255, 0.12); }
 .tag-multiplayer { background: rgba(236, 72, 153, 0.08); color: var(--pink); border: 1px solid rgba(236, 72, 153, 0.12); }
+.tag-word { background: rgba(249, 115, 22, 0.08); color: var(--orange); border: 1px solid rgba(249, 115, 22, 0.12); }
+.tag-reflex { background: rgba(239, 68, 68, 0.08); color: var(--red); border: 1px solid rgba(239, 68, 68, 0.12); }
+.tag-casino { background: rgba(245, 158, 11, 0.08); color: var(--gold); border: 1px solid rgba(245, 158, 11, 0.12); }
 
-.icon-puzzle { background: rgba(245, 158, 11, 0.06); border: 1px solid rgba(245, 158, 11, 0.1); }
-.icon-arcade { background: rgba(34, 197, 94, 0.06); border: 1px solid rgba(34, 197, 94, 0.1); }
-.icon-creative { background: rgba(168, 85, 247, 0.06); border: 1px solid rgba(168, 85, 247, 0.1); }
-.icon-strategy { background: rgba(59, 130, 246, 0.06); border: 1px solid rgba(59, 130, 246, 0.1); }
-.icon-multiplayer { background: rgba(236, 72, 153, 0.06); border: 1px solid rgba(236, 72, 153, 0.1); }
+.ic-act { background: rgba(0,240,255,0.06); border: 1px solid rgba(0,240,255,0.1); }
+.ic-arc { background: rgba(34,197,94,0.06); border: 1px solid rgba(34,197,94,0.1); }
+.ic-puz { background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.1); }
+.ic-str { background: rgba(59,130,246,0.06); border: 1px solid rgba(59,130,246,0.1); }
+.ic-cre { background: rgba(168,85,247,0.06); border: 1px solid rgba(168,85,247,0.1); }
+.ic-mul { background: rgba(236,72,153,0.06); border: 1px solid rgba(236,72,153,0.1); }
+.ic-wrd { background: rgba(249,115,22,0.06); border: 1px solid rgba(249,115,22,0.1); }
+.ic-ref { background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.1); }
+.ic-cas { background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.1); }
 
 .card-title {
   font-family: 'Orbitron', sans-serif;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 2px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   color: rgba(255, 255, 255, 0.9);
 }
-
-.card-desc {
-  font-size: 13px;
-  line-height: 1.7;
-  color: var(--text-dim);
-  margin-bottom: 20px;
-}
-
-.card-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
+.card-desc { font-size: 12px; line-height: 1.6; color: var(--text-dim); margin-bottom: 16px; }
+.card-footer { display: flex; align-items: center; justify-content: space-between; }
 .card-play {
   font-family: 'Rajdhani', sans-serif;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 2px;
   color: var(--text-dim);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   transition: color 0.3s ease;
 }
 .card:hover .card-play { color: rgba(255, 255, 255, 0.7); }
-
-.card-play-arrow {
-  transition: transform 0.3s ease;
-  font-size: 14px;
-}
+.card-play-arrow { transition: transform 0.3s ease; font-size: 13px; }
 .card:hover .card-play-arrow { transform: translateX(5px); }
-
-.card-difficulty {
-  display: flex;
-  gap: 3px;
-}
-.card-difficulty-dot {
-  width: 4px; height: 4px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-}
-.card-difficulty-dot.filled { background: rgba(255, 255, 255, 0.4); }
+.card-diff { display: flex; gap: 2px; }
+.dd { width: 4px; height: 4px; border-radius: 50%; background: rgba(255,255,255,0.08); }
+.dd.f { background: rgba(255,255,255,0.35); }
 
 /* ===== FOOTER ===== */
 .footer {
@@ -465,32 +425,23 @@ body {
   text-align: center;
   padding: 40px 24px;
   border-top: 1px solid rgba(255, 255, 255, 0.03);
+  margin-top: 40px;
 }
+.footer-logo { font-family: 'Orbitron', sans-serif; font-weight: 700; color: rgba(255,255,255,0.06); font-size: 16px; letter-spacing: 6px; margin-bottom: 6px; }
+.footer-text { font-family: 'Rajdhani', sans-serif; font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,0.12); }
 
-.footer-text {
-  font-family: 'Rajdhani', sans-serif;
-  font-size: 12px;
-  letter-spacing: 3px;
-  color: rgba(255, 255, 255, 0.15);
-}
-
-.footer-logo {
-  font-family: 'Orbitron', sans-serif;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.08);
-  font-size: 18px;
-  letter-spacing: 6px;
-  margin-bottom: 8px;
-}
-
-/* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
-  .featured-card {
-    grid-template-columns: 1fr;
-  }
-  .featured-visual { min-height: 200px; }
-  .featured-content { padding: 28px; }
-  .header { padding: 60px 20px 32px; }
+  .featured-card { grid-template-columns: 1fr; }
+  .featured-visual { min-height: 180px; }
+  .featured-content { padding: 24px; }
+  .header { padding: 48px 16px 20px; }
+  .grid { grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 16px 16px; }
+  .card { padding: 18px 16px; }
+  .card-desc { font-size: 11px; margin-bottom: 12px; }
+  .filter-bar { gap: 6px; padding: 0 16px; }
+  .filter-btn { padding: 5px 12px; font-size: 10px; }
+}
+@media (max-width: 480px) {
   .grid { grid-template-columns: 1fr; }
 }
 </style>
@@ -503,9 +454,22 @@ body {
   <div class="header-badge">PREMIUM COLLECTION</div>
   <h1 class="header-title">ARCADE</h1>
   <p class="header-subtitle">CURATED GAMING EXPERIENCE</p>
+  <p class="game-count">37 GAMES</p>
 </header>
 
-<!-- Featured Game -->
+<!-- Filter Tabs -->
+<div class="filter-bar">
+  <button class="filter-btn active" data-filter="all">ALL</button>
+  <button class="filter-btn" data-filter="action">ACTION</button>
+  <button class="filter-btn" data-filter="arcade">ARCADE</button>
+  <button class="filter-btn" data-filter="puzzle">PUZZLE</button>
+  <button class="filter-btn" data-filter="strategy">STRATEGY</button>
+  <button class="filter-btn" data-filter="word">WORD</button>
+  <button class="filter-btn" data-filter="reflex">REFLEX</button>
+  <button class="filter-btn" data-filter="creative">CREATIVE</button>
+</div>
+
+<!-- Featured -->
 <section class="featured">
   <a href="/nova.html" class="featured-card">
     <div class="featured-visual">
@@ -513,282 +477,314 @@ body {
       <div class="featured-icon">🚀</div>
     </div>
     <div class="featured-content">
-      <div class="featured-badge">
-        <span class="featured-badge-dot"></span>
-        FEATURED
-      </div>
+      <div class="featured-badge"><span class="featured-badge-dot"></span> FEATURED</div>
       <h2 class="featured-title">NOVA</h2>
-      <p class="featured-desc">
-        우주의 끝없는 심연에서 살아남으세요. 파티클 이펙트, 웨이브 시스템, 파워업과 함께하는 프리미엄 우주 전투 게임.
-      </p>
+      <p class="featured-desc">우주의 끝없는 심연에서 살아남으세요. 파티클 이펙트, 웨이브 시스템, 파워업과 함께하는 프리미엄 우주 전투 게임.</p>
       <div class="featured-tags">
         <span class="featured-tag">60 FPS</span>
         <span class="featured-tag">PARTICLES</span>
         <span class="featured-tag">WAVES</span>
         <span class="featured-tag">POWER-UPS</span>
       </div>
-      <div class="play-btn">
-        LAUNCH GAME <span class="play-arrow">→</span>
-      </div>
+      <div class="play-btn">LAUNCH GAME <span class="play-arrow">→</span></div>
     </div>
   </a>
 </section>
 
-<!-- Game Collection -->
+<!-- ACTION & SHOOTER -->
 <div class="section-header">
   <span class="section-line"></span>
-  <h2 class="section-title">ALL GAMES</h2>
-  <span class="section-line" style="background: linear-gradient(270deg, var(--glass-border), transparent);"></span>
+  <h2 class="section-title">ACTION & SHOOTER</h2>
+  <span class="section-line" style="background: linear-gradient(270deg, var(--glass-border), transparent)"></span>
+</div>
+<div class="grid">
+  <a href="/invaders.html" class="card" data-cat="action">
+    <div class="card-header"><div class="card-icon-wrap ic-act">👾</div><span class="card-tag tag-action">SHOOTER</span></div>
+    <h3 class="card-title">INVADERS</h3>
+    <p class="card-desc">외계 침략자를 격퇴하세요. 실드, UFO 보너스, 웨이브 시스템의 클래식 슈팅 게임.</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd f"></span><span class="dd f"></span><span class="dd"></span></div></div>
+  </a>
+  <a href="/asteroids.html" class="card" data-cat="action">
+    <div class="card-header"><div class="card-icon-wrap ic-act">☄️</div><span class="card-tag tag-action">ACTION</span></div>
+    <h3 class="card-title">ASTEROIDS</h3>
+    <p class="card-desc">소행성 벨트에서 생존하세요. 벡터 그래픽, 추진 파티클, 하이퍼스페이스 점프.</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd f"></span><span class="dd f"></span><span class="dd"></span></div></div>
+  </a>
+  <a href="/flappy.html" class="card" data-cat="action">
+    <div class="card-header"><div class="card-icon-wrap ic-act">🐦</div><span class="card-tag tag-action">ACTION</span></div>
+    <h3 class="card-title">FLAPPY</h3>
+    <p class="card-desc">네온 새를 조종해 파이프 사이를 날아가세요. 중독성 있는 원탭 아케이드.</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd f"></span><span class="dd"></span><span class="dd"></span></div></div>
+  </a>
+  <a href="/slash.html" class="card" data-cat="action">
+    <div class="card-header"><div class="card-icon-wrap ic-act">⚔️</div><span class="card-tag tag-action">ACTION</span></div>
+    <h3 class="card-title">SLASH</h3>
+    <p class="card-desc">날아오는 네온 도형을 베어내세요. 콤보와 폭탄 회피, 네온 블레이드 슬래시.</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd f"></span><span class="dd"></span><span class="dd"></span></div></div>
+  </a>
 </div>
 
+<!-- ARCADE -->
+<div class="section-header">
+  <span class="section-line"></span>
+  <h2 class="section-title">ARCADE CLASSICS</h2>
+  <span class="section-line" style="background: linear-gradient(270deg, var(--glass-border), transparent)"></span>
+</div>
 <div class="grid">
-
-  <a href="/2048.html" class="card">
-    <div class="card-header">
-      <div class="card-icon-wrap icon-puzzle">🧩</div>
-      <span class="card-tag tag-puzzle">PUZZLE</span>
-    </div>
-    <h3 class="card-title">2048</h3>
-    <p class="card-desc">숫자 타일을 합쳐 2048을 만드세요. 간단하지만 중독성 있는 수학 퍼즐 게임.</p>
-    <div class="card-footer">
-      <span class="card-play">PLAY <span class="card-play-arrow">→</span></span>
-      <div class="card-difficulty">
-        <span class="card-difficulty-dot filled"></span>
-        <span class="card-difficulty-dot filled"></span>
-        <span class="card-difficulty-dot"></span>
-        <span class="card-difficulty-dot"></span>
-      </div>
-    </div>
-  </a>
-
-  <a href="/snake.html" class="card">
-    <div class="card-header">
-      <div class="card-icon-wrap icon-arcade">🐍</div>
-      <span class="card-tag tag-arcade">ARCADE</span>
-    </div>
+  <a href="/snake.html" class="card" data-cat="arcade">
+    <div class="card-header"><div class="card-icon-wrap ic-arc">🐍</div><span class="card-tag tag-arcade">ARCADE</span></div>
     <h3 class="card-title">SNAKE</h3>
-    <p class="card-desc">뱀을 조종해 먹이를 먹고 점점 길어지세요. 클래식 아케이드의 정수.</p>
-    <div class="card-footer">
-      <span class="card-play">PLAY <span class="card-play-arrow">→</span></span>
-      <div class="card-difficulty">
-        <span class="card-difficulty-dot filled"></span>
-        <span class="card-difficulty-dot"></span>
-        <span class="card-difficulty-dot"></span>
-        <span class="card-difficulty-dot"></span>
-      </div>
-    </div>
+    <p class="card-desc">네온 뱀을 조종해 먹이를 먹고 점점 길어지세요. 클래식 아케이드의 정수.</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd"></span><span class="dd"></span><span class="dd"></span></div></div>
   </a>
-
-  <a href="/tetris.html" class="card">
-    <div class="card-header">
-      <div class="card-icon-wrap icon-arcade">🟦</div>
-      <span class="card-tag tag-arcade">ARCADE</span>
-    </div>
+  <a href="/tetris.html" class="card" data-cat="arcade">
+    <div class="card-header"><div class="card-icon-wrap ic-arc">🟦</div><span class="card-tag tag-arcade">ARCADE</span></div>
     <h3 class="card-title">TETRIS</h3>
-    <p class="card-desc">떨어지는 블록을 맞추어 줄을 완성하세요. 세계적 명작 퍼즐 게임.</p>
-    <div class="card-footer">
-      <span class="card-play">PLAY <span class="card-play-arrow">→</span></span>
-      <div class="card-difficulty">
-        <span class="card-difficulty-dot filled"></span>
-        <span class="card-difficulty-dot filled"></span>
-        <span class="card-difficulty-dot filled"></span>
-        <span class="card-difficulty-dot"></span>
-      </div>
-    </div>
+    <p class="card-desc">떨어지는 블록을 맞추어 줄을 완성하세요. 홀드, 고스트 피스, 레벨 시스템.</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd f"></span><span class="dd f"></span><span class="dd"></span></div></div>
   </a>
-
-  <a href="/breakout.html" class="card">
-    <div class="card-header">
-      <div class="card-icon-wrap icon-arcade">🧱</div>
-      <span class="card-tag tag-arcade">ARCADE</span>
-    </div>
+  <a href="/breakout.html" class="card" data-cat="arcade">
+    <div class="card-header"><div class="card-icon-wrap ic-arc">🧱</div><span class="card-tag tag-arcade">ARCADE</span></div>
     <h3 class="card-title">BREAKOUT</h3>
-    <p class="card-desc">네온 빛 블록을 깨부수세요. 파워업과 콤보 시스템으로 최고 점수에 도전!</p>
-    <div class="card-footer">
-      <span class="card-play">PLAY <span class="card-play-arrow">→</span></span>
-      <div class="card-difficulty">
-        <span class="card-difficulty-dot filled"></span>
-        <span class="card-difficulty-dot filled"></span>
-        <span class="card-difficulty-dot"></span>
-        <span class="card-difficulty-dot"></span>
-      </div>
-    </div>
+    <p class="card-desc">네온 블록을 깨부수세요. 파워업, 멀티볼, 콤보 시스템으로 최고 점수 도전.</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd f"></span><span class="dd"></span><span class="dd"></span></div></div>
   </a>
-
-  <a href="/pixel-art.html" class="card">
-    <div class="card-header">
-      <div class="card-icon-wrap icon-creative">🎨</div>
-      <span class="card-tag tag-creative">CREATIVE</span>
-    </div>
-    <h3 class="card-title">PIXEL ART</h3>
-    <p class="card-desc">나만의 픽셀 아트를 만들어보세요. 다양한 도구와 팔레트를 제공합니다.</p>
-    <div class="card-footer">
-      <span class="card-play">CREATE <span class="card-play-arrow">→</span></span>
-      <div class="card-difficulty">
-        <span class="card-difficulty-dot filled"></span>
-        <span class="card-difficulty-dot"></span>
-        <span class="card-difficulty-dot"></span>
-        <span class="card-difficulty-dot"></span>
-      </div>
-    </div>
+  <a href="/pong.html" class="card" data-cat="arcade">
+    <div class="card-header"><div class="card-icon-wrap ic-arc">🏓</div><span class="card-tag tag-arcade">ARCADE</span></div>
+    <h3 class="card-title">PONG</h3>
+    <p class="card-desc">AI와 네온 듀얼! 패들 히트 위치에 따라 변하는 사운드, 속도 증가 랠리.</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd"></span><span class="dd"></span><span class="dd"></span></div></div>
   </a>
-
-  <a href="/sudoku.html" class="card">
-    <div class="card-header">
-      <div class="card-icon-wrap icon-strategy">🔢</div>
-      <span class="card-tag tag-strategy">LOGIC</span>
-    </div>
-    <h3 class="card-title">SUDOKU</h3>
-    <p class="card-desc">논리적 사고로 9x9 그리드를 완성하세요. 4단계 난이도와 메모 기능 지원.</p>
-    <div class="card-footer">
-      <span class="card-play">PLAY <span class="card-play-arrow">→</span></span>
-      <div class="card-difficulty">
-        <span class="card-difficulty-dot filled"></span>
-        <span class="card-difficulty-dot filled"></span>
-        <span class="card-difficulty-dot filled"></span>
-        <span class="card-difficulty-dot"></span>
-      </div>
-    </div>
+  <a href="/pacman.html" class="card" data-cat="arcade">
+    <div class="card-header"><div class="card-icon-wrap ic-arc">🟡</div><span class="card-tag tag-arcade">ARCADE</span></div>
+    <h3 class="card-title">PAC-MAN</h3>
+    <p class="card-desc">네온 미로에서 도트를 먹고 고스트를 피하세요. 파워 펠릿으로 역전!</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd f"></span><span class="dd f"></span><span class="dd"></span></div></div>
   </a>
-
-  <a href="/typing.html" class="card">
-    <div class="card-header">
-      <div class="card-icon-wrap icon-puzzle">⌨️</div>
-      <span class="card-tag tag-puzzle">SKILL</span>
-    </div>
-    <h3 class="card-title">TYPING SPEED</h3>
-    <p class="card-desc">타이핑 속도를 측정하세요. WPM 실시간 추적, 정확도 분석, 랭킹 시스템.</p>
-    <div class="card-footer">
-      <span class="card-play">PLAY <span class="card-play-arrow">→</span></span>
-      <div class="card-difficulty">
-        <span class="card-difficulty-dot filled"></span>
-        <span class="card-difficulty-dot filled"></span>
-        <span class="card-difficulty-dot"></span>
-        <span class="card-difficulty-dot"></span>
-      </div>
-    </div>
-  </a>
-
-  <a href="/bubble.html" class="card">
-    <div class="card-header">
-      <div class="card-icon-wrap icon-arcade" style="background: rgba(0,240,255,0.06); border: 1px solid rgba(0,240,255,0.1);">🫧</div>
-      <span class="card-tag tag-arcade">ARCADE</span>
-    </div>
-    <h3 class="card-title">BUBBLE</h3>
-    <p class="card-desc">색상 버블을 발사해 3개 이상 연결하면 터뜨리세요. 콤보 시스템과 중력 물리가 적용된 버블 슈터.</p>
-    <div class="card-footer">
-      <span class="card-play">PLAY <span class="card-play-arrow">→</span></span>
-      <div class="card-difficulty">
-        <span class="card-difficulty-dot filled"></span>
-        <span class="card-difficulty-dot filled"></span>
-        <span class="card-difficulty-dot"></span>
-        <span class="card-difficulty-dot"></span>
-      </div>
-    </div>
-  </a>
-
-  <a href="/index.html" class="card">
-    <div class="card-header">
-      <div class="card-icon-wrap icon-multiplayer">♟️</div>
-      <span class="card-tag tag-multiplayer">MULTIPLAYER</span>
-    </div>
-    <h3 class="card-title">CHESS ONLINE</h3>
-    <p class="card-desc">친구와 함께 실시간 온라인 체스를 즐기세요. 방 만들기 & 참가 지원.</p>
-    <div class="card-footer">
-      <span class="card-play">PLAY <span class="card-play-arrow">→</span></span>
-      <div class="card-difficulty">
-        <span class="card-difficulty-dot filled"></span>
-        <span class="card-difficulty-dot filled"></span>
-        <span class="card-difficulty-dot filled"></span>
-        <span class="card-difficulty-dot filled"></span>
-      </div>
-    </div>
-  </a>
-
-  <a href="/runner.html" class="card">
-    <div class="card-header">
-      <div class="card-icon-wrap" style="background: rgba(0,240,255,0.06); border: 1px solid rgba(0,240,255,0.1);">🏃</div>
-      <span class="card-tag tag-action">ACTION</span>
-    </div>
+  <a href="/runner.html" class="card" data-cat="arcade">
+    <div class="card-header"><div class="card-icon-wrap ic-act">🏃</div><span class="card-tag tag-action">RUNNER</span></div>
     <h3 class="card-title">RUNNER</h3>
-    <p class="card-desc">사이버펑크 도시를 달려라! 장애물을 뛰어넘고, 오브를 수집하며 끝없는 질주를 즐기세요!</p>
-    <div class="card-footer">
-      <span class="card-play">PLAY <span class="card-play-arrow">→</span></span>
-      <div class="card-difficulty">
-        <span class="card-difficulty-dot filled"></span>
-        <span class="card-difficulty-dot filled"></span>
-        <span class="card-difficulty-dot filled"></span>
-        <span class="card-difficulty-dot"></span>
-      </div>
-    </div>
+    <p class="card-desc">사이버펑크 도시를 달려라! 더블 점프, 슬라이드, 오브 수집의 끝없는 질주.</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd f"></span><span class="dd f"></span><span class="dd"></span></div></div>
   </a>
-
-  <a href="/whack.html" class="card">
-    <div class="card-header">
-      <div class="card-icon-wrap" style="background: rgba(0,240,255,0.06); border: 1px solid rgba(0,240,255,0.1);">🎯</div>
-      <span class="card-tag tag-action">REFLEX</span>
-    </div>
-    <h3 class="card-title">WHACK</h3>
-    <p class="card-desc">네온 포탈에서 나타나는 타겟을 빠르게 잡으세요. 반응속도 측정, 콤보 시스템, 폭탄 회피까지!</p>
-    <div class="card-footer">
-      <span class="card-play">PLAY <span class="card-play-arrow">→</span></span>
-      <div class="card-difficulty">
-        <span class="card-difficulty-dot filled"></span>
-        <span class="card-difficulty-dot filled"></span>
-        <span class="card-difficulty-dot"></span>
-        <span class="card-difficulty-dot"></span>
-      </div>
-    </div>
+  <a href="/racing.html" class="card" data-cat="arcade">
+    <div class="card-header"><div class="card-icon-wrap ic-act">🏎️</div><span class="card-tag tag-action">RACING</span></div>
+    <h3 class="card-title">RACING</h3>
+    <p class="card-desc">네온 고속도로를 질주하세요. 코인 수집, 실드, 속도계 게이지.</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd f"></span><span class="dd"></span><span class="dd"></span></div></div>
   </a>
-
-  <a href="/simon.html" class="card">
-    <div class="card-header">
-      <div class="card-icon-wrap icon-puzzle">🎵</div>
-      <span class="card-tag tag-puzzle">MEMORY</span>
-    </div>
-    <h3 class="card-title">SIMON</h3>
-    <p class="card-desc">빛과 소리의 시퀀스를 기억하세요. 라운드마다 길어지는 패턴에 도전하는 메모리 게임.</p>
-    <div class="card-footer">
-      <span class="card-play">PLAY <span class="card-play-arrow">→</span></span>
-      <div class="card-difficulty">
-        <span class="card-difficulty-dot filled"></span>
-        <span class="card-difficulty-dot filled"></span>
-        <span class="card-difficulty-dot filled"></span>
-        <span class="card-difficulty-dot"></span>
-      </div>
-    </div>
+  <a href="/jump.html" class="card" data-cat="arcade">
+    <div class="card-header"><div class="card-icon-wrap ic-act">⬆️</div><span class="card-tag tag-action">ARCADE</span></div>
+    <h3 class="card-title">JUMP</h3>
+    <p class="card-desc">무중력 점프! 다양한 플랫폼을 밟고 우주 끝까지 올라가세요.</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd f"></span><span class="dd"></span><span class="dd"></span></div></div>
   </a>
+  <a href="/colorswitch.html" class="card" data-cat="arcade">
+    <div class="card-header"><div class="card-icon-wrap ic-arc">🌈</div><span class="card-tag tag-arcade">ARCADE</span></div>
+    <h3 class="card-title">COLOR SWITCH</h3>
+    <p class="card-desc">색상을 맞춰 장애물을 통과하세요. 타이밍과 색상 매칭의 조합.</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd f"></span><span class="dd f"></span><span class="dd"></span></div></div>
+  </a>
+  <a href="/pinball.html" class="card" data-cat="arcade">
+    <div class="card-header"><div class="card-icon-wrap ic-arc">🔮</div><span class="card-tag tag-arcade">ARCADE</span></div>
+    <h3 class="card-title">PINBALL</h3>
+    <p class="card-desc">네온 핀볼 머신! 플리퍼로 볼을 튕기고 범퍼와 타겟으로 점수 획득.</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd f"></span><span class="dd"></span><span class="dd"></span></div></div>
+  </a>
+  <a href="/bubble.html" class="card" data-cat="arcade">
+    <div class="card-header"><div class="card-icon-wrap ic-arc">🫧</div><span class="card-tag tag-arcade">ARCADE</span></div>
+    <h3 class="card-title">BUBBLE</h3>
+    <p class="card-desc">버블을 발사해 3개 이상 연결하면 터뜨리세요. 콤보와 중력 물리 적용.</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd f"></span><span class="dd"></span><span class="dd"></span></div></div>
+  </a>
+</div>
 
-  <a href="/tower.html" class="card">
-    <div class="card-header">
-      <div class="card-icon-wrap icon-strategy">🏰</div>
-      <span class="card-tag tag-strategy">STRATEGY</span>
-    </div>
+<!-- PUZZLE & LOGIC -->
+<div class="section-header">
+  <span class="section-line"></span>
+  <h2 class="section-title">PUZZLE & LOGIC</h2>
+  <span class="section-line" style="background: linear-gradient(270deg, var(--glass-border), transparent)"></span>
+</div>
+<div class="grid">
+  <a href="/2048.html" class="card" data-cat="puzzle">
+    <div class="card-header"><div class="card-icon-wrap ic-puz">🧩</div><span class="card-tag tag-puzzle">PUZZLE</span></div>
+    <h3 class="card-title">2048</h3>
+    <p class="card-desc">타일을 합쳐 2048을 만드세요. 네온 색상 타일, 파티클 머지 이펙트.</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd f"></span><span class="dd"></span><span class="dd"></span></div></div>
+  </a>
+  <a href="/sudoku.html" class="card" data-cat="puzzle">
+    <div class="card-header"><div class="card-icon-wrap ic-str">🔢</div><span class="card-tag tag-strategy">LOGIC</span></div>
+    <h3 class="card-title">SUDOKU</h3>
+    <p class="card-desc">9x9 그리드를 논리로 완성하세요. 메모, 힌트, 4단계 난이도 지원.</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd f"></span><span class="dd f"></span><span class="dd"></span></div></div>
+  </a>
+  <a href="/minesweeper.html" class="card" data-cat="puzzle">
+    <div class="card-header"><div class="card-icon-wrap ic-puz">💣</div><span class="card-tag tag-puzzle">PUZZLE</span></div>
+    <h3 class="card-title">MINES</h3>
+    <p class="card-desc">지뢰를 피해 안전한 셀을 모두 열어보세요. 캐스케이드 리빌 애니메이션.</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd f"></span><span class="dd f"></span><span class="dd f"></span></div></div>
+  </a>
+  <a href="/match3.html" class="card" data-cat="puzzle">
+    <div class="card-header"><div class="card-icon-wrap ic-puz">💎</div><span class="card-tag tag-puzzle">PUZZLE</span></div>
+    <h3 class="card-title">MATCH 3</h3>
+    <p class="card-desc">보석을 3개 이상 연결하세요. 체인 반응 캐스케이드와 특수 보석 생성.</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd f"></span><span class="dd"></span><span class="dd"></span></div></div>
+  </a>
+  <a href="/maze.html" class="card" data-cat="puzzle">
+    <div class="card-header"><div class="card-icon-wrap ic-puz">🌀</div><span class="card-tag tag-puzzle">PUZZLE</span></div>
+    <h3 class="card-title">MAZE</h3>
+    <p class="card-desc">네온 미궁을 탈출하세요. 안개 속 탐험, 미니맵, 아이템 수집.</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd f"></span><span class="dd f"></span><span class="dd"></span></div></div>
+  </a>
+</div>
+
+<!-- BOARD & STRATEGY -->
+<div class="section-header">
+  <span class="section-line"></span>
+  <h2 class="section-title">BOARD & STRATEGY</h2>
+  <span class="section-line" style="background: linear-gradient(270deg, var(--glass-border), transparent)"></span>
+</div>
+<div class="grid">
+  <a href="/index.html" class="card" data-cat="strategy">
+    <div class="card-header"><div class="card-icon-wrap ic-mul">♟️</div><span class="card-tag tag-multiplayer">ONLINE</span></div>
+    <h3 class="card-title">CHESS ONLINE</h3>
+    <p class="card-desc">실시간 온라인 체스. Socket.io 멀티플레이어, 방 만들기 & 참가.</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd f"></span><span class="dd f"></span><span class="dd f"></span></div></div>
+  </a>
+  <a href="/checkers.html" class="card" data-cat="strategy">
+    <div class="card-header"><div class="card-icon-wrap ic-str">⚫</div><span class="card-tag tag-strategy">STRATEGY</span></div>
+    <h3 class="card-title">CHECKERS</h3>
+    <p class="card-desc">네온 체커 보드에서 AI와 대결. 킹 승급, 멀티 점프, 전략적 포획.</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd f"></span><span class="dd f"></span><span class="dd"></span></div></div>
+  </a>
+  <a href="/connect4.html" class="card" data-cat="strategy">
+    <div class="card-header"><div class="card-icon-wrap ic-str">🔴</div><span class="card-tag tag-strategy">STRATEGY</span></div>
+    <h3 class="card-title">CONNECT 4</h3>
+    <p class="card-desc">4개를 연결하세요! AI 미니맥스 알고리즘, 디스크 드롭 애니메이션.</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd f"></span><span class="dd"></span><span class="dd"></span></div></div>
+  </a>
+  <a href="/tictactoe.html" class="card" data-cat="strategy">
+    <div class="card-header"><div class="card-icon-wrap ic-str">❌</div><span class="card-tag tag-strategy">STRATEGY</span></div>
+    <h3 class="card-title">TIC TAC TOE</h3>
+    <p class="card-desc">퀀텀 그리드에서 3목을 만드세요. 네온 드로잉 이펙트, AI 대전.</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd"></span><span class="dd"></span><span class="dd"></span></div></div>
+  </a>
+  <a href="/tower.html" class="card" data-cat="strategy">
+    <div class="card-header"><div class="card-icon-wrap ic-str">🏰</div><span class="card-tag tag-strategy">STRATEGY</span></div>
     <h3 class="card-title">TOWER DEFENSE</h3>
-    <p class="card-desc">타워를 배치하고 업그레이드하여 적의 침공을 방어하세요. 20웨이브 전략 디펜스 게임.</p>
-    <div class="card-footer">
-      <span class="card-play">PLAY <span class="card-play-arrow">→</span></span>
-      <div class="card-difficulty">
-        <span class="card-difficulty-dot filled"></span>
-        <span class="card-difficulty-dot filled"></span>
-        <span class="card-difficulty-dot filled"></span>
-        <span class="card-difficulty-dot filled"></span>
-      </div>
-    </div>
+    <p class="card-desc">타워를 배치하고 업그레이드하여 적을 방어하세요. 4종 타워, 웨이브 시스템.</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd f"></span><span class="dd f"></span><span class="dd f"></span></div></div>
   </a>
+  <a href="/solitaire.html" class="card" data-cat="strategy">
+    <div class="card-header"><div class="card-icon-wrap ic-str">🃏</div><span class="card-tag tag-strategy">CARDS</span></div>
+    <h3 class="card-title">SOLITAIRE</h3>
+    <p class="card-desc">네온 카드 솔리테어. 드래그 앤 드롭, 자동 완성, 언두 기능.</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd f"></span><span class="dd"></span><span class="dd"></span></div></div>
+  </a>
+</div>
 
+<!-- WORD GAMES -->
+<div class="section-header">
+  <span class="section-line"></span>
+  <h2 class="section-title">WORD GAMES</h2>
+  <span class="section-line" style="background: linear-gradient(270deg, var(--glass-border), transparent)"></span>
+</div>
+<div class="grid">
+  <a href="/wordle.html" class="card" data-cat="word">
+    <div class="card-header"><div class="card-icon-wrap ic-wrd">📝</div><span class="card-tag tag-word">WORD</span></div>
+    <h3 class="card-title">WORDLE</h3>
+    <p class="card-desc">5글자 단어를 맞추세요. 6번의 기회, 색상 힌트, 통계 추적.</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd f"></span><span class="dd"></span><span class="dd"></span></div></div>
+  </a>
+  <a href="/hangman.html" class="card" data-cat="word">
+    <div class="card-header"><div class="card-icon-wrap ic-wrd">🔤</div><span class="card-tag tag-word">WORD</span></div>
+    <h3 class="card-title">HANGMAN</h3>
+    <p class="card-desc">단어를 해독하세요. 카테고리별 단어, 힌트 시스템, 디지털 엔티티.</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd f"></span><span class="dd"></span><span class="dd"></span></div></div>
+  </a>
+  <a href="/typing.html" class="card" data-cat="word">
+    <div class="card-header"><div class="card-icon-wrap ic-wrd">⌨️</div><span class="card-tag tag-word">SKILL</span></div>
+    <h3 class="card-title">TYPING</h3>
+    <p class="card-desc">타이핑 속도 측정. 실시간 WPM, 정확도, 랭킹 시스템.</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd f"></span><span class="dd"></span><span class="dd"></span></div></div>
+  </a>
+  <a href="/quiz.html" class="card" data-cat="word">
+    <div class="card-header"><div class="card-icon-wrap ic-wrd">🧠</div><span class="card-tag tag-word">TRIVIA</span></div>
+    <h3 class="card-title">QUIZ</h3>
+    <p class="card-desc">지식을 테스트하세요. 5개 카테고리, 50:50 라이프라인, 등급 시스템.</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd f"></span><span class="dd f"></span><span class="dd"></span></div></div>
+  </a>
+</div>
+
+<!-- MEMORY & REFLEX -->
+<div class="section-header">
+  <span class="section-line"></span>
+  <h2 class="section-title">MEMORY & REFLEX</h2>
+  <span class="section-line" style="background: linear-gradient(270deg, var(--glass-border), transparent)"></span>
+</div>
+<div class="grid">
+  <a href="/memory.html" class="card" data-cat="reflex">
+    <div class="card-header"><div class="card-icon-wrap ic-ref">🃏</div><span class="card-tag tag-reflex">MEMORY</span></div>
+    <h3 class="card-title">MEMORY</h3>
+    <p class="card-desc">카드 짝을 맞추세요. 3D 플립 애니메이션, 별 등급, 3단계 난이도.</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd f"></span><span class="dd"></span><span class="dd"></span></div></div>
+  </a>
+  <a href="/simon.html" class="card" data-cat="reflex">
+    <div class="card-header"><div class="card-icon-wrap ic-ref">🎵</div><span class="card-tag tag-reflex">MEMORY</span></div>
+    <h3 class="card-title">SIMON</h3>
+    <p class="card-desc">빛과 소리의 시퀀스를 기억하세요. 라운드마다 길어지는 패턴 도전.</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd f"></span><span class="dd f"></span><span class="dd"></span></div></div>
+  </a>
+  <a href="/whack.html" class="card" data-cat="reflex">
+    <div class="card-header"><div class="card-icon-wrap ic-ref">🎯</div><span class="card-tag tag-reflex">REFLEX</span></div>
+    <h3 class="card-title">WHACK</h3>
+    <p class="card-desc">포탈에서 나타나는 타겟을 잡으세요. 반응속도 측정, 콤보, 폭탄 회피.</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd f"></span><span class="dd"></span><span class="dd"></span></div></div>
+  </a>
+  <a href="/reaction.html" class="card" data-cat="reflex">
+    <div class="card-header"><div class="card-icon-wrap ic-ref">⚡</div><span class="card-tag tag-reflex">REFLEX</span></div>
+    <h3 class="card-title">REFLEX</h3>
+    <p class="card-desc">반응 속도, 에임 트레이너, 숫자 기억력. 종합 반사신경 테스트.</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd f"></span><span class="dd"></span><span class="dd"></span></div></div>
+  </a>
+  <a href="/rhythm.html" class="card" data-cat="reflex">
+    <div class="card-header"><div class="card-icon-wrap ic-ref">🎶</div><span class="card-tag tag-reflex">RHYTHM</span></div>
+    <h3 class="card-title">RHYTHM</h3>
+    <p class="card-desc">비트에 맞춰 노트를 치세요. 4레인, PERFECT/GREAT 판정, 콤보.</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd f"></span><span class="dd f"></span><span class="dd"></span></div></div>
+  </a>
+</div>
+
+<!-- CREATIVE & CASINO -->
+<div class="section-header">
+  <span class="section-line"></span>
+  <h2 class="section-title">CREATIVE & ENTERTAINMENT</h2>
+  <span class="section-line" style="background: linear-gradient(270deg, var(--glass-border), transparent)"></span>
+</div>
+<div class="grid">
+  <a href="/pixel-art.html" class="card" data-cat="creative">
+    <div class="card-header"><div class="card-icon-wrap ic-cre">🎨</div><span class="card-tag tag-creative">CREATIVE</span></div>
+    <h3 class="card-title">PIXEL ART</h3>
+    <p class="card-desc">나만의 픽셀 아트를 만드세요. 브러시, 채우기, 미러 모드, PNG 내보내기.</p>
+    <div class="card-footer"><span class="card-play">CREATE <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd"></span><span class="dd"></span><span class="dd"></span></div></div>
+  </a>
+  <a href="/slots.html" class="card" data-cat="creative">
+    <div class="card-header"><div class="card-icon-wrap ic-cas">🎰</div><span class="card-tag tag-casino">CASINO</span></div>
+    <h3 class="card-title">SLOTS</h3>
+    <p class="card-desc">네온 슬롯 머신! 3릴 스핀, 잭팟 이펙트, 오토 스핀. (엔터테인먼트용)</p>
+    <div class="card-footer"><span class="card-play">PLAY <span class="card-play-arrow">→</span></span><div class="card-diff"><span class="dd f"></span><span class="dd"></span><span class="dd"></span><span class="dd"></span></div></div>
+  </a>
 </div>
 
 <footer class="footer">
   <div class="footer-logo">ARCADE</div>
-  <p class="footer-text">PREMIUM GAME HUB &copy; 2026</p>
+  <p class="footer-text">37 PREMIUM GAMES &copy; 2026</p>
 </footer>
 
 <script>
-// ===== ANIMATED BACKGROUND =====
+// ===== BACKGROUND =====
 const canvas = document.getElementById('bgCanvas');
 const ctx = canvas.getContext('2d');
-
 function resize() {
   canvas.width = window.innerWidth * window.devicePixelRatio;
   canvas.height = window.innerHeight * window.devicePixelRatio;
@@ -796,100 +792,94 @@ function resize() {
 }
 resize();
 window.addEventListener('resize', resize);
-
 const W = () => window.innerWidth;
-const H = () => document.documentElement.scrollHeight;
 
-// Stars
 const stars = [];
-for (let i = 0; i < 120; i++) {
+for (let i = 0; i < 100; i++) {
   stars.push({
-    x: Math.random() * W(),
-    y: Math.random() * 3000,
+    x: Math.random() * W(), y: Math.random() * 4000,
     size: 0.3 + Math.random() * 1.2,
     brightness: 0.15 + Math.random() * 0.5,
     twinkle: Math.random() * Math.PI * 2,
     twinkleSpeed: 0.5 + Math.random() * 2
   });
 }
-
-// Floating particles
 const floaters = [];
-for (let i = 0; i < 20; i++) {
+for (let i = 0; i < 15; i++) {
   floaters.push({
-    x: Math.random() * W(),
-    y: Math.random() * 3000,
+    x: Math.random() * W(), y: Math.random() * 4000,
     size: 1 + Math.random() * 2,
     speedX: (Math.random() - 0.5) * 0.3,
     speedY: -0.2 - Math.random() * 0.3,
     hue: Math.random() > 0.5 ? 185 : 270,
-    alpha: 0.05 + Math.random() * 0.1
+    alpha: 0.04 + Math.random() * 0.08
   });
 }
-
 let time = 0;
-
 function draw() {
   const scrollY = window.scrollY;
   const viewH = window.innerHeight;
-
   ctx.clearRect(0, 0, W(), viewH);
-
-  // Background fill
   ctx.fillStyle = '#05050f';
   ctx.fillRect(0, 0, W(), viewH);
-
-  // Nebula
   time += 0.005;
-  const nebX = W() * 0.5 + Math.sin(time) * 100;
-  const nebY = viewH * 0.3 - scrollY * 0.1;
-  const g = ctx.createRadialGradient(nebX, nebY, 0, nebX, nebY, W() * 0.5);
-  g.addColorStop(0, `hsla(${185 + Math.sin(time) * 20}, 70%, 18%, 0.04)`);
+  const g = ctx.createRadialGradient(W()*0.5+Math.sin(time)*80, viewH*0.3-scrollY*0.08, 0, W()*0.5, viewH*0.3, W()*0.45);
+  g.addColorStop(0, `hsla(${185+Math.sin(time)*15}, 70%, 18%, 0.03)`);
   g.addColorStop(1, 'transparent');
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, W(), viewH);
-
-  const nebX2 = W() * 0.8 + Math.cos(time * 0.7) * 80;
-  const nebY2 = viewH * 0.7 - scrollY * 0.05;
-  const g2 = ctx.createRadialGradient(nebX2, nebY2, 0, nebX2, nebY2, W() * 0.35);
-  g2.addColorStop(0, `hsla(270, 50%, 15%, 0.03)`);
-  g2.addColorStop(1, 'transparent');
-  ctx.fillStyle = g2;
-  ctx.fillRect(0, 0, W(), viewH);
-
-  // Stars
   for (const s of stars) {
-    const sy = s.y - scrollY * 0.15;
+    const sy = s.y - scrollY * 0.12;
     if (sy < -10 || sy > viewH + 10) continue;
     s.twinkle += s.twinkleSpeed * 0.016;
-    const a = s.brightness * (0.6 + 0.4 * Math.sin(s.twinkle));
-    ctx.fillStyle = `rgba(200, 220, 255, ${a})`;
-    ctx.beginPath();
-    ctx.arc(s.x, sy, s.size, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.fillStyle = `rgba(200,220,255,${s.brightness*(0.6+0.4*Math.sin(s.twinkle))})`;
+    ctx.beginPath(); ctx.arc(s.x, sy, s.size, 0, Math.PI*2); ctx.fill();
   }
-
-  // Floaters
   for (const f of floaters) {
-    f.x += f.speedX;
-    f.y += f.speedY;
-    if (f.y < -20) { f.y = 3000; f.x = Math.random() * W(); }
-    if (f.x < -20) f.x = W() + 20;
-    if (f.x > W() + 20) f.x = -20;
-
-    const fy = f.y - scrollY * 0.2;
+    f.x += f.speedX; f.y += f.speedY;
+    if (f.y < -20) { f.y = 4000; f.x = Math.random() * W(); }
+    const fy = f.y - scrollY * 0.15;
     if (fy < -20 || fy > viewH + 20) continue;
-
-    ctx.fillStyle = `hsla(${f.hue}, 80%, 60%, ${f.alpha})`;
-    ctx.beginPath();
-    ctx.arc(f.x, fy, f.size, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.fillStyle = `hsla(${f.hue},80%,60%,${f.alpha})`;
+    ctx.beginPath(); ctx.arc(f.x, fy, f.size, 0, Math.PI*2); ctx.fill();
   }
-
   requestAnimationFrame(draw);
 }
-
 requestAnimationFrame(draw);
+
+// ===== FILTER =====
+const filterBtns = document.querySelectorAll('.filter-btn');
+const cards = document.querySelectorAll('.card[data-cat]');
+const sections = document.querySelectorAll('.section-header');
+const grids = document.querySelectorAll('.grid');
+const featured = document.querySelector('.featured');
+
+filterBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    filterBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const filter = btn.dataset.filter;
+
+    if (filter === 'all') {
+      cards.forEach(c => c.style.display = '');
+      sections.forEach(s => s.style.display = '');
+      grids.forEach(g => g.style.display = '');
+      featured.style.display = '';
+    } else {
+      featured.style.display = 'none';
+      cards.forEach(c => {
+        c.style.display = c.dataset.cat === filter ? '' : 'none';
+      });
+      // Show/hide sections based on visible cards
+      grids.forEach((g, i) => {
+        const visibleCards = g.querySelectorAll('.card[data-cat]:not([style*="display: none"])');
+        const visible = visibleCards.length > 0;
+        g.style.display = visible ? '' : 'none';
+        if (sections[i]) sections[i].style.display = visible ? '' : 'none';
+      });
+    }
+  });
+});
 </script>
 
 </body>

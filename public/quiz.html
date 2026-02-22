@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QUIZ - Knowledge Protocol</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+:root{
+  --cyan:#00f0ff;
+  --purple:#a855f7;
+  --gold:#f59e0b;
+  --red:#ef4444;
+  --green:#22c55e;
+  --bg:#05050f;
+  --glass:rgba(255,255,255,0.03);
+  --glass-border:rgba(255,255,255,0.08);
+  --glass-hover:rgba(255,255,255,0.06);
+  --text:#e2e8f0;
+  --text-dim:rgba(255,255,255,0.35);
+}
+
+html{scroll-behavior:smooth;}
+
+body{
+  font-family:'Rajdhani','Noto Sans KR',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+  position:relative;
+}
+
+#starCanvas{
+  position:fixed;top:0;left:0;
+  width:100%;height:100%;
+  z-index:0;pointer-events:none;
+}
+
+/* ===== BACK LINK ===== */
+.back-link{
+  position:fixed;top:20px;left:20px;z-index:100;
+  display:flex;align-items:center;gap:8px;
+  padding:10px 20px;
+  background:var(--glass);
+  border:1px solid var(--glass-border);
+  border-radius:12px;
+  color:var(--text-dim);
+  text-decoration:none;
+  font-family:'Rajdhani',sans-serif;
+  font-size:15px;font-weight:500;
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  transition:all .3s ease;
+}
+.back-link:hover{
+  color:var(--cyan);
+  border-color:rgba(0,240,255,0.3);
+  box-shadow:0 0 20px rgba(0,240,255,0.1);
+}
+.back-link svg{width:16px;height:16px;transition:transform .3s ease;}
+.back-link:hover svg{transform:translateX(-3px);}
+
+/* ===== CONTAINER ===== */
+.container{
+  position:relative;z-index:1;
+  max-width:800px;
+  margin:0 auto;
+  padding:20px;
+  min-height:100vh;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+}
+
+/* ===== GAME HEADER ===== */
+.game-header{
+  text-align:center;
+  margin-bottom:24px;
+  animation:fadeInDown .8s ease;
+}
+.game-title{
+  font-family:'Orbitron',monospace;
+  font-size:clamp(40px,8vw,64px);
+  font-weight:900;
+  letter-spacing:8px;
+  background:linear-gradient(135deg,var(--cyan),var(--purple));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+  filter:drop-shadow(0 0 30px rgba(0,240,255,0.3));
+  line-height:1.1;
+}
+.game-subtitle{
+  font-family:'Orbitron',monospace;
+  font-size:clamp(11px,2vw,14px);
+  font-weight:400;
+  letter-spacing:6px;
+  color:var(--text-dim);
+  margin-top:6px;
+}
+
+/* ===== SCREENS ===== */
+.screen{
+  display:none;
+  width:100%;
+  animation:fadeIn .5s ease;
+}
+.screen.active{display:block;}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeInDown{from{opacity:0;transform:translateY(-30px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(30px);}to{opacity:1;transform:translateY(0);}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.85);}to{opacity:1;transform:scale(1);}}
+@keyframes slideInLeft{from{opacity:0;transform:translateX(-40px);}to{opacity:1;transform:translateX(0);}}
+@keyframes slideInRight{from{opacity:0;transform:translateX(40px);}to{opacity:1;transform:translateX(0);}}
+@keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.05);}}
+@keyframes glow{0%,100%{box-shadow:0 0 20px rgba(0,240,255,0.2);}50%{box-shadow:0 0 40px rgba(0,240,255,0.4);}}
+@keyframes shake{0%,100%{transform:translateX(0);}10%,30%,50%,70%,90%{transform:translateX(-4px);}20%,40%,60%,80%{transform:translateX(4px);}}
+@keyframes timerPulse{0%,100%{transform:scale(1);filter:brightness(1);}50%{transform:scale(1.08);filter:brightness(1.3);}}
+@keyframes correctPop{0%{transform:scale(1);}40%{transform:scale(1.08);}100%{transform:scale(1);}}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(1);}100%{opacity:0;transform:translateY(-80px) scale(0.5);}}
+@keyframes streakPulse{0%{transform:scale(1);opacity:1;}50%{transform:scale(1.3);opacity:.7;}100%{transform:scale(1);opacity:1;}}
+@keyframes barFill{from{width:0;}to{width:var(--fill);}}
+
+/* ===== GLASS PANEL ===== */
+.glass-panel{
+  background:var(--glass);
+  border:1px solid var(--glass-border);
+  border-radius:20px;
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  padding:32px;
+  position:relative;
+  overflow:hidden;
+}
+.glass-panel::before{
+  content:'';
+  position:absolute;top:0;left:0;right:0;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(0,240,255,0.2),transparent);
+}
+
+/* ===== MENU SCREEN ===== */
+.menu-panel{
+  max-width:500px;
+  margin:0 auto;
+}
+.menu-panel h2{
+  font-family:'Orbitron',monospace;
+  font-size:18px;
+  font-weight:600;
+  color:var(--cyan);
+  letter-spacing:3px;
+  margin-bottom:24px;
+  text-align:center;
+}
+.category-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-bottom:24px;
+}
+.category-btn{
+  background:var(--glass);
+  border:1px solid var(--glass-border);
+  border-radius:14px;
+  padding:16px 12px;
+  color:var(--text);
+  font-family:'Rajdhani',sans-serif;
+  font-size:15px;font-weight:600;
+  cursor:pointer;
+  transition:all .3s ease;
+  text-align:center;
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  position:relative;
+  overflow:hidden;
+}
+.category-btn .cat-icon{
+  font-size:28px;
+  display:block;
+  margin-bottom:6px;
+}
+.category-btn .cat-label{
+  letter-spacing:1px;
+}
+.category-btn:hover{
+  border-color:rgba(0,240,255,0.3);
+  background:var(--glass-hover);
+  transform:translateY(-2px);
+  box-shadow:0 8px 30px rgba(0,240,255,0.1);
+}
+.category-btn.selected{
+  border-color:var(--cyan);
+  background:rgba(0,240,255,0.08);
+  box-shadow:0 0 25px rgba(0,240,255,0.15);
+}
+.category-btn.all-random{
+  grid-column:1/-1;
+  background:linear-gradient(135deg,rgba(0,240,255,0.06),rgba(168,85,247,0.06));
+  border-color:rgba(168,85,247,0.3);
+}
+.category-btn.all-random:hover{
+  border-color:var(--purple);
+  box-shadow:0 8px 30px rgba(168,85,247,0.15);
+}
+.category-btn.all-random.selected{
+  border-color:var(--purple);
+  background:rgba(168,85,247,0.12);
+  box-shadow:0 0 25px rgba(168,85,247,0.2);
+}
+
+.question-count-section{
+  margin-bottom:24px;
+  text-align:center;
+}
+.question-count-section label{
+  font-family:'Orbitron',monospace;
+  font-size:12px;
+  letter-spacing:2px;
+  color:var(--text-dim);
+  display:block;
+  margin-bottom:10px;
+}
+.count-btns{
+  display:flex;gap:10px;justify-content:center;
+}
+.count-btn{
+  background:var(--glass);
+  border:1px solid var(--glass-border);
+  border-radius:10px;
+  padding:10px 22px;
+  color:var(--text);
+  font-family:'Orbitron',monospace;
+  font-size:16px;font-weight:600;
+  cursor:pointer;
+  transition:all .3s ease;
+}
+.count-btn:hover{border-color:rgba(0,240,255,0.3);}
+.count-btn.selected{
+  border-color:var(--cyan);
+  background:rgba(0,240,255,0.08);
+  color:var(--cyan);
+}
+
+.start-btn{
+  display:block;
+  width:100%;
+  padding:16px;
+  background:linear-gradient(135deg,rgba(0,240,255,0.15),rgba(168,85,247,0.15));
+  border:1px solid rgba(0,240,255,0.3);
+  border-radius:14px;
+  color:var(--cyan);
+  font-family:'Orbitron',monospace;
+  font-size:18px;font-weight:700;
+  letter-spacing:4px;
+  cursor:pointer;
+  transition:all .3s ease;
+  position:relative;
+  overflow:hidden;
+}
+.start-btn::after{
+  content:'';
+  position:absolute;top:0;left:-100%;
+  width:100%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(0,240,255,0.1),transparent);
+  transition:left .5s ease;
+}
+.start-btn:hover::after{left:100%;}
+.start-btn:hover{
+  background:linear-gradient(135deg,rgba(0,240,255,0.25),rgba(168,85,247,0.25));
+  box-shadow:0 0 40px rgba(0,240,255,0.2);
+  transform:translateY(-2px);
+}
+
+.high-score-display{
+  text-align:center;
+  margin-top:20px;
+  padding-top:16px;
+  border-top:1px solid var(--glass-border);
+}
+.high-score-display span{
+  font-family:'Orbitron',monospace;
+  font-size:12px;
+  letter-spacing:2px;
+  color:var(--text-dim);
+}
+.high-score-display .hs-value{
+  color:var(--gold);
+  font-weight:700;
+  font-size:14px;
+}
+
+/* ===== GAME SCREEN ===== */
+.game-hud{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:16px;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.hud-item{
+  background:var(--glass);
+  border:1px solid var(--glass-border);
+  border-radius:12px;
+  padding:8px 16px;
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  text-align:center;
+  min-width:80px;
+}
+.hud-label{
+  font-family:'Orbitron',monospace;
+  font-size:9px;
+  letter-spacing:2px;
+  color:var(--text-dim);
+  text-transform:uppercase;
+}
+.hud-value{
+  font-family:'Orbitron',monospace;
+  font-size:20px;
+  font-weight:700;
+  color:var(--cyan);
+}
+.hud-value.score-val{color:var(--gold);}
+.hud-value.streak-val{color:var(--purple);}
+
+/* Progress bar */
+.progress-bar-wrap{
+  width:100%;
+  height:6px;
+  background:rgba(255,255,255,0.05);
+  border-radius:3px;
+  margin-bottom:20px;
+  overflow:hidden;
+  position:relative;
+}
+.progress-bar-fill{
+  height:100%;
+  border-radius:3px;
+  background:linear-gradient(90deg,var(--cyan),var(--purple));
+  transition:width .5s ease;
+  position:relative;
+}
+.progress-bar-fill::after{
+  content:'';
+  position:absolute;right:0;top:0;
+  width:20px;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.4));
+  border-radius:3px;
+}
+
+/* Category badge */
+.category-badge{
+  display:inline-block;
+  padding:4px 14px;
+  border-radius:20px;
+  font-family:'Orbitron',monospace;
+  font-size:10px;
+  font-weight:600;
+  letter-spacing:2px;
+  margin-bottom:16px;
+  border:1px solid;
+}
+.cat-science{color:#22c55e;border-color:rgba(34,197,94,0.3);background:rgba(34,197,94,0.08);}
+.cat-technology{color:#00f0ff;border-color:rgba(0,240,255,0.3);background:rgba(0,240,255,0.08);}
+.cat-geography{color:#f59e0b;border-color:rgba(245,158,11,0.3);background:rgba(245,158,11,0.08);}
+.cat-history{color:#a855f7;border-color:rgba(168,85,247,0.3);background:rgba(168,85,247,0.08);}
+.cat-general{color:#ec4899;border-color:rgba(236,72,153,0.3);background:rgba(236,72,153,0.08);}
+
+/* Difficulty badge */
+.difficulty-badge{
+  display:inline-block;
+  padding:3px 10px;
+  border-radius:20px;
+  font-family:'Orbitron',monospace;
+  font-size:9px;
+  font-weight:600;
+  letter-spacing:1px;
+  margin-left:8px;
+  border:1px solid;
+}
+.diff-easy{color:var(--green);border-color:rgba(34,197,94,0.3);background:rgba(34,197,94,0.06);}
+.diff-medium{color:var(--gold);border-color:rgba(245,158,11,0.3);background:rgba(245,158,11,0.06);}
+.diff-hard{color:var(--red);border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.06);}
+
+/* Question panel */
+.question-panel{
+  text-align:center;
+  padding:36px 28px;
+  margin-bottom:20px;
+  min-height:160px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+}
+.question-panel .q-badges{
+  margin-bottom:16px;
+}
+.question-text{
+  font-size:clamp(18px,3.5vw,24px);
+  font-weight:600;
+  line-height:1.5;
+  color:#fff;
+  letter-spacing:0.5px;
+}
+
+/* Timer */
+.timer-wrap{
+  position:relative;
+  width:70px;height:70px;
+  margin:0 auto 0;
+}
+.timer-svg{
+  width:70px;height:70px;
+  transform:rotate(-90deg);
+}
+.timer-bg{
+  fill:none;
+  stroke:rgba(255,255,255,0.05);
+  stroke-width:4;
+}
+.timer-fg{
+  fill:none;
+  stroke:var(--cyan);
+  stroke-width:4;
+  stroke-linecap:round;
+  transition:stroke-dashoffset .3s linear, stroke .3s ease;
+}
+.timer-fg.warning{stroke:var(--gold);}
+.timer-fg.danger{stroke:var(--red);}
+.timer-text{
+  position:absolute;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  font-family:'Orbitron',monospace;
+  font-size:22px;
+  font-weight:700;
+  color:var(--cyan);
+  transition:color .3s ease;
+}
+.timer-text.warning{color:var(--gold);animation:timerPulse .6s ease infinite;}
+.timer-text.danger{color:var(--red);animation:timerPulse .4s ease infinite;}
+
+/* Answer options */
+.answers-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-bottom:20px;
+}
+.answer-btn{
+  background:var(--glass);
+  border:1px solid var(--glass-border);
+  border-radius:16px;
+  padding:18px 16px;
+  color:var(--text);
+  font-family:'Rajdhani',sans-serif;
+  font-size:16px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all .3s ease;
+  text-align:left;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  position:relative;
+  overflow:hidden;
+  min-height:64px;
+}
+.answer-btn::before{
+  content:'';
+  position:absolute;top:0;left:0;right:0;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent);
+}
+.answer-btn:hover:not(.disabled){
+  border-color:rgba(0,240,255,0.3);
+  background:var(--glass-hover);
+  transform:translateY(-2px);
+  box-shadow:0 8px 25px rgba(0,240,255,0.08);
+}
+.answer-btn .option-letter{
+  font-family:'Orbitron',monospace;
+  font-size:14px;
+  font-weight:700;
+  color:var(--cyan);
+  width:32px;height:32px;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid rgba(0,240,255,0.2);
+  border-radius:8px;
+  flex-shrink:0;
+  background:rgba(0,240,255,0.05);
+}
+.answer-btn .option-text{
+  flex:1;
+  line-height:1.3;
+}
+.answer-btn.correct{
+  border-color:var(--green)!important;
+  background:rgba(34,197,94,0.12)!important;
+  box-shadow:0 0 30px rgba(34,197,94,0.2)!important;
+  animation:correctPop .4s ease;
+}
+.answer-btn.correct .option-letter{
+  color:var(--green);
+  border-color:var(--green);
+  background:rgba(34,197,94,0.15);
+}
+.answer-btn.wrong{
+  border-color:var(--red)!important;
+  background:rgba(239,68,68,0.12)!important;
+  box-shadow:0 0 30px rgba(239,68,68,0.2)!important;
+  animation:shake .4s ease;
+}
+.answer-btn.wrong .option-letter{
+  color:var(--red);
+  border-color:var(--red);
+  background:rgba(239,68,68,0.15);
+}
+.answer-btn.disabled{
+  pointer-events:none;
+  opacity:.4;
+}
+.answer-btn.eliminated{
+  pointer-events:none;
+  opacity:.15;
+  transform:scale(.95);
+}
+
+/* Lifelines */
+.lifelines{
+  display:flex;
+  gap:12px;
+  justify-content:center;
+  margin-bottom:0;
+}
+.lifeline-btn{
+  background:var(--glass);
+  border:1px solid var(--glass-border);
+  border-radius:12px;
+  padding:10px 20px;
+  color:var(--text);
+  font-family:'Rajdhani',sans-serif;
+  font-size:14px;font-weight:600;
+  cursor:pointer;
+  transition:all .3s ease;
+  display:flex;align-items:center;gap:8px;
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+}
+.lifeline-btn:hover:not(.used){
+  border-color:rgba(245,158,11,0.4);
+  background:rgba(245,158,11,0.08);
+  color:var(--gold);
+}
+.lifeline-btn .ll-icon{font-size:18px;}
+.lifeline-btn.used{
+  opacity:.25;
+  pointer-events:none;
+  text-decoration:line-through;
+}
+
+/* Streak popup */
+.streak-popup{
+  position:fixed;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  font-family:'Orbitron',monospace;
+  font-size:48px;
+  font-weight:900;
+  pointer-events:none;
+  z-index:200;
+  animation:floatUp 1s ease forwards;
+}
+.streak-popup.correct-pop{
+  color:var(--green);
+  text-shadow:0 0 40px rgba(34,197,94,0.5);
+}
+.streak-popup.wrong-pop{
+  color:var(--red);
+  text-shadow:0 0 40px rgba(239,68,68,0.5);
+}
+.streak-popup.streak-pop{
+  color:var(--gold);
+  text-shadow:0 0 40px rgba(245,158,11,0.5);
+  font-size:36px;
+}
+
+/* Particles */
+.particle{
+  position:fixed;
+  width:6px;height:6px;
+  border-radius:50%;
+  pointer-events:none;
+  z-index:150;
+  animation:floatUp .8s ease forwards;
+}
+
+/* ===== RESULTS SCREEN ===== */
+.results-panel{
+  max-width:520px;
+  margin:0 auto;
+  text-align:center;
+  padding:40px 32px;
+}
+.results-panel h2{
+  font-family:'Orbitron',monospace;
+  font-size:16px;
+  letter-spacing:4px;
+  color:var(--text-dim);
+  margin-bottom:8px;
+}
+
+.grade-display{
+  font-family:'Orbitron',monospace;
+  font-size:80px;
+  font-weight:900;
+  line-height:1;
+  margin:16px 0;
+  filter:drop-shadow(0 0 30px currentColor);
+}
+.grade-S{background:linear-gradient(135deg,var(--gold),#fcd34d);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.grade-A{color:var(--green);}
+.grade-B{color:var(--cyan);}
+.grade-C{color:var(--purple);}
+.grade-D{color:var(--red);}
+
+.results-stats{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:12px;
+  margin:24px 0;
+}
+.stat-item{
+  background:rgba(255,255,255,0.02);
+  border:1px solid var(--glass-border);
+  border-radius:12px;
+  padding:16px 8px;
+}
+.stat-label{
+  font-family:'Orbitron',monospace;
+  font-size:9px;
+  letter-spacing:2px;
+  color:var(--text-dim);
+  margin-bottom:4px;
+}
+.stat-value{
+  font-family:'Orbitron',monospace;
+  font-size:24px;
+  font-weight:700;
+  color:var(--cyan);
+}
+.stat-value.gold{color:var(--gold);}
+
+/* Category breakdown */
+.cat-breakdown{
+  margin:24px 0;
+  text-align:left;
+}
+.cat-breakdown h3{
+  font-family:'Orbitron',monospace;
+  font-size:11px;
+  letter-spacing:3px;
+  color:var(--text-dim);
+  margin-bottom:14px;
+  text-align:center;
+}
+.cat-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:10px;
+}
+.cat-row-name{
+  font-size:13px;font-weight:600;
+  width:100px;
+  flex-shrink:0;
+  color:var(--text-dim);
+}
+.cat-row-bar{
+  flex:1;height:8px;
+  background:rgba(255,255,255,0.05);
+  border-radius:4px;
+  overflow:hidden;
+}
+.cat-row-fill{
+  height:100%;border-radius:4px;
+  transition:width 1s ease;
+}
+.cat-row-score{
+  font-family:'Orbitron',monospace;
+  font-size:12px;font-weight:600;
+  width:50px;text-align:right;
+  flex-shrink:0;
+}
+
+.results-actions{
+  display:flex;gap:12px;margin-top:24px;
+}
+.result-btn{
+  flex:1;
+  padding:14px;
+  border-radius:12px;
+  font-family:'Orbitron',monospace;
+  font-size:13px;font-weight:600;
+  letter-spacing:2px;
+  cursor:pointer;
+  transition:all .3s ease;
+  border:1px solid;
+}
+.result-btn.primary{
+  background:linear-gradient(135deg,rgba(0,240,255,0.15),rgba(168,85,247,0.15));
+  border-color:rgba(0,240,255,0.3);
+  color:var(--cyan);
+}
+.result-btn.primary:hover{
+  background:linear-gradient(135deg,rgba(0,240,255,0.25),rgba(168,85,247,0.25));
+  box-shadow:0 0 30px rgba(0,240,255,0.15);
+}
+.result-btn.secondary{
+  background:var(--glass);
+  border-color:var(--glass-border);
+  color:var(--text-dim);
+}
+.result-btn.secondary:hover{
+  border-color:rgba(255,255,255,0.15);
+  color:var(--text);
+}
+
+/* New high score */
+.new-hs{
+  display:inline-block;
+  padding:6px 16px;
+  border-radius:20px;
+  font-family:'Orbitron',monospace;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:2px;
+  color:var(--gold);
+  border:1px solid rgba(245,158,11,0.3);
+  background:rgba(245,158,11,0.08);
+  margin-bottom:12px;
+  animation:pulse 1.5s ease infinite;
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:3px;}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:600px){
+  .container{padding:15px;padding-top:70px;}
+  .game-header{margin-bottom:16px;}
+  .glass-panel{padding:20px 16px;border-radius:16px;}
+  .answers-grid{grid-template-columns:1fr;gap:10px;}
+  .answer-btn{padding:14px 12px;min-height:56px;}
+  .game-hud{gap:8px;}
+  .hud-item{padding:6px 10px;min-width:65px;}
+  .hud-value{font-size:16px;}
+  .timer-wrap{width:56px;height:56px;}
+  .timer-svg{width:56px;height:56px;}
+  .timer-text{font-size:18px;}
+  .results-stats{grid-template-columns:1fr 1fr 1fr;gap:8px;}
+  .stat-value{font-size:18px;}
+  .results-actions{flex-direction:column;}
+  .category-grid{grid-template-columns:1fr 1fr;gap:8px;}
+  .question-text{font-size:17px;}
+  .lifeline-btn{padding:8px 14px;font-size:13px;}
+}
+@media(max-width:380px){
+  .category-grid{grid-template-columns:1fr;}
+  .category-btn.all-random{grid-column:auto;}
+}
+</style>
+</head>
+<body>
+<canvas id="starCanvas"></canvas>
+
+<a href="/games.html" class="back-link">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19 12H5M12 19l-7-7 7-7"/>
+  </svg>
+  ARCADE
+</a>
+
+<div class="container">
+  <div class="game-header">
+    <div class="game-title">QUIZ</div>
+    <div class="game-subtitle">KNOWLEDGE PROTOCOL</div>
+  </div>
+
+  <!-- MENU SCREEN -->
+  <div class="screen active" id="menuScreen">
+    <div class="glass-panel menu-panel">
+      <h2>SELECT CATEGORY</h2>
+      <div class="category-grid">
+        <button class="category-btn all-random selected" data-cat="all" onclick="selectCategory('all',this)">
+          <span class="cat-icon">&#9733;</span>
+          <span class="cat-label">ALL RANDOM</span>
+        </button>
+        <button class="category-btn" data-cat="science" onclick="selectCategory('science',this)">
+          <span class="cat-icon">&#9883;</span>
+          <span class="cat-label">SCIENCE</span>
+        </button>
+        <button class="category-btn" data-cat="technology" onclick="selectCategory('technology',this)">
+          <span class="cat-icon">&#9000;</span>
+          <span class="cat-label">TECHNOLOGY</span>
+        </button>
+        <button class="category-btn" data-cat="geography" onclick="selectCategory('geography',this)">
+          <span class="cat-icon">&#9793;</span>
+          <span class="cat-label">GEOGRAPHY</span>
+        </button>
+        <button class="category-btn" data-cat="history" onclick="selectCategory('history',this)">
+          <span class="cat-icon">&#9764;</span>
+          <span class="cat-label">HISTORY</span>
+        </button>
+        <button class="category-btn" data-cat="general" onclick="selectCategory('general',this)">
+          <span class="cat-icon">&#10024;</span>
+          <span class="cat-label">GENERAL</span>
+        </button>
+      </div>
+
+      <div class="question-count-section">
+        <label>QUESTIONS</label>
+        <div class="count-btns">
+          <button class="count-btn" data-count="10" onclick="selectCount(10,this)">10</button>
+          <button class="count-btn selected" data-count="15" onclick="selectCount(15,this)">15</button>
+          <button class="count-btn" data-count="20" onclick="selectCount(20,this)">20</button>
+        </div>
+      </div>
+
+      <button class="start-btn" onclick="startGame()">START PROTOCOL</button>
+
+      <div class="high-score-display" id="highScoreDisplay">
+        <span>HIGH SCORE: <span class="hs-value" id="hsValue">0</span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div class="screen" id="gameScreen">
+    <div class="game-hud">
+      <div class="hud-item">
+        <div class="hud-label">QUESTION</div>
+        <div class="hud-value" id="hudQuestion">1/15</div>
+      </div>
+      <div class="hud-item">
+        <div class="hud-label">SCORE</div>
+        <div class="hud-value score-val" id="hudScore">0</div>
+      </div>
+      <div class="hud-item">
+        <div class="hud-label">STREAK</div>
+        <div class="hud-value streak-val" id="hudStreak">0</div>
+      </div>
+      <div class="timer-wrap" id="timerWrap">
+        <svg class="timer-svg" viewBox="0 0 70 70">
+          <circle class="timer-bg" cx="35" cy="35" r="30"/>
+          <circle class="timer-fg" id="timerCircle" cx="35" cy="35" r="30"
+            stroke-dasharray="188.5" stroke-dashoffset="0"/>
+        </svg>
+        <div class="timer-text" id="timerText">15</div>
+      </div>
+    </div>
+
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+    </div>
+
+    <div class="glass-panel question-panel" id="questionPanel">
+      <div class="q-badges" id="qBadges"></div>
+      <div class="question-text" id="questionText"></div>
+    </div>
+
+    <div class="answers-grid" id="answersGrid"></div>
+
+    <div class="lifelines" id="lifelinesBar">
+      <button class="lifeline-btn" id="ll5050" onclick="useFiftyFifty()">
+        <span class="ll-icon">&#10006;</span> 50:50
+      </button>
+      <button class="lifeline-btn" id="llSkip" onclick="useSkip()">
+        <span class="ll-icon">&#10145;</span> SKIP
+      </button>
+    </div>
+  </div>
+
+  <!-- RESULTS SCREEN -->
+  <div class="screen" id="resultsScreen">
+    <div class="glass-panel results-panel" id="resultsPanel"></div>
+  </div>
+</div>
+
+<script>
+// ===== STAR BACKGROUND =====
+(function(){
+  const c=document.getElementById('starCanvas'),x=c.getContext('2d');
+  let stars=[];
+  function resize(){c.width=innerWidth;c.height=innerHeight;initStars();}
+  function initStars(){
+    stars=[];
+    const n=Math.floor((c.width*c.height)/4000);
+    for(let i=0;i<n;i++){
+      stars.push({
+        x:Math.random()*c.width,
+        y:Math.random()*c.height,
+        r:Math.random()*1.5+0.3,
+        a:Math.random()*0.6+0.1,
+        s:Math.random()*0.3+0.1,
+        p:Math.random()*Math.PI*2
+      });
+    }
+  }
+  function draw(){
+    x.clearRect(0,0,c.width,c.height);
+    const t=Date.now()*0.001;
+    stars.forEach(s=>{
+      const a=s.a*(0.5+0.5*Math.sin(t*s.s+s.p));
+      x.beginPath();
+      x.arc(s.x,s.y,s.r,0,Math.PI*2);
+      x.fillStyle=`rgba(180,200,255,${a})`;
+      x.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  addEventListener('resize',resize);
+  resize();draw();
+})();
+
+// ===== AUDIO ENGINE =====
+const AudioEngine={
+  ctx:null,
+  init(){if(!this.ctx)this.ctx=new(window.AudioContext||window.webkitAudioContext)();},
+  play(type){
+    this.init();
+    const c=this.ctx, now=c.currentTime;
+    const g=c.createGain();
+    g.connect(c.destination);
+    const osc=(f,t,dur,vol=0.15,wave='sine')=>{
+      const o=c.createOscillator();
+      o.type=wave;o.frequency.setValueAtTime(f,now+t);
+      const gn=c.createGain();
+      gn.gain.setValueAtTime(vol,now+t);
+      gn.gain.exponentialRampToValueAtTime(0.001,now+t+dur);
+      o.connect(gn);gn.connect(c.destination);
+      o.start(now+t);o.stop(now+t+dur);
+    };
+    switch(type){
+      case'select':
+        osc(800,0,0.08,0.1);osc(1200,0.05,0.1,0.08);
+        break;
+      case'correct':
+        osc(523,0,0.12,0.12);osc(659,0.1,0.12,0.12);osc(784,0.2,0.2,0.15);
+        break;
+      case'wrong':
+        osc(300,0,0.15,0.12,'sawtooth');osc(200,0.12,0.25,0.1,'sawtooth');
+        break;
+      case'warning':
+        osc(600,0,0.06,0.08);osc(600,0.15,0.06,0.08);
+        break;
+      case'complete':
+        osc(523,0,0.15,0.1);osc(659,0.12,0.15,0.1);osc(784,0.24,0.15,0.1);osc(1047,0.4,0.3,0.13);
+        break;
+      case'tick':
+        osc(1000,0,0.03,0.04);
+        break;
+      case'streak':
+        osc(880,0,0.08,0.1);osc(1100,0.06,0.08,0.1);osc(1320,0.12,0.15,0.12);
+        break;
+      case'skip':
+        osc(500,0,0.06,0.06);osc(700,0.06,0.1,0.08);
+        break;
+      case'fifty':
+        osc(600,0,0.06,0.06);osc(900,0.05,0.06,0.06);osc(600,0.1,0.1,0.08);
+        break;
+    }
+  }
+};
+
+// ===== QUESTION DATABASE =====
+const QUESTIONS = {
+  science: [
+    {q:"What is the chemical symbol for gold?",a:["Au","Ag","Fe","Cu"],c:0,d:1},
+    {q:"How many bones are in the adult human body?",a:["206","208","196","212"],c:0,d:1},
+    {q:"What planet is known as the Red Planet?",a:["Mars","Venus","Jupiter","Saturn"],c:0,d:1},
+    {q:"What gas do plants absorb from the atmosphere?",a:["Carbon Dioxide","Oxygen","Nitrogen","Hydrogen"],c:0,d:1},
+    {q:"What is the speed of light in km/s (approx)?",a:["300,000","150,000","500,000","200,000"],c:0,d:2},
+    {q:"What is the most abundant gas in Earth's atmosphere?",a:["Nitrogen","Oxygen","Carbon Dioxide","Argon"],c:0,d:1},
+    {q:"What is the powerhouse of the cell?",a:["Mitochondria","Nucleus","Ribosome","Golgi Body"],c:0,d:1},
+    {q:"What element has the atomic number 1?",a:["Hydrogen","Helium","Lithium","Carbon"],c:0,d:1},
+    {q:"What is the hardest natural substance on Earth?",a:["Diamond","Titanium","Quartz","Topaz"],c:0,d:1},
+    {q:"How many chromosomes do humans have?",a:["46","44","48","42"],c:0,d:2},
+    {q:"What is absolute zero in Celsius?",a:["-273.15","-459.67","-100","0"],c:0,d:2},
+    {q:"What particle has a positive charge?",a:["Proton","Electron","Neutron","Photon"],c:0,d:1},
+    {q:"What is the chemical formula for water?",a:["H2O","CO2","NaCl","O2"],c:0,d:1},
+    {q:"Which planet has the most moons?",a:["Saturn","Jupiter","Uranus","Neptune"],c:0,d:3},
+    {q:"What force keeps planets in orbit around the Sun?",a:["Gravity","Magnetism","Friction","Inertia"],c:0,d:2},
+    {q:"What is the pH of pure water?",a:["7","0","14","1"],c:0,d:2},
+    {q:"What phenomenon causes a rainbow?",a:["Refraction","Reflection","Diffraction","Absorption"],c:0,d:2},
+    {q:"What is the largest organ of the human body?",a:["Skin","Liver","Brain","Lungs"],c:0,d:1},
+    {q:"What type of blood cells fight infection?",a:["White blood cells","Red blood cells","Platelets","Plasma"],c:0,d:1},
+    {q:"What is the Heisenberg Uncertainty Principle about?",a:["Position and momentum","Energy and time","Mass and velocity","Charge and spin"],c:0,d:3}
+  ],
+  technology: [
+    {q:"Who co-founded Apple alongside Steve Jobs?",a:["Steve Wozniak","Bill Gates","Tim Cook","Elon Musk"],c:0,d:1},
+    {q:"What does 'HTTP' stand for?",a:["HyperText Transfer Protocol","High Tech Transfer Protocol","HyperText Transmission Protocol","Home Tool Transfer Protocol"],c:0,d:1},
+    {q:"In what year was the first iPhone released?",a:["2007","2005","2008","2006"],c:0,d:2},
+    {q:"What programming language is known as the 'language of the web'?",a:["JavaScript","Python","Java","C++"],c:0,d:1},
+    {q:"What does 'CPU' stand for?",a:["Central Processing Unit","Computer Personal Unit","Central Program Utility","Core Processing Unit"],c:0,d:1},
+    {q:"What does 'GPU' stand for?",a:["Graphics Processing Unit","General Processing Unit","Graphics Program Utility","Global Processing Unit"],c:0,d:1},
+    {q:"Who is known as the father of the World Wide Web?",a:["Tim Berners-Lee","Vint Cerf","Alan Turing","Linus Torvalds"],c:0,d:2},
+    {q:"What does 'RAM' stand for?",a:["Random Access Memory","Read Access Memory","Run Active Memory","Real Application Memory"],c:0,d:1},
+    {q:"What company developed the Android OS?",a:["Google","Apple","Microsoft","Samsung"],c:0,d:1},
+    {q:"What year was Bluetooth technology introduced?",a:["1998","2000","1995","2003"],c:0,d:3},
+    {q:"What does 'SSD' stand for?",a:["Solid State Drive","Super Speed Disk","System Storage Device","Standard State Drive"],c:0,d:1},
+    {q:"What is the most used programming language in 2024?",a:["Python","JavaScript","Java","C#"],c:0,d:2},
+    {q:"What does 'AI' stand for?",a:["Artificial Intelligence","Automated Intelligence","Advanced Integration","Artificial Integration"],c:0,d:1},
+    {q:"Who founded Tesla Motors?",a:["Elon Musk & others","Steve Jobs","Jeff Bezos","Bill Gates"],c:0,d:2},
+    {q:"What is the name of Google's AI chatbot?",a:["Gemini","Siri","Alexa","Cortana"],c:0,d:2},
+    {q:"What does 'IoT' stand for?",a:["Internet of Things","Integration of Technology","Internet of Technology","Interaction of Things"],c:0,d:2},
+    {q:"What is Linux?",a:["An operating system kernel","A programming language","A web browser","A database"],c:0,d:2},
+    {q:"What company created ChatGPT?",a:["OpenAI","Google","Meta","Microsoft"],c:0,d:1},
+    {q:"What does 'VPN' stand for?",a:["Virtual Private Network","Virtual Public Network","Verified Private Network","Visual Private Network"],c:0,d:1},
+    {q:"What is quantum computing's basic unit of information?",a:["Qubit","Bit","Byte","Quantum"],c:0,d:3}
+  ],
+  geography: [
+    {q:"What is the largest country by area?",a:["Russia","Canada","China","United States"],c:0,d:1},
+    {q:"What is the smallest country in the world?",a:["Vatican City","Monaco","San Marino","Liechtenstein"],c:0,d:1},
+    {q:"What is the longest river in the world?",a:["Nile","Amazon","Mississippi","Yangtze"],c:0,d:2},
+    {q:"What is the capital of Australia?",a:["Canberra","Sydney","Melbourne","Brisbane"],c:0,d:2},
+    {q:"Which ocean is the largest?",a:["Pacific","Atlantic","Indian","Arctic"],c:0,d:1},
+    {q:"What is the tallest mountain in the world?",a:["Mount Everest","K2","Kangchenjunga","Lhotse"],c:0,d:1},
+    {q:"What country has the most people?",a:["India","China","USA","Indonesia"],c:0,d:2},
+    {q:"What is the driest continent?",a:["Antarctica","Africa","Australia","Asia"],c:0,d:3},
+    {q:"The Amazon Rainforest spans how many countries?",a:["9","7","5","12"],c:0,d:3},
+    {q:"What is the capital of Canada?",a:["Ottawa","Toronto","Vancouver","Montreal"],c:0,d:2},
+    {q:"Which country is both in Europe and Asia?",a:["Turkey","Russia","Egypt","Greece"],c:0,d:2},
+    {q:"What is the deepest ocean trench?",a:["Mariana Trench","Tonga Trench","Philippine Trench","Java Trench"],c:0,d:2},
+    {q:"What desert is the largest hot desert?",a:["Sahara","Arabian","Gobi","Kalahari"],c:0,d:1},
+    {q:"What is the capital of Brazil?",a:["Brasilia","Rio de Janeiro","Sao Paulo","Salvador"],c:0,d:2},
+    {q:"How many continents are there?",a:["7","6","5","8"],c:0,d:1},
+    {q:"What country has the most islands?",a:["Sweden","Indonesia","Philippines","Japan"],c:0,d:3},
+    {q:"What is the largest lake in Africa?",a:["Lake Victoria","Lake Tanganyika","Lake Malawi","Lake Chad"],c:0,d:2},
+    {q:"What strait separates Europe from Africa?",a:["Strait of Gibraltar","Strait of Hormuz","Bosphorus","Strait of Malacca"],c:0,d:2},
+    {q:"What is the highest waterfall in the world?",a:["Angel Falls","Niagara Falls","Victoria Falls","Iguazu Falls"],c:0,d:2},
+    {q:"Which country is known as the Land of the Rising Sun?",a:["Japan","China","South Korea","Thailand"],c:0,d:1}
+  ],
+  history: [
+    {q:"In what year did World War II end?",a:["1945","1944","1946","1943"],c:0,d:1},
+    {q:"Who was the first person to walk on the Moon?",a:["Neil Armstrong","Buzz Aldrin","Yuri Gagarin","John Glenn"],c:0,d:1},
+    {q:"What year did the Berlin Wall fall?",a:["1989","1991","1987","1990"],c:0,d:2},
+    {q:"Who painted the Mona Lisa?",a:["Leonardo da Vinci","Michelangelo","Raphael","Botticelli"],c:0,d:1},
+    {q:"What ancient civilization built the pyramids of Giza?",a:["Egyptians","Romans","Greeks","Persians"],c:0,d:1},
+    {q:"In what year did the Titanic sink?",a:["1912","1910","1914","1908"],c:0,d:2},
+    {q:"Who was the first President of the United States?",a:["George Washington","Thomas Jefferson","Abraham Lincoln","John Adams"],c:0,d:1},
+    {q:"What empire was ruled by Genghis Khan?",a:["Mongol Empire","Ottoman Empire","Roman Empire","Persian Empire"],c:0,d:1},
+    {q:"The French Revolution began in what year?",a:["1789","1776","1799","1792"],c:0,d:2},
+    {q:"What was the name of the ship Darwin sailed on?",a:["HMS Beagle","HMS Victory","HMS Endeavour","HMS Bounty"],c:0,d:3},
+    {q:"Who discovered penicillin?",a:["Alexander Fleming","Louis Pasteur","Robert Koch","Joseph Lister"],c:0,d:2},
+    {q:"What year did the Korean War begin?",a:["1950","1948","1952","1945"],c:0,d:2},
+    {q:"Which ancient wonder was in Alexandria?",a:["Lighthouse","Colossus","Hanging Gardens","Temple of Artemis"],c:0,d:3},
+    {q:"Who wrote 'The Art of War'?",a:["Sun Tzu","Confucius","Lao Tzu","Miyamoto Musashi"],c:0,d:2},
+    {q:"What year was the United Nations founded?",a:["1945","1948","1942","1950"],c:0,d:2},
+    {q:"The Renaissance originated in which country?",a:["Italy","France","England","Spain"],c:0,d:1},
+    {q:"Who was the last Pharaoh of Egypt?",a:["Cleopatra VII","Ramesses II","Tutankhamun","Nefertiti"],c:0,d:2},
+    {q:"What treaty ended World War I?",a:["Treaty of Versailles","Treaty of Paris","Treaty of Ghent","Treaty of Vienna"],c:0,d:2},
+    {q:"The Cold War was primarily between which two nations?",a:["USA & USSR","USA & China","UK & USSR","France & Germany"],c:0,d:1},
+    {q:"In what century was the printing press invented?",a:["15th","14th","16th","13th"],c:0,d:3}
+  ],
+  general: [
+    {q:"How many strings does a standard guitar have?",a:["6","4","8","5"],c:0,d:1},
+    {q:"What is the currency of Japan?",a:["Yen","Won","Yuan","Ringgit"],c:0,d:1},
+    {q:"What sport is known as 'the beautiful game'?",a:["Football/Soccer","Basketball","Tennis","Cricket"],c:0,d:1},
+    {q:"What is the most spoken language in the world?",a:["English","Mandarin","Spanish","Hindi"],c:0,d:2},
+    {q:"How many players are on a basketball team on court?",a:["5","6","7","4"],c:0,d:1},
+    {q:"What color do you get mixing blue and yellow?",a:["Green","Orange","Purple","Brown"],c:0,d:1},
+    {q:"What is the largest mammal on Earth?",a:["Blue Whale","African Elephant","Giraffe","Hippopotamus"],c:0,d:1},
+    {q:"How many sides does a hexagon have?",a:["6","5","7","8"],c:0,d:1},
+    {q:"What is the capital of South Korea?",a:["Seoul","Tokyo","Busan","Beijing"],c:0,d:1},
+    {q:"In chess, which piece can only move diagonally?",a:["Bishop","Rook","Knight","Pawn"],c:0,d:2},
+    {q:"What is the tallest animal on Earth?",a:["Giraffe","Elephant","Ostrich","Moose"],c:0,d:1},
+    {q:"How many dots are on a standard pair of dice?",a:["42","36","21","48"],c:0,d:2},
+    {q:"What is the most popular sport in the world?",a:["Football/Soccer","Cricket","Basketball","Tennis"],c:0,d:1},
+    {q:"How many Olympic rings are there?",a:["5","6","4","7"],c:0,d:1},
+    {q:"What animal is known as man's best friend?",a:["Dog","Cat","Horse","Dolphin"],c:0,d:1},
+    {q:"What is the fastest land animal?",a:["Cheetah","Lion","Pronghorn","Greyhound"],c:0,d:1},
+    {q:"What language has the most native speakers?",a:["Mandarin Chinese","Spanish","English","Hindi"],c:0,d:2},
+    {q:"What is origami the art of?",a:["Paper folding","Flower arranging","Sword fighting","Calligraphy"],c:0,d:1},
+    {q:"What instrument has 88 keys?",a:["Piano","Organ","Accordion","Harpsichord"],c:0,d:1},
+    {q:"How many time zones does Russia have?",a:["11","9","7","13"],c:0,d:3}
+  ]
+};
+
+// ===== GAME STATE =====
+let state = {
+  category: 'all',
+  questionCount: 15,
+  questions: [],
+  currentIndex: 0,
+  score: 0,
+  streak: 0,
+  maxStreak: 0,
+  correctCount: 0,
+  fiftyFiftyUsed: false,
+  skipUsed: false,
+  timerInterval: null,
+  timeLeft: 15,
+  answered: false,
+  categoryStats: {},
+  newHighScore: false
+};
+
+const TIMER_MAX = 15;
+const CIRCUMFERENCE = 2 * Math.PI * 30; // radius=30
+
+// ===== CATEGORY SELECTION =====
+function selectCategory(cat, el) {
+  AudioEngine.play('select');
+  document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  state.category = cat;
+  updateHighScoreDisplay();
+}
+
+function selectCount(n, el) {
+  AudioEngine.play('select');
+  document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  state.questionCount = n;
+}
+
+function updateHighScoreDisplay() {
+  const key = 'quiz_hs_' + state.category;
+  const hs = localStorage.getItem(key) || 0;
+  document.getElementById('hsValue').textContent = hs;
+}
+
+// ===== SCREEN MANAGEMENT =====
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ===== PREPARE QUESTIONS =====
+function prepareQuestions() {
+  let pool = [];
+  if (state.category === 'all') {
+    Object.keys(QUESTIONS).forEach(cat => {
+      QUESTIONS[cat].forEach(q => pool.push({...q, category: cat}));
+    });
+  } else {
+    QUESTIONS[state.category].forEach(q => pool.push({...q, category: state.category}));
+  }
+
+  // Shuffle
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+
+  // Sort by difficulty for progressive difficulty
+  pool.sort((a, b) => a.d - b.d);
+
+  // Take needed count
+  pool = pool.slice(0, state.questionCount);
+
+  // Shuffle answers for each question
+  pool.forEach(q => {
+    const correctAnswer = q.a[q.c];
+    const shuffled = [...q.a];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    q.a = shuffled;
+    q.c = shuffled.indexOf(correctAnswer);
+  });
+
+  return pool;
+}
+
+// ===== START GAME =====
+function startGame() {
+  AudioEngine.play('select');
+  state.questions = prepareQuestions();
+  state.currentIndex = 0;
+  state.score = 0;
+  state.streak = 0;
+  state.maxStreak = 0;
+  state.correctCount = 0;
+  state.fiftyFiftyUsed = false;
+  state.skipUsed = false;
+  state.categoryStats = {};
+  state.newHighScore = false;
+
+  document.getElementById('ll5050').classList.remove('used');
+  document.getElementById('llSkip').classList.remove('used');
+
+  showScreen('gameScreen');
+  loadQuestion();
+}
+
+// ===== LOAD QUESTION =====
+function loadQuestion() {
+  if (state.currentIndex >= state.questions.length) {
+    endGame();
+    return;
+  }
+
+  state.answered = false;
+  const q = state.questions[state.currentIndex];
+  const total = state.questions.length;
+
+  // Update HUD
+  document.getElementById('hudQuestion').textContent = `${state.currentIndex + 1}/${total}`;
+  document.getElementById('hudScore').textContent = state.score;
+  document.getElementById('hudStreak').textContent = state.streak;
+
+  // Progress bar
+  const pct = (state.currentIndex / total) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+
+  // Category badge
+  const catMap = {
+    science: {label: 'SCIENCE', cls: 'cat-science'},
+    technology: {label: 'TECHNOLOGY', cls: 'cat-technology'},
+    geography: {label: 'GEOGRAPHY', cls: 'cat-geography'},
+    history: {label: 'HISTORY', cls: 'cat-history'},
+    general: {label: 'GENERAL', cls: 'cat-general'}
+  };
+  const diffMap = {1: {label: 'EASY', cls: 'diff-easy'}, 2: {label: 'MEDIUM', cls: 'diff-medium'}, 3: {label: 'HARD', cls: 'diff-hard'}};
+  const ci = catMap[q.category];
+  const di = diffMap[q.d];
+  document.getElementById('qBadges').innerHTML =
+    `<span class="category-badge ${ci.cls}">${ci.label}</span>` +
+    `<span class="difficulty-badge ${di.cls}">${di.label}</span>`;
+
+  // Question text with animation
+  const qp = document.getElementById('questionPanel');
+  qp.style.animation = 'none';
+  qp.offsetHeight;
+  qp.style.animation = 'scaleIn 0.4s ease';
+  document.getElementById('questionText').textContent = q.q;
+
+  // Answer buttons
+  const letters = ['A', 'B', 'C', 'D'];
+  const grid = document.getElementById('answersGrid');
+  grid.innerHTML = '';
+  q.a.forEach((ans, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'answer-btn';
+    btn.style.animation = `fadeInUp 0.4s ease ${i * 0.08}s both`;
+    btn.innerHTML = `<span class="option-letter">${letters[i]}</span><span class="option-text">${ans}</span>`;
+    btn.addEventListener('click', () => selectAnswer(i));
+    btn.addEventListener('touchend', (e) => { e.preventDefault(); selectAnswer(i); });
+    grid.appendChild(btn);
+  });
+
+  // Start timer
+  startTimer();
+}
+
+// ===== TIMER =====
+function startTimer() {
+  clearInterval(state.timerInterval);
+  state.timeLeft = TIMER_MAX;
+  updateTimerDisplay();
+
+  state.timerInterval = setInterval(() => {
+    state.timeLeft--;
+    updateTimerDisplay();
+
+    if (state.timeLeft <= 5 && state.timeLeft > 2) {
+      AudioEngine.play('warning');
+    } else if (state.timeLeft <= 2 && state.timeLeft > 0) {
+      AudioEngine.play('tick');
+    }
+
+    if (state.timeLeft <= 0) {
+      clearInterval(state.timerInterval);
+      timeUp();
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const circle = document.getElementById('timerCircle');
+  const text = document.getElementById('timerText');
+  const ratio = state.timeLeft / TIMER_MAX;
+  const offset = CIRCUMFERENCE * (1 - ratio);
+  circle.style.strokeDashoffset = offset;
+
+  text.textContent = state.timeLeft;
+
+  // Color states
+  circle.classList.remove('warning', 'danger');
+  text.classList.remove('warning', 'danger');
+  if (state.timeLeft <= 3) {
+    circle.classList.add('danger');
+    text.classList.add('danger');
+  } else if (state.timeLeft <= 7) {
+    circle.classList.add('warning');
+    text.classList.add('warning');
+  }
+}
+
+function timeUp() {
+  if (state.answered) return;
+  state.answered = true;
+  AudioEngine.play('wrong');
+
+  const q = state.questions[state.currentIndex];
+  const btns = document.querySelectorAll('.answer-btn');
+  btns.forEach((b, i) => {
+    b.classList.add('disabled');
+    if (i === q.c) b.classList.add('correct');
+  });
+
+  state.streak = 0;
+  document.getElementById('hudStreak').textContent = 0;
+
+  showPopup('TIME UP', 'wrong-pop');
+  trackCategory(q.category, false);
+
+  setTimeout(() => {
+    state.currentIndex++;
+    loadQuestion();
+  }, 1800);
+}
+
+// ===== SELECT ANSWER =====
+function selectAnswer(idx) {
+  if (state.answered) return;
+  state.answered = true;
+  clearInterval(state.timerInterval);
+
+  const q = state.questions[state.currentIndex];
+  const btns = document.querySelectorAll('.answer-btn');
+  const isCorrect = idx === q.c;
+
+  btns.forEach((b, i) => {
+    b.classList.add('disabled');
+    if (i === q.c) b.classList.add('correct');
+    if (i === idx && !isCorrect) b.classList.add('wrong');
+  });
+
+  if (isCorrect) {
+    AudioEngine.play('correct');
+
+    // Calculate score
+    const timeBonus = Math.floor(state.timeLeft * 5);
+    const diffBonus = q.d * 20;
+    let baseScore = 100 + timeBonus + diffBonus;
+
+    state.streak++;
+    if (state.streak > state.maxStreak) state.maxStreak = state.streak;
+    state.correctCount++;
+
+    // Streak bonus
+    let streakBonus = 0;
+    if (state.streak >= 3) {
+      streakBonus = state.streak * 15;
+      baseScore += streakBonus;
+    }
+
+    state.score += baseScore;
+
+    showPopup('+' + baseScore, 'correct-pop');
+    if (state.streak >= 3) {
+      setTimeout(() => showPopup(state.streak + 'x STREAK!', 'streak-pop'), 300);
+      AudioEngine.play('streak');
+    }
+
+    spawnParticles(btns[idx], 'var(--green)');
+
+    document.getElementById('hudScore').textContent = state.score;
+    document.getElementById('hudStreak').textContent = state.streak;
+  } else {
+    AudioEngine.play('wrong');
+    state.streak = 0;
+    document.getElementById('hudStreak').textContent = 0;
+    showPopup('WRONG', 'wrong-pop');
+  }
+
+  trackCategory(q.category, isCorrect);
+
+  setTimeout(() => {
+    state.currentIndex++;
+    loadQuestion();
+  }, 1800);
+}
+
+// ===== TRACK CATEGORY =====
+function trackCategory(cat, correct) {
+  if (!state.categoryStats[cat]) state.categoryStats[cat] = {correct: 0, total: 0};
+  state.categoryStats[cat].total++;
+  if (correct) state.categoryStats[cat].correct++;
+}
+
+// ===== LIFELINES =====
+function useFiftyFifty() {
+  if (state.fiftyFiftyUsed || state.answered) return;
+  state.fiftyFiftyUsed = true;
+  document.getElementById('ll5050').classList.add('used');
+  AudioEngine.play('fifty');
+
+  const q = state.questions[state.currentIndex];
+  const btns = document.querySelectorAll('.answer-btn');
+  const wrongIndices = [];
+  for (let i = 0; i < 4; i++) {
+    if (i !== q.c) wrongIndices.push(i);
+  }
+  // Remove 2 random wrong answers
+  for (let i = wrongIndices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [wrongIndices[i], wrongIndices[j]] = [wrongIndices[j], wrongIndices[i]];
+  }
+  const toEliminate = wrongIndices.slice(0, 2);
+  toEliminate.forEach(idx => {
+    btns[idx].classList.add('eliminated');
+  });
+}
+
+function useSkip() {
+  if (state.skipUsed || state.answered) return;
+  state.skipUsed = true;
+  document.getElementById('llSkip').classList.add('used');
+  AudioEngine.play('skip');
+  clearInterval(state.timerInterval);
+
+  state.answered = true;
+  showPopup('SKIPPED', 'wrong-pop');
+
+  const q = state.questions[state.currentIndex];
+  trackCategory(q.category, false);
+
+  setTimeout(() => {
+    state.currentIndex++;
+    loadQuestion();
+  }, 800);
+}
+
+// ===== POPUP =====
+function showPopup(text, cls) {
+  const el = document.createElement('div');
+  el.className = `streak-popup ${cls}`;
+  el.textContent = text;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1000);
+}
+
+// ===== PARTICLES =====
+function spawnParticles(target, color) {
+  const rect = target.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  for (let i = 0; i < 12; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = (cx + (Math.random() - 0.5) * 80) + 'px';
+    p.style.top = (cy + (Math.random() - 0.5) * 40) + 'px';
+    p.style.background = color;
+    p.style.width = (Math.random() * 6 + 3) + 'px';
+    p.style.height = p.style.width;
+    p.style.animationDuration = (Math.random() * 0.5 + 0.5) + 's';
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 1000);
+  }
+}
+
+// ===== END GAME =====
+function endGame() {
+  clearInterval(state.timerInterval);
+  AudioEngine.play('complete');
+
+  const total = state.questions.length;
+  const accuracy = total > 0 ? Math.round((state.correctCount / total) * 100) : 0;
+
+  // Grade
+  let grade, gradeClass;
+  if (accuracy >= 95) { grade = 'S'; gradeClass = 'grade-S'; }
+  else if (accuracy >= 80) { grade = 'A'; gradeClass = 'grade-A'; }
+  else if (accuracy >= 60) { grade = 'B'; gradeClass = 'grade-B'; }
+  else if (accuracy >= 40) { grade = 'C'; gradeClass = 'grade-C'; }
+  else { grade = 'D'; gradeClass = 'grade-D'; }
+
+  // High score
+  const key = 'quiz_hs_' + state.category;
+  const prevHS = parseInt(localStorage.getItem(key) || '0');
+  if (state.score > prevHS) {
+    localStorage.setItem(key, state.score);
+    state.newHighScore = true;
+  }
+
+  // Category breakdown HTML
+  const catColors = {
+    science: 'var(--green)', technology: 'var(--cyan)',
+    geography: 'var(--gold)', history: 'var(--purple)',
+    general: '#ec4899'
+  };
+  const catNames = {
+    science: 'Science', technology: 'Technology',
+    geography: 'Geography', history: 'History',
+    general: 'General'
+  };
+  let breakdownHTML = '';
+  const cats = Object.keys(state.categoryStats);
+  if (cats.length > 0) {
+    breakdownHTML = '<div class="cat-breakdown"><h3>CATEGORY BREAKDOWN</h3>';
+    cats.forEach(cat => {
+      const s = state.categoryStats[cat];
+      const pct = s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0;
+      breakdownHTML += `
+        <div class="cat-row">
+          <div class="cat-row-name">${catNames[cat]}</div>
+          <div class="cat-row-bar">
+            <div class="cat-row-fill" style="width:${pct}%;background:${catColors[cat]}"></div>
+          </div>
+          <div class="cat-row-score" style="color:${catColors[cat]}">${s.correct}/${s.total}</div>
+        </div>`;
+    });
+    breakdownHTML += '</div>';
+  }
+
+  const hsTag = state.newHighScore ? '<div class="new-hs">NEW HIGH SCORE!</div>' : '';
+
+  document.getElementById('resultsPanel').innerHTML = `
+    ${hsTag}
+    <h2>PROTOCOL COMPLETE</h2>
+    <div class="grade-display ${gradeClass}">${grade}</div>
+    <div class="results-stats">
+      <div class="stat-item">
+        <div class="stat-label">SCORE</div>
+        <div class="stat-value gold">${state.score}</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">CORRECT</div>
+        <div class="stat-value">${state.correctCount}/${total}</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">ACCURACY</div>
+        <div class="stat-value">${accuracy}%</div>
+      </div>
+    </div>
+    <div class="results-stats" style="grid-template-columns:1fr 1fr;margin-top:0;">
+      <div class="stat-item">
+        <div class="stat-label">MAX STREAK</div>
+        <div class="stat-value" style="color:var(--purple)">${state.maxStreak}</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">BEST SCORE</div>
+        <div class="stat-value gold">${Math.max(state.score, prevHS)}</div>
+      </div>
+    </div>
+    ${breakdownHTML}
+    <div class="results-actions">
+      <button class="result-btn primary" onclick="goToMenu()">PLAY AGAIN</button>
+      <button class="result-btn secondary" onclick="location.href='/games.html'">ARCADE</button>
+    </div>
+  `;
+
+  // Progress fill to 100%
+  document.getElementById('progressFill').style.width = '100%';
+
+  showScreen('resultsScreen');
+}
+
+function goToMenu() {
+  AudioEngine.play('select');
+  updateHighScoreDisplay();
+  showScreen('menuScreen');
+}
+
+// ===== KEYBOARD SUPPORT =====
+document.addEventListener('keydown', e => {
+  if (state.answered) return;
+  const gameScreen = document.getElementById('gameScreen');
+  if (!gameScreen.classList.contains('active')) return;
+
+  switch(e.key.toLowerCase()) {
+    case '1': case 'a': selectAnswer(0); break;
+    case '2': case 'b': selectAnswer(1); break;
+    case '3': case 'c': selectAnswer(2); break;
+    case '4': case 'd': selectAnswer(3); break;
+    case 'f': useFiftyFifty(); break;
+    case 's': useSkip(); break;
+  }
+});
+
+// ===== INIT =====
+updateHighScoreDisplay();
+</script>
+</body>
+</html>
