@@ -444,12 +444,189 @@ body {
 @media (max-width: 480px) {
   .grid { grid-template-columns: 1fr; }
 }
+
+/* ===== GAME PLAYER OVERLAY ===== */
+.game-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: var(--bg);
+  display: none;
+  flex-direction: column;
+  opacity: 0;
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.game-overlay.active {
+  display: flex;
+  opacity: 1;
+}
+.game-overlay.fade-in {
+  opacity: 1;
+}
+
+.game-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: rgba(5, 5, 15, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(20px);
+  z-index: 10001;
+  min-height: 48px;
+  flex-shrink: 0;
+}
+
+.game-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border: 1px solid rgba(0, 240, 255, 0.15);
+  border-radius: 8px;
+  background: rgba(0, 240, 255, 0.04);
+  color: var(--cyan);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.back-btn:hover {
+  background: rgba(0, 240, 255, 0.1);
+  border-color: rgba(0, 240, 255, 0.3);
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.1);
+}
+.back-btn svg {
+  width: 14px;
+  height: 14px;
+  transition: transform 0.3s ease;
+}
+.back-btn:hover svg {
+  transform: translateX(-3px);
+}
+
+.game-topbar-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.game-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fullscreen-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.fullscreen-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+.fullscreen-btn svg { width: 16px; height: 16px; }
+
+.game-iframe-wrap {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+.game-iframe-wrap iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: var(--bg);
+}
+
+.game-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  background: var(--bg);
+  z-index: 10;
+  transition: opacity 0.5s ease;
+}
+.game-loading.hidden { opacity: 0; pointer-events: none; }
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 2px solid rgba(0, 240, 255, 0.1);
+  border-top-color: var(--cyan);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-text {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 11px;
+  letter-spacing: 4px;
+  color: var(--text-dim);
+}
+
+/* Hub hidden when game active */
+.hub-content.hidden {
+  display: none;
+}
 </style>
 </head>
 <body>
 
+<!-- Game Player Overlay -->
+<div class="game-overlay" id="gameOverlay">
+  <div class="game-topbar">
+    <div class="game-topbar-left">
+      <button class="back-btn" id="backBtn" onclick="closeGame()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+        BACK
+      </button>
+      <span class="game-topbar-title" id="gameTitle"></span>
+    </div>
+    <div class="game-topbar-right">
+      <button class="fullscreen-btn" onclick="toggleFullscreen()" title="Fullscreen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 00-2 2v3"/><path d="M21 8V5a2 2 0 00-2-2h-3"/><path d="M3 16v3a2 2 0 002 2h3"/><path d="M16 21h3a2 2 0 002-2v-3"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="game-iframe-wrap">
+    <div class="game-loading" id="gameLoading">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">LOADING...</div>
+    </div>
+    <iframe id="gameFrame" sandbox="allow-scripts allow-same-origin allow-popups" allowfullscreen></iframe>
+  </div>
+</div>
+
 <canvas class="bg-canvas" id="bgCanvas"></canvas>
 
+<div class="hub-content" id="hubContent">
 <header class="header">
   <div class="header-badge">PREMIUM COLLECTION</div>
   <h1 class="header-title">ARCADE</h1>
@@ -780,6 +957,7 @@ body {
   <div class="footer-logo">ARCADE</div>
   <p class="footer-text">37 PREMIUM GAMES &copy; 2026</p>
 </footer>
+</div><!-- /hub-content -->
 
 <script>
 // ===== BACKGROUND =====
@@ -849,7 +1027,7 @@ requestAnimationFrame(draw);
 
 // ===== FILTER =====
 const filterBtns = document.querySelectorAll('.filter-btn');
-const cards = document.querySelectorAll('.card[data-cat]');
+const allCards = document.querySelectorAll('.card[data-cat]');
 const sections = document.querySelectorAll('.section-header');
 const grids = document.querySelectorAll('.grid');
 const featured = document.querySelector('.featured');
@@ -861,16 +1039,15 @@ filterBtns.forEach(btn => {
     const filter = btn.dataset.filter;
 
     if (filter === 'all') {
-      cards.forEach(c => c.style.display = '');
+      allCards.forEach(c => c.style.display = '');
       sections.forEach(s => s.style.display = '');
       grids.forEach(g => g.style.display = '');
       featured.style.display = '';
     } else {
       featured.style.display = 'none';
-      cards.forEach(c => {
+      allCards.forEach(c => {
         c.style.display = c.dataset.cat === filter ? '' : 'none';
       });
-      // Show/hide sections based on visible cards
       grids.forEach((g, i) => {
         const visibleCards = g.querySelectorAll('.card[data-cat]:not([style*="display: none"])');
         const visible = visibleCards.length > 0;
@@ -879,6 +1056,113 @@ filterBtns.forEach(btn => {
       });
     }
   });
+});
+
+// ===== GAME PLAYER (SPA) =====
+const overlay = document.getElementById('gameOverlay');
+const hubContent = document.getElementById('hubContent');
+const gameFrame = document.getElementById('gameFrame');
+const gameTitle = document.getElementById('gameTitle');
+const gameLoading = document.getElementById('gameLoading');
+let savedScrollY = 0;
+
+function openGame(url, title) {
+  savedScrollY = window.scrollY;
+  gameTitle.textContent = title || '';
+  gameLoading.classList.remove('hidden');
+  gameFrame.src = '';
+
+  // Show overlay
+  overlay.style.display = 'flex';
+  requestAnimationFrame(() => {
+    overlay.classList.add('active', 'fade-in');
+  });
+  hubContent.classList.add('hidden');
+  document.body.style.overflow = 'hidden';
+
+  // Load game in iframe
+  gameFrame.src = url;
+  gameFrame.onload = () => {
+    gameLoading.classList.add('hidden');
+    // Remove back links inside the iframe games
+    try {
+      const iDoc = gameFrame.contentDocument;
+      if (iDoc) {
+        const backLinks = iDoc.querySelectorAll('a[href*="games.html"]');
+        backLinks.forEach(a => a.style.display = 'none');
+      }
+    } catch(e) { /* cross-origin, ignore */ }
+  };
+
+  // Push history state for back button
+  history.pushState({ game: url, title: title }, '', '#' + url.replace(/^\/|\.html$/g, ''));
+}
+
+function closeGame() {
+  overlay.classList.remove('fade-in');
+  overlay.style.opacity = '0';
+  setTimeout(() => {
+    overlay.style.display = 'none';
+    overlay.classList.remove('active');
+    overlay.style.opacity = '';
+    gameFrame.src = '';
+  }, 350);
+
+  hubContent.classList.remove('hidden');
+  document.body.style.overflow = '';
+  window.scrollTo(0, savedScrollY);
+
+  if (location.hash) {
+    history.pushState({}, '', location.pathname);
+  }
+}
+
+function toggleFullscreen() {
+  const wrap = document.querySelector('.game-iframe-wrap');
+  if (!document.fullscreenElement) {
+    (wrap.requestFullscreen || wrap.webkitRequestFullscreen || wrap.msRequestFullscreen).call(wrap);
+  } else {
+    (document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen).call(document);
+  }
+}
+
+// Intercept all game links
+document.addEventListener('click', (e) => {
+  const link = e.target.closest('a[href$=".html"]');
+  if (!link) return;
+  const href = link.getAttribute('href');
+  if (!href || href.includes('games.html')) return;
+
+  e.preventDefault();
+  const title = link.querySelector('.card-title, .featured-title');
+  openGame(href, title ? title.textContent : '');
+});
+
+// Handle browser back button
+window.addEventListener('popstate', (e) => {
+  if (overlay.classList.contains('active')) {
+    closeGame();
+  } else if (e.state && e.state.game) {
+    openGame(e.state.game, e.state.title);
+  }
+});
+
+// Handle hash on page load (direct link to game)
+if (location.hash) {
+  const gameName = location.hash.slice(1);
+  if (gameName) {
+    const url = '/' + gameName + '.html';
+    const link = document.querySelector(`a[href="${url}"]`);
+    const title = link ? (link.querySelector('.card-title, .featured-title')?.textContent || '') : gameName.toUpperCase();
+    setTimeout(() => openGame(url, title), 500);
+  }
+}
+
+// Escape key to close
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && overlay.classList.contains('active')) {
+    closeGame();
+  }
 });
 </script>
 
