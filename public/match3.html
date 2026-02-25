@@ -734,9 +734,11 @@ function areAdjacent(g1,g2){
 }
 
 function allSettled(){
-  for(let r=0;r<ROWS;r++)
+  for(let r=0;r<ROWS;r++){
+    if(!board[r])return true;
     for(let c=0;c<COLS;c++)
       if(board[r][c]&&!board[r][c].isSettled())return false;
+  }
   return true;
 }
 
@@ -1204,6 +1206,7 @@ function gameLoop(time){
 
   // Update & draw gems
   for(let r=0;r<ROWS;r++){
+    if(!board[r])continue;
     for(let c=0;c<COLS;c++){
       const g=board[r][c];
       if(g){g.update(dt);drawGem(g);}
@@ -1229,6 +1232,7 @@ function init(){
     initBg();calcSize();
     // Reposition gems
     for(let r=0;r<ROWS;r++){
+      if(!board[r])continue;
       for(let c=0;c<COLS;c++){
         if(board[r][c]){
           board[r][c].targetX=c*cellSize+cellSize/2;
