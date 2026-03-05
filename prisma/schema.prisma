@@ -1529,3 +1529,270 @@ model Booking {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 }
+
+// ============================================
+// 브랜드 관리 (Multi-Brand CRM)
+// ============================================
+model Brand {
+  id          String   @id @default(cuid())
+  code        String   @unique // aramhuvis, lilai
+  name        String   // 아람휴비스, LILAI.AI
+  nameEn      String?  // Aram Huvis, LILAI.AI
+  description String?
+  logoUrl     String?
+  website     String?
+  type        String   @default("b2b") // b2b, b2c, both
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products    BrandProduct[]
+  orders      BrandOrder[]
+  promotions  Promotion[]
+  productions ProductionOrder[]
+  messageLogs MessageLog[]
+}
+
+// ============================================
+// 브랜드별 제품 (확장)
+// ============================================
+model BrandProduct {
+  id            String   @id @default(cuid())
+  brandId       String
+  brand         Brand    @relation(fields: [brandId], references: [id])
+  name          String
+  nameEn        String?
+  sku           String   @unique
+  barcode       String?
+  category      String   // diagnostic_device, shampoo, serum, lotion, sunscreen, custom_cosmetic, etc.
+  subcategory   String?
+  description   String?
+  price         Float    @default(0)
+  cost          Float    @default(0)
+  wholesalePrice Float?
+  retailPrice   Float?
+  unit          String   @default("EA")
+  weight        Float?
+  volume        String?  // 용량 (200ml, 50g 등)
+  ingredients   String?  // 성분 (화장품용)
+  imageUrl      String?
+  images        String?  // JSON array of image URLs
+  specifications String? // JSON: 기기 스펙, 제품 사양
+  isActive      Boolean  @default(true)
+  isFeatured    Boolean  @default(false)
+  minOrderQty   Int      @default(1)
+  currentStock  Int      @default(0)
+  safetyStock   Int      @default(10)
+  leadTimeDays  Int      @default(7)
+  cafe24ProductId String? // 카페24 연동 ID
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  orderItems    BrandOrderItem[]
+  promotionProducts PromotionProduct[]
+  productionOrders  ProductionOrder[]
+}
+
+// ============================================
+// 브랜드별 주문 (Cafe24 + 홈페이지 통합)
+// ============================================
+model BrandOrder {
+  id              String    @id @default(cuid())
+  brandId         String
+  brand           Brand     @relation(fields: [brandId], references: [id])
+  orderNumber     String    @unique
+  externalOrderId String?   // 카페24 주문번호 등 외부 ID
+  source          String    @default("direct") // direct, cafe24, website, phone, wholesale
+  customerId      String?
+  customerName    String
+  customerEmail   String?
+  customerPhone   String?
+  customerAddress String?
+  shippingAddress String?
+  shippingMethod  String?
+  shippingCost    Float     @default(0)
+  trackingNumber  String?
+  courier         String?
+  subtotal        Float     @default(0)
+  discountAmount  Float     @default(0)
+  taxAmount       Float     @default(0)
+  totalAmount     Float     @default(0)
+  status          String    @default("pending") // pending, confirmed, processing, shipped, delivered, cancelled, refunded, returned
+  paymentStatus   String    @default("unpaid") // unpaid, paid, partial, refunded
+  paymentMethod   String?   // card, bank_transfer, cash, etc.
+  promotionId     String?
+  memo            String?
+  orderedAt       DateTime  @default(now())
+  shippedAt       DateTime?
+  deliveredAt     DateTime?
+  cancelledAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  items           BrandOrderItem[]
+}
+
+model BrandOrderItem {
+  id          String      @id @default(cuid())
+  orderId     String
+  order       BrandOrder  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String?
+  product     BrandProduct? @relation(fields: [productId], references: [id])
+  productName String
+  sku         String?
+  quantity    Int         @default(1)
+  unitPrice   Float
+  discount    Float       @default(0)
+  totalPrice  Float
+  memo        String?
+}
+
+// ============================================
+// 프로모션/할인 관리
+// ============================================
+model Promotion {
+  id              String    @id @default(cuid())
+  brandId         String
+  brand           Brand     @relation(fields: [brandId], references: [id])
+  name            String
+  code            String?   @unique // 프로모션 코드
+  type            String    @default("discount") // discount, coupon, bundle, loyalty, seasonal
+  discountType    String    @default("percentage") // percentage, fixed_amount, buy_x_get_y
+  discountValue   Float     @default(0)
+  minOrderAmount  Float?
+  maxDiscountAmount Float?
+  targetCustomerGrade String? // vip, gold, normal, new, all
+  targetSegment   String?   // JSON: 고객 세그먼트 조건
+  description     String?
+  startDate       DateTime
+  endDate         DateTime
+  usageLimit      Int?      // null = 무제한
+  usedCount       Int       @default(0)
+  isActive        Boolean   @default(true)
+  messageTemplate String?   // 발송 메시지 템플릿
+  channels        String?   // JSON: ["kakao", "sms", "email", "messenger"]
+  createdById     String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  products        PromotionProduct[]
+}
+
+model PromotionProduct {
+  id          String       @id @default(cuid())
+  promotionId String
+  promotion   Promotion    @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  productId   String
+  product     BrandProduct @relation(fields: [productId], references: [id])
+
+  @@unique([promotionId, productId])
+}
+
+// ============================================
+// 생산 공정 관리
+// ============================================
+model ProductionOrder {
+  id              String    @id @default(cuid())
+  brandId         String
+  brand           Brand     @relation(fields: [brandId], references: [id])
+  productId       String
+  product         BrandProduct @relation(fields: [productId], references: [id])
+  orderNumber     String    @unique
+  quantity        Int
+  completedQty    Int       @default(0)
+  defectQty       Int       @default(0)
+  status          String    @default("planned") // planned, material_ready, in_production, quality_check, completed, cancelled
+  priority        String    @default("medium")
+  startDate       DateTime?
+  expectedEndDate DateTime?
+  actualEndDate   DateTime?
+  batchNumber     String?
+  rawMaterials    String?   // JSON: [{name, qty, unit}]
+  qualityNotes    String?
+  assignedTo      String?
+  memo            String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  stages          ProductionStage[]
+}
+
+model ProductionStage {
+  id                String    @id @default(cuid())
+  productionOrderId String
+  productionOrder   ProductionOrder @relation(fields: [productionOrderId], references: [id], onDelete: Cascade)
+  name              String    // 원료 준비, 혼합, 충전, 포장, 품질검사, 출고대기
+  status            String    @default("pending") // pending, in_progress, completed, failed
+  sortOrder         Int       @default(0)
+  startedAt         DateTime?
+  completedAt       DateTime?
+  notes             String?
+  assignedTo        String?
+}
+
+// ============================================
+// 멀티채널 메시징 허브
+// ============================================
+model MessageLog {
+  id            String    @id @default(cuid())
+  brandId       String?
+  brand         Brand?    @relation(fields: [brandId], references: [id])
+  channel       String    // kakao, sms, email, messenger, slack, push
+  direction     String    @default("outbound") // inbound, outbound
+  customerId    String?
+  customerName  String?
+  customerPhone String?
+  customerEmail String?
+  subject       String?
+  content       String
+  templateId    String?
+  status        String    @default("pending") // pending, sent, delivered, failed, read
+  sentAt        DateTime?
+  deliveredAt   DateTime?
+  readAt        DateTime?
+  failReason    String?
+  externalId    String?   // 외부 서비스 메시지 ID
+  metadata      String?   // JSON: 추가 데이터
+  cost          Float?    // 발송 비용
+  campaignId    String?
+  promotionId   String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// ============================================
+// 메시지 템플릿 (멀티채널)
+// ============================================
+model MessageTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  channel     String   // kakao, sms, email, messenger, slack
+  category    String   @default("general") // general, promotion, notification, welcome, order_confirm, shipping
+  subject     String?
+  content     String
+  variables   String?  // JSON: ["customerName", "orderNumber", "productName"]
+  isActive    Boolean  @default(true)
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============================================
+// 카페24 연동 설정
+// ============================================
+model Cafe24Config {
+  id              String    @id @default(cuid())
+  mallId          String    @unique
+  clientId        String
+  clientSecret    String
+  accessToken     String?
+  refreshToken    String?
+  tokenExpiresAt  DateTime?
+  shopName        String?
+  isActive        Boolean   @default(true)
+  lastSyncAt      DateTime?
+  syncInterval    Int       @default(30) // minutes
+  autoSync        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
