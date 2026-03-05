@@ -55,6 +55,11 @@ import {
   CalendarClock,
   ThumbsUp,
   GitBranch,
+  Layers,
+  Factory,
+  Gift,
+  Send,
+  ShoppingCart,
 } from "lucide-react";
 
 interface NavGroup {
@@ -63,12 +68,23 @@ interface NavGroup {
 }
 
 // 항상 표시되는 메뉴 (토글 불가)
-export const ALWAYS_VISIBLE_MENUS = ["/dashboard", "/settings"];
+export const ALWAYS_VISIBLE_MENUS = ["/dashboard", "/settings", "/brand-dashboard", "/brand-products", "/brand-orders", "/promotions", "/production", "/messaging-hub"];
 
 // 기본 AS 메뉴 (enabledMenus가 null일 때 기본으로 표시)
 export const DEFAULT_AS_MENUS = ["/service", "/ai-cs", "/sla", "/faq"];
 
 export const navGroups: NavGroup[] = [
+  {
+    label: "브랜드 CRM",
+    items: [
+      { label: "브랜드 대시보드", icon: Layers, href: "/brand-dashboard" },
+      { label: "브랜드 제품", icon: ShoppingBag, href: "/brand-products" },
+      { label: "통합 주문", icon: ShoppingCart, href: "/brand-orders" },
+      { label: "프로모션", icon: Gift, href: "/promotions" },
+      { label: "생산 관리", icon: Factory, href: "/production" },
+      { label: "메시징 허브", icon: Send, href: "/messaging-hub" },
+    ],
+  },
   {
     label: "업무",
     items: [
