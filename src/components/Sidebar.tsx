@@ -68,7 +68,7 @@ interface NavGroup {
 }
 
 // 항상 표시되는 메뉴 (토글 불가)
-export const ALWAYS_VISIBLE_MENUS = ["/dashboard", "/settings", "/brand-dashboard", "/brand-products", "/brand-orders", "/promotions", "/production", "/messaging-hub"];
+export const ALWAYS_VISIBLE_MENUS = ["/dashboard", "/settings", "/brand-dashboard", "/brand-products", "/brand-orders", "/promotions", "/production", "/messaging-hub", "/manual"];
 
 // 기본 AS 메뉴 (enabledMenus가 null일 때 기본으로 표시)
 export const DEFAULT_AS_MENUS = ["/service", "/ai-cs", "/sla", "/faq"];
@@ -161,6 +161,7 @@ export const navGroups: NavGroup[] = [
       { label: "직원 디렉토리", icon: UsersRound, href: "/directory" },
       { label: "설정", icon: Settings, href: "/settings" },
       { label: "워크플로우", icon: GitBranch, href: "/workflow-builder" },
+      { label: "사용 매뉴얼", icon: BookOpen, href: "/manual" },
     ],
   },
 ];

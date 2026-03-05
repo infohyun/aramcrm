@@ -12,6 +12,7 @@ import {
   User,
   Settings,
   Command,
+  BookOpen,
 } from "lucide-react";
 import NotificationCenter from "./NotificationCenter";
 import GlobalSearch from "./GlobalSearch";
@@ -66,6 +67,13 @@ const pageTitles: Record<string, string> = {
   "/nps": "NPS 대시보드",
   "/workflow-builder": "워크플로우 빌더",
   "/scheduler": "미팅 스케줄러",
+  "/brand-dashboard": "브랜드 대시보드",
+  "/brand-products": "브랜드 제품 관리",
+  "/brand-orders": "통합 주문 관리",
+  "/promotions": "프로모션/할인 관리",
+  "/production": "생산 공정 관리",
+  "/messaging-hub": "멀티채널 메시징 허브",
+  "/manual": "사용 매뉴얼",
 };
 
 function getPageTitle(pathname: string): string {
@@ -133,6 +141,16 @@ export default function TopBar() {
           >
             <Search size={18} />
           </button>
+
+          {/* Manual button */}
+          <Link
+            href="/manual"
+            className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium text-[#555] hover:bg-[#f0f0f0] transition-colors"
+            title="사용 매뉴얼"
+          >
+            <BookOpen size={16} className="text-indigo-500" />
+            <span className="hidden lg:inline">매뉴얼</span>
+          </Link>
 
           {/* Notification center */}
           <NotificationCenter />
