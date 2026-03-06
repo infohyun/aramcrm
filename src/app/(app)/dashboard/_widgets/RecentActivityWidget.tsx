@@ -44,8 +44,8 @@ export default function RecentActivityWidget() {
             <div key={n.id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
               <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${typeColors[n.type] || 'bg-gray-400'}`} />
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-gray-700 truncate">{n.title}</p>
-                <p className="text-xs text-gray-400 truncate">{n.message}</p>
+                <p className="text-sm text-gray-700">{n.title}</p>
+                <p className="text-xs text-gray-400">{n.message}</p>
               </div>
               <span className="text-[10px] text-gray-300 shrink-0">
                 {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true, locale: ko })}

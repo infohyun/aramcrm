@@ -450,7 +450,7 @@ export default function ExpensesPage() {
 
                     {/* Main info */}
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-semibold text-gray-900 truncate group-hover:text-green-700 transition-colors">
+                      <h4 className="text-sm font-semibold text-gray-900 group-hover:text-green-700 transition-colors">
                         {expense.title}
                       </h4>
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
@@ -527,7 +527,7 @@ export default function ExpensesPage() {
                   {/* Description (if exists) */}
                   {expense.description && (
                     <div className="px-4 pb-3">
-                      <p className="text-xs text-gray-400 truncate">
+                      <p className="text-xs text-gray-400">
                         {expense.description}
                       </p>
                     </div>

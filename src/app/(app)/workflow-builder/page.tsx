@@ -157,7 +157,7 @@ function FlowCanvas({
                       {typeInfo.label}
                     </span>
                   </div>
-                  <p className="text-sm font-medium text-gray-900 mt-0.5 truncate">
+                  <p className="text-sm font-medium text-gray-900 mt-0.5">
                     {node.label}
                   </p>
                 </div>
@@ -484,7 +484,7 @@ export default function WorkflowBuilderPage() {
                   {/* Card Header */}
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 truncate">{wf.name}</h3>
+                      <h3 className="font-semibold text-gray-900">{wf.name}</h3>
                       {wf.description && (
                         <p className="text-sm text-gray-500 mt-0.5 line-clamp-2">{wf.description}</p>
                       )}

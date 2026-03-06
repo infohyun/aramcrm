@@ -546,7 +546,7 @@ export default function NpsPage() {
                               </span>
                             </td>
                             <td className="px-6 py-4">
-                              <span className="text-sm text-gray-600 line-clamp-1 max-w-[200px] block">
+                              <span className="text-sm text-gray-600 block">
                                 {record.comment || "-"}
                               </span>
                             </td>

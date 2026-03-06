@@ -215,7 +215,7 @@ export default function DirectoryPage() {
                         : 'text-gray-600 hover:bg-gray-50'
                     }`}
                   >
-                    <span className="truncate">{dept.name}</span>
+                    <span>{dept.name}</span>
                     <span
                       className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${
                         selectedDeptId === dept.id
@@ -363,7 +363,7 @@ function EmployeeCard({ user }: { user: DirectoryUser }) {
         {/* 정보 영역 */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
-            <h3 className="text-base font-semibold text-gray-900 truncate">{user.name}</h3>
+            <h3 className="text-base font-semibold text-gray-900">{user.name}</h3>
             <span
               className={`text-[11px] px-1.5 py-0.5 rounded-full font-medium flex-shrink-0 ${roleBadgeStyle}`}
             >
@@ -390,7 +390,7 @@ function EmployeeCard({ user }: { user: DirectoryUser }) {
             className="flex items-center gap-2 text-sm text-gray-600 hover:text-indigo-600 transition-colors group"
           >
             <Mail className="w-4 h-4 text-gray-400 group-hover:text-indigo-500 flex-shrink-0" />
-            <span className="truncate">{user.email}</span>
+            <span>{user.email}</span>
           </a>
         )}
         {user.phone && (

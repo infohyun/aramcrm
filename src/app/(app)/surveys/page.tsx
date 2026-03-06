@@ -402,7 +402,7 @@ export default function SurveysPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-1">
-                        <h3 className="text-base font-semibold text-gray-900 truncate">
+                        <h3 className="text-base font-semibold text-gray-900">
                           {survey.title}
                         </h3>
                         <span
@@ -413,7 +413,7 @@ export default function SurveysPage() {
                         </span>
                       </div>
                       {survey.description && (
-                        <p className="text-sm text-gray-500 truncate mb-2">
+                        <p className="text-sm text-gray-500 mb-2">
                           {survey.description}
                         </p>
                       )}
@@ -679,11 +679,11 @@ export default function SurveysPage() {
                       <ClipboardList className="w-5 h-5 text-amber-600" />
                     </div>
                     <div className="min-w-0">
-                      <h2 className="text-lg font-semibold text-gray-900 truncate">
+                      <h2 className="text-lg font-semibold text-gray-900">
                         {detailSurvey.title}
                       </h2>
                       {detailSurvey.description && (
-                        <p className="text-sm text-gray-500 truncate">{detailSurvey.description}</p>
+                        <p className="text-sm text-gray-500">{detailSurvey.description}</p>
                       )}
                     </div>
                   </div>
@@ -758,7 +758,7 @@ export default function SurveysPage() {
                                 <span className="text-sm font-medium text-amber-600 shrink-0">
                                   Q{idx + 1}
                                 </span>
-                                <span className="flex-1 text-sm font-medium text-gray-900 truncate">
+                                <span className="flex-1 text-sm font-medium text-gray-900">
                                   {question.question}
                                 </span>
                                 <span className="text-xs px-2 py-0.5 rounded-full bg-white border border-gray-200 text-gray-500 shrink-0">
@@ -816,7 +816,7 @@ export default function SurveysPage() {
                                         const pct = total > 0 ? (count / total) * 100 : 0;
                                         return (
                                           <div key={option} className="flex items-center gap-2">
-                                            <span className="text-xs text-gray-600 w-24 truncate shrink-0">
+                                            <span className="text-xs text-gray-600 w-24 shrink-0">
                                               {option}
                                             </span>
                                             <div className="flex-1 h-5 bg-gray-100 rounded-full overflow-hidden">

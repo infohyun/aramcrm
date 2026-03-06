@@ -202,7 +202,7 @@ export default function ReportSchedulesPage() {
                 >
                   {/* Card Header */}
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-gray-900 truncate">{schedule.name}</h3>
+                    <h3 className="font-semibold text-gray-900">{schedule.name}</h3>
                     <button
                       onClick={() => handleDelete(schedule.id)}
                       className="p-1.5 text-gray-400 hover:text-red-600 rounded"
@@ -232,7 +232,7 @@ export default function ReportSchedulesPage() {
                         {recipients.map((email, i) => (
                           <span
                             key={i}
-                            className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full truncate max-w-[180px]"
+                            className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full"
                           >
                             {email}
                           </span>

@@ -452,11 +452,11 @@ export default function TimeTrackingPage() {
 
                     {/* Description */}
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-700 truncate">
+                      <p className="text-sm text-gray-700">
                         {entry.description}
                       </p>
                       {entry.project && (
-                        <p className="text-[11px] text-gray-400 mt-0.5 truncate">
+                        <p className="text-[11px] text-gray-400 mt-0.5">
                           {entry.project.name}
                         </p>
                       )}

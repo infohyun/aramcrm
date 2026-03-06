@@ -665,11 +665,11 @@ export default function TerritoriesPage() {
                           className="rounded border-gray-300 text-lime-600 focus:ring-lime-500"
                         />
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-800 truncate">
+                          <p className="text-sm font-medium text-gray-800">
                             {customer.name}
                           </p>
                           {(customer.email || customer.phone) && (
-                            <p className="text-xs text-gray-400 truncate">
+                            <p className="text-xs text-gray-400">
                               {customer.email || customer.phone}
                             </p>
                           )}

@@ -33,7 +33,7 @@ export default function ProjectProgressWidget({ projects }: { projects: ProjectD
         {projects.map((p) => (
           <div key={p.name}>
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs font-medium text-gray-700 truncate max-w-[60%]">{p.name}</span>
+              <span className="text-xs font-medium text-gray-700 max-w-[60%]">{p.name}</span>
               <div className="flex items-center gap-2">
                 <span className={`text-[10px] px-1.5 py-0.5 rounded-full text-white ${statusColors[p.status] || "bg-gray-400"}`}>
                   {statusLabels[p.status] || p.status}

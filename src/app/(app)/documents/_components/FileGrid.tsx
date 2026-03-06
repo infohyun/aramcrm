@@ -242,7 +242,7 @@ export default function FileGrid({ documents, onDownload }: FileGridProps) {
 
                 {/* 파일명 */}
                 <h4
-                  className="text-sm font-semibold text-gray-900 truncate mb-1 group-hover:text-indigo-700 transition-colors cursor-pointer"
+                  className="text-sm font-semibold text-gray-900 mb-1 group-hover:text-indigo-700 transition-colors cursor-pointer"
                   onClick={() => onDownload(doc)}
                 >
                   {doc.name}
@@ -266,7 +266,7 @@ export default function FileGrid({ documents, onDownload }: FileGridProps) {
                     <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center">
                       <User className="w-3 h-3 text-gray-500" />
                     </div>
-                    <span className="text-[11px] text-gray-500 truncate max-w-[80px]">
+                    <span className="text-[11px] text-gray-500">
                       {doc.uploader.name}
                     </span>
                   </div>

@@ -62,7 +62,7 @@ export default function CalendarWidget() {
             <div key={event.id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
               <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${typeColors[event.type] || 'bg-gray-400'}`} />
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-gray-700 truncate">{event.title}</p>
+                <p className="text-sm text-gray-700">{event.title}</p>
                 <div className="flex items-center gap-2 mt-0.5">
                   <span className="text-xs text-gray-400 flex items-center gap-1">
                     <Clock size={10} />

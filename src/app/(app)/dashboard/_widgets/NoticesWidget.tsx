@@ -48,7 +48,7 @@ export default function NoticesWidget() {
           {posts.map((post) => (
             <Link key={post.id} href={`/board/${post.id}`} className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
               {post.isPinned && <Pin size={12} className="text-red-400 shrink-0" />}
-              <p className="text-sm text-gray-700 truncate flex-1">{post.title}</p>
+              <p className="text-sm text-gray-700 flex-1">{post.title}</p>
               <span className="text-xs text-gray-400 shrink-0 flex items-center gap-1">
                 <Eye size={10} />{post.viewCount}
               </span>

@@ -330,7 +330,7 @@ export default function QuotesPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-1">
-                        <h3 className="text-base font-semibold text-gray-900 truncate">
+                        <h3 className="text-base font-semibold text-gray-900">
                           {q.title}
                         </h3>
                         <span

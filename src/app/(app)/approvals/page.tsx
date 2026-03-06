@@ -428,7 +428,7 @@ export default function ApprovalsPage() {
 
                     {/* Main info */}
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-semibold text-gray-900 truncate group-hover:text-indigo-700 transition-colors">
+                      <h4 className="text-sm font-semibold text-gray-900 group-hover:text-indigo-700 transition-colors">
                         {approval.title}
                       </h4>
                       <div className="flex items-center gap-2 mt-1 flex-wrap">

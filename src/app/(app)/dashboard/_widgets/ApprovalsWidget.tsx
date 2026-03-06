@@ -53,7 +53,7 @@ export default function ApprovalsWidget() {
             <Link key={item.id} href={`/approvals/${item.id}`} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
               <Badge variant="primary" size="sm">{typeLabels[item.type] || item.type}</Badge>
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-gray-700 truncate">{item.title}</p>
+                <p className="text-sm text-gray-700">{item.title}</p>
                 <p className="text-xs text-gray-400">{item.requester?.name}</p>
               </div>
               <Clock size={12} className="text-gray-300 shrink-0" />

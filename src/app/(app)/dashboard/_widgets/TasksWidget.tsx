@@ -70,7 +70,7 @@ export default function TasksWidget() {
                 <Circle size={16} className={`${priorityColors[task.priority] || 'text-gray-300'} shrink-0`} />
               )}
               <div className="flex-1 min-w-0">
-                <p className={`text-sm truncate ${task.status === 'done' ? 'text-gray-400 line-through' : 'text-gray-700'}`}>
+                <p className={`text-sm ${task.status === 'done' ? 'text-gray-400 line-through' : 'text-gray-700'}`}>
                   {task.title}
                 </p>
                 <p className="text-xs text-gray-400">{task.project.name}</p>

@@ -333,7 +333,7 @@ export default function BoardPage() {
                         )}
                       </div>
 
-                      <h3 className="text-sm font-semibold text-gray-900 truncate group-hover:text-indigo-700 transition-colors">
+                      <h3 className="text-sm font-semibold text-gray-900 group-hover:text-indigo-700 transition-colors">
                         {post.title}
                       </h3>
 
