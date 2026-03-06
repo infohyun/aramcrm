@@ -376,7 +376,7 @@ export default function CommunicationsPage() {
                       </div>
 
                       {comm.subject && (
-                        <p className="text-sm font-medium text-gray-800 mb-1 truncate">
+                        <p className="text-sm font-medium text-gray-800 mb-1">
                           {comm.subject}
                         </p>
                       )}

@@ -179,7 +179,7 @@ export default function MessagingHubPage() {
                   </td>
                   <td className="px-4 py-3">
                     {m.subject && <p className="font-medium text-xs text-gray-600 mb-0.5">{m.subject}</p>}
-                    <p className="text-gray-500 truncate max-w-md">{m.content}</p>
+                    <p className="text-gray-500">{m.content}</p>
                   </td>
                   <td className="px-4 py-3 text-center">
                     <span className={`text-xs px-2 py-0.5 rounded ${
@@ -306,7 +306,7 @@ export default function MessagingHubPage() {
                       </span>
                       <span className="text-sm font-medium">{t.name}</span>
                     </div>
-                    <p className="text-xs text-gray-400 truncate">{t.content}</p>
+                    <p className="text-xs text-gray-400">{t.content}</p>
                   </button>
                 ))}
               </div>

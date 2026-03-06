@@ -1299,7 +1299,7 @@ function CustomerTimeline({ customerId }: { customerId: string }) {
                             {event.status}
                           </span>
                         </div>
-                        <p className="text-sm font-medium text-gray-900 truncate">{event.title}</p>
+                        <p className="text-sm font-medium text-gray-900">{event.title}</p>
                         {event.subtitle && (
                           <p className="text-xs text-gray-500 mt-0.5">{event.subtitle}</p>
                         )}

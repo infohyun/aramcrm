@@ -259,7 +259,7 @@ export default function CustomerHealthPage() {
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2 mb-1">
                                     <User className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                                    <span className="text-sm font-medium text-gray-900 truncate">
+                                    <span className="text-sm font-medium text-gray-900">
                                       {customer.name}
                                     </span>
                                     <span

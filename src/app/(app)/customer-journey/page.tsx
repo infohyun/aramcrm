@@ -419,7 +419,7 @@ export default function CustomerJourneyPage() {
                           <div className="w-8 h-8 bg-fuchsia-100 rounded-full flex items-center justify-center flex-shrink-0">
                             <User className="w-4 h-4 text-fuchsia-600" />
                           </div>
-                          <span className="text-sm font-medium text-gray-900 truncate">
+                          <span className="text-sm font-medium text-gray-900">
                             {change.customerName}
                           </span>
                         </div>
@@ -454,9 +454,9 @@ export default function CustomerJourneyPage() {
 
                         {/* Notes */}
                         {change.notes && (
-                          <div className="flex items-center gap-1 text-xs text-gray-500 max-w-[200px] truncate">
+                          <div className="flex items-center gap-1 text-xs text-gray-500">
                             <StickyNote className="w-3 h-3 flex-shrink-0" />
-                            <span className="truncate">{change.notes}</span>
+                            <span>{change.notes}</span>
                           </div>
                         )}
                       </div>

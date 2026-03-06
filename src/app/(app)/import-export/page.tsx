@@ -345,7 +345,7 @@ export default function ImportExportPage() {
                             {row.map((cell, ci) => (
                               <td
                                 key={ci}
-                                className="px-3 py-2 text-gray-600 whitespace-nowrap max-w-[200px] truncate"
+                                className="px-3 py-2 text-gray-600 whitespace-nowrap"
                               >
                                 {cell}
                               </td>
