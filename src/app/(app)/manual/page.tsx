@@ -892,7 +892,7 @@ export default function ManualPage() {
                   <div className={`w-6 h-6 rounded-md ${team.bgColor} flex items-center justify-center shrink-0`}>
                     <team.icon size={14} className={team.color} />
                   </div>
-                  <span className="text-sm font-semibold text-[#111] truncate">{team.title}</span>
+                  <span className="text-sm font-semibold text-[#111] break-words">{team.title}</span>
                 </button>
 
                 {/* Sub Category Level (작은 카테고리) */}
@@ -913,7 +913,7 @@ export default function ManualPage() {
                               <ChevronRight size={12} className="text-gray-300 shrink-0" />
                             )}
                             <sub.icon size={13} className="text-gray-400 shrink-0" />
-                            <span className="text-xs font-medium text-gray-600 truncate">{sub.title}</span>
+                            <span className="text-xs font-medium text-gray-600 break-words">{sub.title}</span>
                           </button>
 
                           {/* Leaf Items (세밀한 카테고리) */}
@@ -937,7 +937,7 @@ export default function ManualPage() {
                                       className={isSelected ? "text-indigo-500 shrink-0" : "text-gray-400 shrink-0"}
                                     />
                                     <span
-                                      className={`text-xs truncate ${
+                                      className={`text-xs break-words ${
                                         isSelected ? "font-semibold text-indigo-700" : "text-gray-500"
                                       }`}
                                     >

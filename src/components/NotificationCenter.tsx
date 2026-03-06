@@ -140,7 +140,7 @@ export default function NotificationCenter() {
                     }`}
                   />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
+                    <p className="text-sm font-medium text-gray-900 break-words">
                       {n.title}
                     </p>
                     <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">

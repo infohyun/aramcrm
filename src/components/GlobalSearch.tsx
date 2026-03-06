@@ -144,9 +144,9 @@ export default function GlobalSearch({ onClose }: { onClose: () => void }) {
                       <Icon size={15} className="text-gray-500" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{result.title}</p>
+                      <p className="text-sm font-medium text-gray-900 break-words">{result.title}</p>
                       {result.subtitle && (
-                        <p className="text-xs text-gray-500 truncate">{result.subtitle}</p>
+                        <p className="text-xs text-gray-500 break-words">{result.subtitle}</p>
                       )}
                     </div>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 shrink-0">
