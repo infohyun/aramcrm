@@ -473,7 +473,7 @@ export default function VOCPage() {
                             {statusInfo.label}
                           </span>
                         </div>
-                        <h3 className="font-semibold text-gray-900 text-sm truncate">
+                        <h3 className="font-semibold text-gray-900 text-sm">
                           {voc.title}
                         </h3>
                         <div className="flex items-center gap-3 mt-1">

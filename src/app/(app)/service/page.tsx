@@ -415,7 +415,7 @@ export default function ServicePage() {
           {ticket.productName && (
             <p className="text-[11px] text-gray-500 mb-2 flex items-center gap-1">
               <Package className="w-3 h-3 shrink-0" />
-              <span className="truncate">{ticket.productName}</span>
+              <span>{ticket.productName}</span>
             </p>
           )}
 
@@ -424,7 +424,7 @@ export default function ServicePage() {
             <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
               <User className="w-3 h-3 text-gray-500" />
             </div>
-            <span className="text-[11px] text-gray-600 truncate font-medium">
+            <span className="text-[11px] text-gray-600 font-medium">
               {ticket.customer.name}
               {ticket.customer.company && (
                 <span className="text-gray-400 font-normal"> · {ticket.customer.company}</span>
@@ -520,7 +520,7 @@ export default function ServicePage() {
               )}
             </div>
 
-            <h4 className="text-sm font-semibold text-gray-900 truncate group-hover:text-indigo-700 transition-colors">
+            <h4 className="text-sm font-semibold text-gray-900 group-hover:text-indigo-700 transition-colors">
               {ticket.title}
             </h4>
 

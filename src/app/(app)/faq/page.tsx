@@ -462,7 +462,7 @@ export default function FAQPage() {
                       </span>
 
                       {/* Question */}
-                      <span className="flex-1 font-bold text-gray-900 text-sm truncate">
+                      <span className="flex-1 font-bold text-gray-900 text-sm">
                         {faq.question}
                       </span>
 

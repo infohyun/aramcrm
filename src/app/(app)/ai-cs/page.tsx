@@ -441,7 +441,7 @@ export default function AICSPage() {
                             <sentimentInfo.icon className={`w-3 h-3 ${sentimentInfo.color}`} />
                           )}
                         </div>
-                        <p className="text-xs text-gray-800 font-medium truncate">
+                        <p className="text-xs text-gray-800 font-medium">
                           {conv.lastMessage?.content || conv.summary || "새 대화"}
                         </p>
                         <div className="flex items-center gap-2 mt-1">
