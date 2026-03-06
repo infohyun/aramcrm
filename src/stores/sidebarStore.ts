@@ -3,24 +3,35 @@ import { create } from 'zustand';
 interface SidebarStore {
   isOpen: boolean;
   isCollapsed: boolean;
-  expandedGroups: string[];
+  expandedTeams: Record<string, boolean>;
+  expandedSubs: Record<string, boolean>;
   setOpen: (open: boolean) => void;
   setCollapsed: (collapsed: boolean) => void;
-  toggleGroup: (group: string) => void;
+  toggleTeam: (teamId: string) => void;
+  toggleSub: (subKey: string) => void;
   toggle: () => void;
 }
 
 export const useSidebarStore = create<SidebarStore>((set) => ({
   isOpen: false,
   isCollapsed: false,
-  expandedGroups: ['업무', '고객', '운영'],
+  expandedTeams: { 'crm-automation': true, 'after-service': true },
+  expandedSubs: {},
   setOpen: (open) => set({ isOpen: open }),
   setCollapsed: (collapsed) => set({ isCollapsed: collapsed }),
-  toggleGroup: (group) =>
+  toggleTeam: (teamId) =>
     set((state) => ({
-      expandedGroups: state.expandedGroups.includes(group)
-        ? state.expandedGroups.filter((g) => g !== group)
-        : [...state.expandedGroups, group],
+      expandedTeams: {
+        ...state.expandedTeams,
+        [teamId]: !state.expandedTeams[teamId],
+      },
+    })),
+  toggleSub: (subKey) =>
+    set((state) => ({
+      expandedSubs: {
+        ...state.expandedSubs,
+        [subKey]: !state.expandedSubs[subKey],
+      },
     })),
   toggle: () => set((state) => ({ isOpen: !state.isOpen })),
 }));
