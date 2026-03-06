@@ -420,7 +420,7 @@ export default function Sidebar() {
 
       <aside
         className={`fixed left-0 top-0 z-40 flex h-screen flex-col bg-[#0a0a0a] text-white transition-all duration-300 ${
-          collapsed ? "w-20" : "w-72"
+          collapsed ? "w-20" : "w-80"
         }`}
       >
         {/* Logo Area */}
@@ -449,7 +449,7 @@ export default function Sidebar() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto px-2 py-3">
+        <nav className="flex-1 overflow-y-auto px-3 py-3 overflow-x-hidden">
           {filteredTeams.map((team) => {
             const isTeamOpen = expandedTeams[team.id];
             const isHighlight = team.highlight;
@@ -473,8 +473,8 @@ export default function Sidebar() {
                       strokeWidth={isHighlight ? 2.2 : 1.8}
                     />
                     <span
-                      className={`flex-1 text-left text-[11px] font-semibold uppercase tracking-[0.08em] ${
-                        isHighlight ? team.highlightColor : "text-white/30"
+                      className={`flex-1 text-left text-[12px] font-bold ${
+                        isHighlight ? team.highlightColor : "text-white/35"
                       }`}
                     >
                       {team.label}
@@ -538,7 +538,7 @@ export default function Sidebar() {
                       // 서브그룹이 1개이고 아이템도 적으면 바로 표시
                       if (team.subGroups.length === 1 && sub.items.length <= 3) {
                         return (
-                          <div key={subKey} className="ml-2">
+                          <div key={subKey} className="ml-1">
                             {sub.items.map((item) => {
                               const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
                               const Icon = item.icon;
@@ -546,7 +546,7 @@ export default function Sidebar() {
                                 <Link
                                   key={item.href}
                                   href={item.href}
-                                  className={`flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-[13px] font-medium transition-all duration-200 ${
+                                  className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-[13px] font-medium transition-all duration-200 ${
                                     isActive
                                       ? isHighlight
                                         ? `${team.highlightBg} ${team.highlightColor}`
@@ -565,13 +565,13 @@ export default function Sidebar() {
 
                       // 서브그룹 헤더 (작은 카테고리)
                       return (
-                        <div key={subKey} className="ml-2">
+                        <div key={subKey} className="ml-1">
                           <button
                             onClick={() => toggleSub(subKey)}
-                            className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-white/20 hover:text-white/40 transition-colors"
+                            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-white/25 hover:text-white/50 transition-colors"
                           >
                             <SubIcon size={12} className="shrink-0" />
-                            <span className="flex-1 text-left text-[10px] font-medium uppercase tracking-[0.06em]">
+                            <span className="flex-1 text-left text-[11px] font-semibold">
                               {sub.label}
                             </span>
                             <ChevronDown
@@ -582,7 +582,7 @@ export default function Sidebar() {
 
                           {/* 세부 메뉴 아이템 */}
                           {isSubOpen && (
-                            <ul className="ml-2 border-l border-white/[0.06] space-y-0.5">
+                            <ul className="ml-1 border-l border-white/[0.06] space-y-0.5">
                               {sub.items.map((item) => {
                                 const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
                                 const Icon = item.icon;
@@ -591,7 +591,7 @@ export default function Sidebar() {
                                   <li key={item.href}>
                                     <Link
                                       href={item.href}
-                                      className={`flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-[13px] font-medium transition-all duration-200 ${
+                                      className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-[13px] font-medium transition-all duration-200 ${
                                         isActive
                                           ? isHighlight
                                             ? `${team.highlightBg} ${team.highlightColor}`
