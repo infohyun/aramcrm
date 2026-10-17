@@ -11,9 +11,9 @@ export default function AppLayout({
     <ThemeProvider>
       <div className="flex h-screen dark:bg-gray-900">
         <Sidebar />
-        <div className="flex flex-1 flex-col lg:ml-80">
+        <div className="flex min-w-0 flex-1 flex-col lg:ml-80">
           <TopBar />
-          <main className="flex-1 overflow-y-auto bg-[#f7f7f8] dark:bg-gray-900 p-8">
+          <main className="flex-1 overflow-y-auto bg-[#f7f7f8] dark:bg-gray-900 p-4 sm:p-8">
             {children}
           </main>
         </div>

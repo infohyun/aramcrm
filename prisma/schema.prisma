@@ -2011,6 +2011,7 @@ model AramEmail {
   body      String
   language  String?
   replyToId String?
+  externalId String?      @unique // Gmail 메시지 ID 등 외부 동기화 키
   sentAt    DateTime?
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt

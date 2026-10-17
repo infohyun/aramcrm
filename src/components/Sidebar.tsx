@@ -381,6 +381,18 @@ export default function Sidebar() {
   const userInitial = userName.charAt(0);
   const userDept = (user as Record<string, unknown>)?.departmentName as string || (user as Record<string, unknown>)?.department as string || "";
 
+  // 모바일에서는 페이지 이동 시 사이드바를 닫아 본문(녹음 화면 등)이 가려지지 않게 한다
+  useEffect(() => {
+    if (window.matchMedia("(max-width: 1023px)").matches) setCollapsed(true);
+  }, [pathname]);
+
+  // 상단바 메뉴 버튼(모바일)으로 사이드바 열기
+  useEffect(() => {
+    const open = () => setCollapsed(false);
+    window.addEventListener("sidebar:open", open);
+    return () => window.removeEventListener("sidebar:open", open);
+  }, []);
+
   // 현재 pathname에 해당하는 팀/서브그룹을 자동으로 열기
   useEffect(() => {
     for (const team of navTeams) {
@@ -468,7 +480,7 @@ export default function Sidebar() {
 
       <aside
         className={`fixed left-0 top-0 z-40 flex h-screen flex-col bg-[#0a0a0a] text-white transition-all duration-300 ${
-          collapsed ? "w-20" : "w-80"
+          collapsed ? "w-20 max-lg:-translate-x-full" : "w-80"
         }`}
       >
         {/* Logo Area */}
