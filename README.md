@@ -1,36 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 아람휴비스 CRM + 아람(Aram)
 
-## Getting Started
+아람휴비스 통합 업무 시스템(Next.js 16 · Prisma · PostgreSQL)입니다.
+이 저장소에는 **아람(Aram) — 아람휴비스의 귀** 모듈이 포함되어 있습니다.
 
-First, run the development server:
+## 아람(Aram)이란
+
+임직원이 만나는 **모든 대화를 미팅으로 간주**하여 녹음·전사하고, AI가 요약·정리해
+회사의 지식 자산으로 쌓는 미팅 인텔리전스입니다. (`/aram`)
+
+| 기능 | 설명 |
+| --- | --- |
+| 실시간 녹음 · 전사 | 브라우저에서 바로 녹음, 55개 언어 실시간 자막, 녹음 중 메모·중요 표시 |
+| 서버 전사 · 화자 분리 | Deepgram(화자 분리·다국어 혼용 감지) 또는 Whisper, 미설정 시 브라우저 전사 + AI 화자 추정 |
+| 파일 업로드 / 텍스트 | 기존 녹음 파일, 화상회의 녹화, 회의록 텍스트 붙여넣기 |
+| AI 노트 | 템플릿(영업·파트너십·투자·사내·1:1·인터뷰·AS·강의)별 요약, 핵심 포인트, 결정, 리스크, 미해결 질문 |
+| 사업 전망 · 액션 플랜 | 같은 상대·프로젝트의 과거 미팅까지 엮어 지금까지의 흐름과 향후 시나리오·권장 전략 제시 |
+| 할 일 자동화 | 액션 아이템 추출 → 담당 직원 자동 매칭 → 알림 → 캘린더 마감 일정 → 프로젝트 태스크 전환 |
+| 리마인더 | 마감 임박·지연·팔로업 시점 알림(인앱 + 이메일), 접속 시 + 일일 크론 |
+| 명함첩 | 리멤버 엑셀/CSV, vCard, 구글/아웃룩 가져오기(중복 병합), 명함 사진 AI 인식(모든 언어) |
+| 관계 브리핑 | 사람·회사·프로젝트 단위 관계 요약, 타임라인, 전망, 액션 플랜 / 미팅 직전 준비 브리핑 |
+| 이메일 | 미팅·명함·과거 메일 맥락으로 AI 작성/답장(상대 언어로), SMTP 발송, 수신 메일 기록 |
+| 번역 | 요약·전사문을 원하는 언어로 번역 |
+| Ask 아람 | 접근 가능한 모든 미팅 기록에 대해 자연어 질의응답(근거 미팅 링크) |
+| 팀 협업 | 공개 범위(나만/팀/전사), 댓글·@멘션 알림, 화자-직원/명함 연결 |
+| 보안 | 녹음·명함 이미지는 비공개 저장소에 보관, 인증된 API로만 제공 |
+| 모바일 | PWA — 휴대폰 홈 화면에 추가해 앱처럼 녹음 |
+
+## 시작하기
 
 ```bash
+cp .env.example .env      # 값 채우기
+npm install
+npx prisma db push        # 스키마 반영 (이 프로젝트는 db push 방식)
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- AI 기능: `ANTHROPIC_API_KEY` 필요 (기본 모델 `claude-opus-5-5`, `ARAM_AI_MODEL`로 변경)
+- 화자 분리 품질을 높이려면 `DEEPGRAM_API_KEY` 설정을 권장합니다.
+- 실시간 자막은 Chrome/Edge/Safari의 음성 인식 기능을 사용합니다.
+- 녹음 파일은 `ARAM_STORAGE_DIR`(기본 `./storage/aram`)에 저장되므로 **영구 디스크가 있는 Node 서버**에 배포하세요.
+- 리마인더 크론: `vercel.json`에 매일 09:00(KST) 실행이 설정되어 있습니다. 다른 환경에서는
+  `curl -H "Authorization: Bearer $CRON_SECRET" https://<도메인>/api/aram/cron/reminders` 를 스케줄러에 등록하세요.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 리멤버 명함 가져오기
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+리멤버 앱/웹에서 명함 데이터를 엑셀로 내보낸 뒤 `아람 → 명함첩 → 가져오기`에 올리면
+열 이름을 자동으로 인식합니다(이름·회사·부서·직책·이메일·휴대폰 등). 이메일·휴대폰이 같으면 기존 명함에 병합됩니다.
 
-## Learn More
+## 녹음 시 유의사항
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+대화 당사자가 녹음하는 것은 일반적으로 허용되지만, 신뢰를 위해 **녹음 사실을 상대방에게 알리는 것**을 권장합니다.
+해외 일부 지역은 모든 참여자의 동의가 필요할 수 있습니다.

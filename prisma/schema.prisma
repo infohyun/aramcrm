@@ -66,6 +66,15 @@ model User {
   channelMembers      ChannelMember[]
   messages            Message[]
   schedulerConfig     SchedulerConfig? @relation("SchedulerOwner")
+
+  // 아람 (Aram) - 미팅 인텔리전스
+  aramMeetings        AramMeeting[]    @relation("AramMeetingOwner")
+  aramActionsAssigned AramActionItem[] @relation("AramActionAssignee")
+  aramActionsCreated  AramActionItem[] @relation("AramActionCreator")
+  aramContacts        Contact[]        @relation("ContactOwner")
+  aramComments        AramComment[]
+  aramEmails          AramEmail[]
+  aramAsks            AramAsk[]
 }
 
 // ============================================
@@ -476,6 +485,7 @@ model Project {
 
   members     ProjectMember[]
   tasks       Task[]
+  aramMeetings AramMeeting[]
 }
 
 model ProjectMember {
@@ -1795,4 +1805,236 @@ model Cafe24Config {
   autoSync        Boolean   @default(true)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+}
+
+// ============================================
+// 아람 (Aram) - 아람휴비스의 귀
+// 모든 대화를 미팅으로 기록·전사·요약하고 지식 자산화
+// ============================================
+
+// 명함 / 연락처 (리멤버 가져오기, 명함 OCR, 미팅 참석자)
+model Contact {
+  id             String    @id @default(cuid())
+  name           String
+  nameEn         String?
+  company        String?
+  department     String?
+  position       String?
+  email          String?
+  email2         String?
+  phone          String? // 회사 전화
+  mobile         String?
+  fax            String?
+  address        String?
+  website        String?
+  country        String?
+  language       String? // 선호 언어 (ko, en, ja, zh ...)
+  tags           String? // 콤마 구분
+  memo           String?
+  cardImageUrl   String?
+  source         String    @default("manual") // manual, remember, vcard, csv, ocr, meeting
+  importance     String    @default("normal") // vip, high, normal, low
+  visibility     String    @default("company") // private, company
+  ownerId        String
+  owner          User      @relation("ContactOwner", fields: [ownerId], references: [id])
+  customerId     String? // 기존 CRM 고객과 연결
+  lastContactAt  DateTime?
+  nextFollowUpAt DateTime?
+  aiBrief        String? // AI 관계 브리핑 (마크다운)
+  aiBriefAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  meetings    AramMeeting[]
+  speakers    AramSpeaker[]
+  emails      AramEmail[]
+  actionItems AramActionItem[]
+
+  @@index([ownerId])
+  @@index([company])
+  @@index([email])
+}
+
+// 미팅 (모든 대화 = 미팅)
+model AramMeeting {
+  id                String    @id @default(cuid())
+  title             String
+  ownerId           String
+  owner             User      @relation("AramMeetingOwner", fields: [ownerId], references: [id])
+  visibility        String    @default("team") // private, team, company
+  departmentId      String?
+  projectId         String?
+  project           Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  status            String    @default("draft") // draft, recording, transcribing, analyzing, ready, failed
+  source            String    @default("live") // live, upload, text
+  meetingType       String    @default("in_person") // in_person, phone, online, interview, internal
+  template          String    @default("general") // 요약 템플릿
+  language          String? // 주 사용 언어 (BCP-47) / auto
+  detectedLanguages String? // 감지된 언어들 (콤마)
+  summaryLanguage   String    @default("ko")
+  location          String?
+  startedAt         DateTime  @default(now())
+  endedAt           DateTime?
+  durationSec       Int       @default(0)
+  audioUrl          String?
+  audioMimeType     String?
+  userNotes         String? // 녹음 중 메모 (마크다운)
+  customPrompt      String? // 사용자 지정 요약 지시
+
+  // AI 분석 결과
+  summary           String? // 핵심 요약 (마크다운)
+  oneLiner          String? // 한 줄 요약
+  keyPoints         String? // JSON string[]
+  decisions         String? // JSON string[]
+  openQuestions     String? // JSON string[]
+  risks             String? // JSON string[]
+  businessOutlook   String? // 사업 진행 전망 (마크다운)
+  nextMeetingAgenda String? // 다음 미팅 안건 (마크다운)
+  sentiment         String? // positive, neutral, negative, mixed
+  topics            String? // 콤마 구분 키워드
+  translations      String? // JSON { [lang]: markdown }
+  followUpEmail     String? // JSON { subject, body }
+  analyzedAt        DateTime?
+  errorMessage      String?
+
+  calendarEventId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  contacts    Contact[]
+  speakers    AramSpeaker[]
+  segments    AramSegment[]
+  actionItems AramActionItem[]
+  comments    AramComment[]
+  emails      AramEmail[]
+
+  @@index([ownerId])
+  @@index([projectId])
+  @@index([startedAt])
+}
+
+// 화자
+model AramSpeaker {
+  id          String      @id @default(cuid())
+  meetingId   String
+  meeting     AramMeeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  label       String // 원본 라벨 (화자 1, Speaker 0)
+  name        String? // 실제 이름
+  role        String? // 소속/역할
+  contactId   String?
+  contact     Contact?    @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  userId      String? // 사내 직원인 경우
+  color       String?
+  talkTimeSec Int         @default(0)
+  summary     String? // 화자별 발언 요약
+
+  segments AramSegment[]
+
+  @@unique([meetingId, label])
+}
+
+// 전사 구간
+model AramSegment {
+  id          String       @id @default(cuid())
+  meetingId   String
+  meeting     AramMeeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  speakerId   String?
+  speaker     AramSpeaker? @relation(fields: [speakerId], references: [id], onDelete: SetNull)
+  seq         Int
+  startMs     Int          @default(0)
+  endMs       Int          @default(0)
+  text        String
+  language    String?
+  translation String? // JSON { [lang]: text }
+  isHighlight Boolean      @default(false)
+
+  @@index([meetingId, seq])
+}
+
+// 액션 아이템 (할 일) - 프로젝트 태스크/캘린더와 연결
+model AramActionItem {
+  id                String       @id @default(cuid())
+  meetingId         String?
+  meeting           AramMeeting? @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  title             String
+  description       String?
+  assigneeId        String?
+  assignee          User?        @relation("AramActionAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  assigneeName      String? // 외부인/미매칭 담당자 이름
+  contactId         String?
+  contact           Contact?     @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  creatorId         String
+  creator           User         @relation("AramActionCreator", fields: [creatorId], references: [id])
+  dueDate           DateTime?
+  priority          String       @default("medium") // low, medium, high, urgent
+  status            String       @default("open") // open, in_progress, done, cancelled
+  source            String       @default("ai") // ai, manual
+  taskId            String? // 프로젝트 태스크 연동
+  calendarEventId   String? // 캘린더 연동
+  remindedAt        DateTime?
+  overdueNotifiedAt DateTime?
+  completedAt       DateTime?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@index([assigneeId, status])
+  @@index([dueDate])
+}
+
+// 팀 협업 댓글
+model AramComment {
+  id        String      @id @default(cuid())
+  meetingId String
+  meeting   AramMeeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User        @relation(fields: [userId], references: [id])
+  segmentId String?
+  content   String
+  createdAt DateTime    @default(now())
+}
+
+// 이메일 (발송/수신/초안) - 명함·미팅과 연결
+model AramEmail {
+  id        String       @id @default(cuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id])
+  contactId String?
+  contact   Contact?     @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  meetingId String?
+  meeting   AramMeeting? @relation(fields: [meetingId], references: [id], onDelete: SetNull)
+  direction String       @default("outbound") // outbound, inbound
+  status    String       @default("draft") // draft, sent, received, failed
+  fromAddr  String?
+  toAddr    String?
+  cc        String?
+  subject   String
+  body      String
+  language  String?
+  replyToId String?
+  externalId String?      @unique // Gmail 메시지 ID 등 외부 동기화 키
+  sentAt    DateTime?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@index([contactId])
+}
+
+// Ask 아람 (전사 지식 Q&A) 기록
+model AramAsk {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  question  String
+  answer    String
+  sources   String? // JSON [{ meetingId, title }]
+  scope     String? // all, meeting:<id>, contact:<id>, project:<id>
+  createdAt DateTime @default(now())
+}
+
+// 용어집 - 전사 정확도 향상 (제품명, 고유명사)
+model AramGlossary {
+  id        String   @id @default(cuid())
+  term      String   @unique
+  note      String?
+  createdAt DateTime @default(now())
 }

@@ -19,6 +19,14 @@ import GlobalSearch from "./GlobalSearch";
 
 const pageTitles: Record<string, string> = {
   "/dashboard": "대시보드",
+  "/aram/record": "아람 · 새 미팅",
+  "/aram/meetings": "아람 · 미팅 노트",
+  "/aram/actions": "아람 · 할 일",
+  "/aram/contacts": "아람 · 명함첩",
+  "/aram/ask": "Ask 아람",
+  "/aram/insights": "아람 · 사업 인사이트",
+  "/aram/settings": "아람 · 설정",
+  "/aram": "아람",
   "/customers": "고객 관리",
   "/communications": "커뮤니케이션",
   "/voc": "고객의 소리",
@@ -114,7 +122,11 @@ export default function TopBar() {
       <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-[#ebebeb] bg-white px-6">
         {/* Left side */}
         <div className="flex items-center gap-4">
-          <button className="rounded-md p-1.5 text-[#999999] hover:text-[#555555] lg:hidden">
+          <button
+            onClick={() => window.dispatchEvent(new Event("sidebar:open"))}
+            aria-label="메뉴 열기"
+            className="rounded-md p-1.5 text-[#999999] hover:text-[#555555] lg:hidden"
+          >
             <Menu size={18} />
           </button>
           <h1 className="text-[15px] font-semibold text-[#111111]">{pageTitle}</h1>

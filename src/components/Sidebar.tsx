@@ -64,6 +64,12 @@ import {
   Briefcase,
   FlaskConical,
   Sparkles,
+  Ear,
+  Mic,
+  ListChecks,
+  Contact,
+  MessageCircleQuestion,
+  LineChart,
 } from "lucide-react";
 
 // ─── 타입 정의 ─────────────────────────────────────────────
@@ -99,13 +105,54 @@ export const ALWAYS_VISIBLE_MENUS = [
   "/brand-orders", "/promotions", "/production", "/messaging-hub", "/manual",
   "/automation", "/workflow-builder",
   "/service", "/ai-cs", "/sla", "/voc", "/faq", "/surveys",
+  "/aram", "/aram/record", "/aram/meetings", "/aram/actions", "/aram/contacts", "/aram/ask", "/aram/insights",
 ];
+
+// 하위 경로에서 활성화되지 않는 메뉴 (정확히 일치할 때만)
+const EXACT_MATCH_MENUS = ["/dashboard", "/aram"];
 
 export const DEFAULT_AS_MENUS = ["/service", "/ai-cs", "/sla", "/faq"];
 
 // ─── 팀별 네비게이션 구조 ────────────────────────────────────
 
 export const navTeams: NavTeam[] = [
+  {
+    id: "aram",
+    label: "아람 · 미팅 인텔리전스",
+    icon: Ear,
+    highlight: true,
+    highlightColor: "text-indigo-400",
+    highlightBg: "bg-indigo-500/10",
+    highlightBorder: "border-indigo-500/20",
+    badge: "NEW",
+    subGroups: [
+      {
+        label: "기록",
+        icon: Mic,
+        items: [
+          { label: "아람 홈", icon: Ear, href: "/aram" },
+          { label: "새 미팅 녹음", icon: Mic, href: "/aram/record" },
+          { label: "미팅 노트", icon: FileText, href: "/aram/meetings" },
+        ],
+      },
+      {
+        label: "관리",
+        icon: ListChecks,
+        items: [
+          { label: "할 일 · 액션", icon: ListChecks, href: "/aram/actions" },
+          { label: "명함첩", icon: Contact, href: "/aram/contacts" },
+        ],
+      },
+      {
+        label: "지식",
+        icon: Sparkles,
+        items: [
+          { label: "Ask 아람", icon: MessageCircleQuestion, href: "/aram/ask" },
+          { label: "사업 인사이트", icon: LineChart, href: "/aram/insights" },
+        ],
+      },
+    ],
+  },
   {
     id: "crm-automation",
     label: "CRM 자동화",
@@ -320,6 +367,7 @@ export default function Sidebar() {
   const { data: session } = useSession();
   const [collapsed, setCollapsed] = useState(false);
   const [expandedTeams, setExpandedTeams] = useState<Record<string, boolean>>({
+    aram: true,
     "crm-automation": true,
     "after-service": true,
   });
@@ -333,12 +381,24 @@ export default function Sidebar() {
   const userInitial = userName.charAt(0);
   const userDept = (user as Record<string, unknown>)?.departmentName as string || (user as Record<string, unknown>)?.department as string || "";
 
+  // 모바일에서는 페이지 이동 시 사이드바를 닫아 본문(녹음 화면 등)이 가려지지 않게 한다
+  useEffect(() => {
+    if (window.matchMedia("(max-width: 1023px)").matches) setCollapsed(true);
+  }, [pathname]);
+
+  // 상단바 메뉴 버튼(모바일)으로 사이드바 열기
+  useEffect(() => {
+    const open = () => setCollapsed(false);
+    window.addEventListener("sidebar:open", open);
+    return () => window.removeEventListener("sidebar:open", open);
+  }, []);
+
   // 현재 pathname에 해당하는 팀/서브그룹을 자동으로 열기
   useEffect(() => {
     for (const team of navTeams) {
       for (const sub of team.subGroups) {
         for (const item of sub.items) {
-          if (pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))) {
+          if (pathname === item.href || (!EXACT_MATCH_MENUS.includes(item.href) && pathname.startsWith(item.href))) {
             setExpandedTeams((prev) => ({ ...prev, [team.id]: true }));
             setExpandedSubs((prev) => ({ ...prev, [`${team.id}-${sub.label}`]: true }));
             return;
@@ -420,7 +480,7 @@ export default function Sidebar() {
 
       <aside
         className={`fixed left-0 top-0 z-40 flex h-screen flex-col bg-[#0a0a0a] text-white transition-all duration-300 ${
-          collapsed ? "w-20" : "w-80"
+          collapsed ? "w-20 max-lg:-translate-x-full" : "w-80"
         }`}
       >
         {/* Logo Area */}
@@ -514,7 +574,7 @@ export default function Sidebar() {
                         return (
                           <div key={subKey}>
                             {sub.items.map((item) => {
-                              const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+                              const isActive = pathname === item.href || (!EXACT_MATCH_MENUS.includes(item.href) && pathname.startsWith(item.href));
                               const Icon = item.icon;
                               return (
                                 <Link
@@ -540,7 +600,7 @@ export default function Sidebar() {
                         return (
                           <div key={subKey} className="ml-1">
                             {sub.items.map((item) => {
-                              const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+                              const isActive = pathname === item.href || (!EXACT_MATCH_MENUS.includes(item.href) && pathname.startsWith(item.href));
                               const Icon = item.icon;
                               return (
                                 <Link
@@ -584,7 +644,7 @@ export default function Sidebar() {
                           {isSubOpen && (
                             <ul className="ml-1 border-l border-white/[0.06] space-y-0.5">
                               {sub.items.map((item) => {
-                                const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+                                const isActive = pathname === item.href || (!EXACT_MATCH_MENUS.includes(item.href) && pathname.startsWith(item.href));
                                 const Icon = item.icon;
 
                                 return (
