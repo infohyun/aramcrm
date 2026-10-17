@@ -16,15 +16,21 @@ interface EmailOptions {
   subject: string;
   html: string;
   from?: string;
+  cc?: string;
+  replyTo?: string;
+  text?: string;
 }
 
-export async function sendEmail({ to, subject, html, from }: EmailOptions): Promise<boolean> {
+export async function sendEmail({ to, subject, html, from, cc, replyTo, text }: EmailOptions): Promise<boolean> {
   try {
     await transporter.sendMail({
       from: from || process.env.SMTP_FROM || 'noreply@aramhuvis.com',
       to: Array.isArray(to) ? to.join(', ') : to,
       subject,
       html,
+      ...(cc ? { cc } : {}),
+      ...(replyTo ? { replyTo } : {}),
+      ...(text ? { text } : {}),
     });
     return true;
   } catch (error) {
