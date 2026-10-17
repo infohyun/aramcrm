@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Noto_Sans_KR } from "next/font/google";
 import "./globals.css";
 import AuthProvider from "@/lib/auth-provider";
@@ -20,6 +20,13 @@ const notoSansKR = Noto_Sans_KR({
 export const metadata: Metadata = {
   title: "아람휴비스 CRM",
   description: "아람휴비스 고객 관계 관리 시스템",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: { capable: true, title: "아람", statusBarStyle: "default" },
+  icons: { apple: "/aram-icon.svg" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#4f46e5",
 };
 
 export default function RootLayout({

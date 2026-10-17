@@ -60,6 +60,8 @@ const protectedPaths = [
   "/workflow-builder",
   // 미팅 스케줄러 (내부 관리)
   "/scheduler",
+  // 아람 (미팅 인텔리전스)
+  "/aram",
 ];
 
 // Public paths that should not be protected

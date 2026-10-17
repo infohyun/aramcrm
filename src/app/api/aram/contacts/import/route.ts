@@ -30,7 +30,8 @@ export async function POST(request: NextRequest) {
       const dupId = (c.email && byEmail.get(c.email)) || (c.mobile && byMobile.get(digitsOnly(c.mobile))) || null;
       if (dupId) {
         if (updateExisting) {
-          const fill = Object.fromEntries(Object.entries(c).filter(([, v]) => v));
+          // 기존 이름은 유지하고 새로 들어온 값으로 나머지 정보를 갱신
+          const fill = Object.fromEntries(Object.entries(c).filter(([k, v]) => v && k !== 'name'));
           await prisma.contact.update({ where: { id: dupId }, data: fill });
           updated++;
         } else skipped++;

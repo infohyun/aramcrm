@@ -1,0 +1,19 @@
+{
+  "name": "아람 · 아람휴비스의 귀",
+  "short_name": "아람",
+  "description": "모든 대화를 미팅으로 기록·전사·요약하고 회사의 지식 자산으로 쌓는 아람휴비스 미팅 인텔리전스",
+  "start_url": "/aram",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f7f7f8",
+  "theme_color": "#4f46e5",
+  "lang": "ko",
+  "icons": [
+    { "src": "/aram-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    { "name": "지금 녹음", "url": "/aram/record" },
+    { "name": "할 일", "url": "/aram/actions" },
+    { "name": "명함첩", "url": "/aram/contacts" }
+  ]
+}

@@ -407,13 +407,16 @@ export async function saveTranscript(
 export function parsePlainTranscript(text: string) {
   const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
   const pattern = /^(?:\[?\(?(\d{1,2}:\d{2}(?::\d{2})?)\)?\]?\s*)?([^:：]{1,30})[:：]\s*(.+)$/;
+  let speaker: string | null = null;
+  let startMs = 0;
   return lines.map((line) => {
     const m = line.match(pattern);
-    let startMs = 0;
     if (m?.[1]) {
       const parts = m[1].split(':').map(Number);
       startMs = (parts.length === 3 ? parts[0] * 3600 + parts[1] * 60 + parts[2] : parts[0] * 60 + parts[1]) * 1000;
     }
-    return m ? { speaker: m[2].trim(), text: m[3], startMs, endMs: startMs } : { speaker: null, text: line, startMs, endMs: startMs };
+    // "이름: 발언" 형식이 아닌 줄은 직전 화자의 이어지는 발언으로 처리
+    if (m) speaker = m[2].trim();
+    return { speaker, text: m ? m[3] : line, startMs, endMs: startMs };
   });
 }

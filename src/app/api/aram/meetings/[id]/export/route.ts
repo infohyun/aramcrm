@@ -74,7 +74,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     .filter((l) => l !== undefined)
     .join('\n');
 
-  const body = format === 'txt' ? doc.replace(/^#+\s/gm, '').replace(/\*\*/g, '') : doc;
+  const cleaned = doc.replace(/\n{3,}/g, '\n\n');
+  const body = format === 'txt' ? cleaned.replace(/^#+\s/gm, '').replace(/\*\*/g, '') : cleaned;
   const filename = encodeURIComponent(`${m.title}.${format}`);
   return new Response(body, {
     headers: {
